@@ -79,7 +79,6 @@ jobs:
     runs-on: ubuntu-latest
     needs: changes
     if: needs.changes.outputs.infra == 'true'
-    environment: production
     outputs:
       function_app_name: ${{ steps.deploy.outputs.function_app_name }}
       key_vault_name: ${{ steps.deploy.outputs.key_vault_name }}
@@ -161,7 +160,6 @@ jobs:
       always() &&
       needs.changes.outputs.code == 'true' &&
       (needs.deploy-infrastructure.result == 'success' || needs.deploy-infrastructure.result == 'skipped')
-    environment: production
     steps:
       - name: Checkout code
         uses: actions/checkout@v4

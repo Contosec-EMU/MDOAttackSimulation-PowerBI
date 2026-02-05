@@ -5,17 +5,6 @@ on:
     branches:
       - main
   workflow_dispatch:
-    inputs:
-      deploy_infra:
-        description: 'Force deploy infrastructure'
-        required: false
-        type: boolean
-        default: false
-      deploy_code:
-        description: 'Force deploy function code'
-        required: false
-        type: boolean
-        default: false
 
 permissions:
   id-token: write   # Required for OIDC
@@ -24,64 +13,11 @@ permissions:
 env:
   AZURE_RESOURCE_GROUP: 'rg-mdo-attack-simulation'
   AZURE_REGION: 'westus2'
-  BICEP_FILE: 'infra/main.bicep'
-  BICEP_PARAMS_FILE: 'infra/main.bicepparam'
-  FUNCTION_APP_PATH: 'src/function_app'
-  PYTHON_VERSION: '3.11'
 
 jobs:
-  changes:
-    name: Detect Changes
+  deploy:
     runs-on: ubuntu-latest
-    outputs:
-      infra: ${{ steps.filter.outputs.infra }}
-      code: ${{ steps.filter.outputs.code }}
-      function_app_name: ${{ steps.get-names.outputs.function_app_name }}
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 2
 
-      - name: Check for file changes
-        id: filter
-        run: |
-          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
-            echo "infra=${{ github.event.inputs.deploy_infra || 'false' }}" >> $GITHUB_OUTPUT
-            echo "code=${{ github.event.inputs.deploy_code || 'false' }}" >> $GITHUB_OUTPUT
-          else
-            # Check if infra files changed
-            if git diff --name-only HEAD^ HEAD | grep -q '^infra/'; then
-              echo "infra=true" >> $GITHUB_OUTPUT
-            else
-              echo "infra=false" >> $GITHUB_OUTPUT
-            fi
-
-            # Check if function code changed
-            if git diff --name-only HEAD^ HEAD | grep -q '^src/'; then
-              echo "code=true" >> $GITHUB_OUTPUT
-            else
-              echo "code=false" >> $GITHUB_OUTPUT
-            fi
-          fi
-
-      - name: Get resource names from bicepparam
-        id: get-names
-        run: |
-          # Extract prefix from bicepparam file
-          PREFIX=$(grep "^param prefix" infra/main.bicepparam | sed "s/param prefix = '\(.*\)'/\1/")
-          FUNCTION_APP_NAME="${PREFIX}-func-$(echo ${{ env.AZURE_REGION }} | head -c 4)"
-          echo "function_app_name=${FUNCTION_APP_NAME}" >> $GITHUB_OUTPUT
-          echo "Detected Function App name: ${FUNCTION_APP_NAME}"
-
-  deploy-infrastructure:
-    name: Deploy Infrastructure
-    runs-on: ubuntu-latest
-    needs: changes
-    if: needs.changes.outputs.infra == 'true'
-    outputs:
-      function_app_name: ${{ steps.deploy.outputs.function_app_name }}
-      key_vault_name: ${{ steps.deploy.outputs.key_vault_name }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -98,78 +34,30 @@ jobs:
           az group create \
             --name ${{ env.AZURE_RESOURCE_GROUP }} \
             --location ${{ env.AZURE_REGION }} \
-            --tags project=MDOAttackSimulation environment=production deployment=github-actions
+            --tags project=MDOAttackSimulation environment=production
 
-      - name: Deploy Bicep Template
-        id: deploy
+      - name: Deploy Infrastructure (Bicep)
         run: |
-          echo "Deploying infrastructure..."
-
-          DEPLOYMENT_OUTPUT=$(az deployment group create \
+          az deployment group create \
             --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
-            --template-file ${{ env.BICEP_FILE }} \
-            --parameters ${{ env.BICEP_PARAMS_FILE }} \
-            --output json)
+            --template-file infra/main.bicep \
+            --parameters infra/main.bicepparam \
+            --query "properties.outputs" \
+            --output json > deployment_outputs.json
 
-          if [ $? -ne 0 ]; then
-            echo "❌ Infrastructure deployment failed"
-            exit 1
-          fi
+          cat deployment_outputs.json
 
-          # Extract outputs
-          FUNCTION_APP_NAME=$(echo "$DEPLOYMENT_OUTPUT" | jq -r '.properties.outputs.functionAppName.value')
-          KEY_VAULT_NAME=$(echo "$DEPLOYMENT_OUTPUT" | jq -r '.properties.outputs.keyVaultName.value')
-          STORAGE_ACCOUNT_NAME=$(echo "$DEPLOYMENT_OUTPUT" | jq -r '.properties.outputs.dataLakeAccountName.value')
-
+      - name: Get Function App Name
+        id: get-names
+        run: |
+          FUNCTION_APP_NAME=$(cat deployment_outputs.json | jq -r '.functionAppName.value')
           echo "function_app_name=${FUNCTION_APP_NAME}" >> $GITHUB_OUTPUT
-          echo "key_vault_name=${KEY_VAULT_NAME}" >> $GITHUB_OUTPUT
-
-          echo "✅ Infrastructure deployed successfully"
-          echo "  Function App: ${FUNCTION_APP_NAME}"
-          echo "  Key Vault: ${KEY_VAULT_NAME}"
-          echo "  Data Lake: ${STORAGE_ACCOUNT_NAME}"
-
-      - name: Verify Managed Identity RBAC
-        run: |
-          FUNCTION_APP_NAME="${{ steps.deploy.outputs.function_app_name }}"
-
-          echo "Verifying managed identity and RBAC assignments..."
-
-          # Get managed identity principal ID
-          PRINCIPAL_ID=$(az functionapp identity show \
-            --name ${FUNCTION_APP_NAME} \
-            --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
-            --query principalId -o tsv)
-
-          if [ -z "$PRINCIPAL_ID" ]; then
-            echo "⚠️  Warning: Managed identity not found"
-            exit 1
-          fi
-
-          echo "✅ Managed identity configured: ${PRINCIPAL_ID}"
-
-      - name: Azure Logout
-        if: always()
-        run: az logout
-
-  deploy-function-code:
-    name: Deploy Function Code
-    runs-on: ubuntu-latest
-    needs: [changes, deploy-infrastructure]
-    if: |
-      always() &&
-      needs.changes.outputs.code == 'true' &&
-      (needs.deploy-infrastructure.result == 'success' || needs.deploy-infrastructure.result == 'skipped')
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+          echo "Function App: ${FUNCTION_APP_NAME}"
 
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: ${{ env.PYTHON_VERSION }}
-          cache: 'pip'
-          cache-dependency-path: '${{ env.FUNCTION_APP_PATH }}/requirements.txt'
+          python-version: '3.11'
 
       - name: Install Azure Functions Core Tools
         run: |
@@ -179,85 +67,11 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y azure-functions-core-tools-4
 
-      - name: Azure Login (OIDC)
-        uses: azure/login@v2
-        with:
-          client-id: ${{ secrets.AZURE_CLIENT_ID }}
-          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-
-      - name: Deploy Function App
+      - name: Deploy Function Code
         run: |
-          FUNCTION_APP_NAME="${{ needs.changes.outputs.function_app_name }}"
-
-          echo "Deploying function code to: ${FUNCTION_APP_NAME}"
-
-          cd ${{ env.FUNCTION_APP_PATH }}
-
-          # Deploy using func CLI
-          func azure functionapp publish ${FUNCTION_APP_NAME} --python
-
-          if [ $? -ne 0 ]; then
-            echo "❌ Function deployment failed"
-            exit 1
-          fi
-
-          echo "✅ Function code deployed successfully"
-
-      - name: Verify Function Health
-        run: |
-          FUNCTION_APP_NAME="${{ needs.changes.outputs.function_app_name }}"
-
-          echo "Waiting for function app to be ready..."
-          sleep 30
-
-          # Get function app URL
-          FUNCTION_URL=$(az functionapp show \
-            --name ${FUNCTION_APP_NAME} \
-            --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
-            --query defaultHostName -o tsv)
-
-          echo "Testing health endpoint: https://${FUNCTION_URL}/api/health"
-
-          # Test health endpoint (may fail if function needs warmup)
-          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "https://${FUNCTION_URL}/api/health" || echo "000")
-
-          if [ "$HTTP_STATUS" == "200" ]; then
-            echo "✅ Health check passed"
-          else
-            echo "⚠️  Health check returned status: ${HTTP_STATUS}"
-            echo "Function may need warmup time. Check logs in Azure Portal."
-          fi
+          cd src/function_app
+          func azure functionapp publish ${{ steps.get-names.outputs.function_app_name }} --python
 
       - name: Azure Logout
         if: always()
         run: az logout
-
-  summary:
-    name: Deployment Summary
-    runs-on: ubuntu-latest
-    needs: [changes, deploy-infrastructure, deploy-function-code]
-    if: always()
-    steps:
-      - name: Generate Summary
-        run: |
-          echo "# 🚀 Deployment Summary" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Trigger:** ${{ github.event_name }}" >> $GITHUB_STEP_SUMMARY
-          echo "**Commit:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
-          echo "**Branch:** ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "## Changes Detected" >> $GITHUB_STEP_SUMMARY
-          echo "- Infrastructure: ${{ needs.changes.outputs.infra }}" >> $GITHUB_STEP_SUMMARY
-          echo "- Function Code: ${{ needs.changes.outputs.code }}" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "## Job Status" >> $GITHUB_STEP_SUMMARY
-          echo "- Deploy Infrastructure: ${{ needs.deploy-infrastructure.result }}" >> $GITHUB_STEP_SUMMARY
-          echo "- Deploy Function Code: ${{ needs.deploy-function-code.result }}" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-
-          if [ "${{ needs.changes.outputs.function_app_name }}" != "" ]; then
-            echo "## Resources" >> $GITHUB_STEP_SUMMARY
-            echo "- Function App: \`${{ needs.changes.outputs.function_app_name }}\`" >> $GITHUB_STEP_SUMMARY
-            echo "- Resource Group: \`${{ env.AZURE_RESOURCE_GROUP }}\`" >> $GITHUB_STEP_SUMMARY
-          fi

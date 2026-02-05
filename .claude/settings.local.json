@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(tree:*)",
+      "Bash(wc:*)",
+      "Bash(dir:*)",
+      "Bash(findstr:*)",
+      "Bash(timeout 2 cat:*)",
+      "Bash(timeout 5 bash -c 'while true; do stat -c \"\"%Y\"\" \"\"C:\\\\repos\\\\MDOAttackSimulation_PowerBI\\\\src\\\\function_app\\\\function_app.py\"\" 2>/dev/null || stat -f \"\"%m\"\" \"\"C:\\\\repos\\\\MDOAttackSimulation_PowerBI\\\\src\\\\function_app\\\\function_app.py\"\" 2>/dev/null; sleep 1; done')",
+      "Bash(python:*)",
+      "Bash(az bicep build:*)",
+      "Bash(git init:*)",
+      "Bash(git add:*)"
+    ]
+  }
+}

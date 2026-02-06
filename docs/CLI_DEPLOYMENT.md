@@ -388,9 +388,21 @@ Remove-Item ..\..\function.zip
 
 ## Step 6: Verify Deployment
 
+Before browsing data in the storage account, grant yourself `Storage Blob Data Reader` on the ADLS Gen2 account (the Bicep only assigns roles to the Function App's managed identity, not to the deploying user):
+
 ### Bash
 
 ```bash
+# Grant yourself Storage Blob Data Reader on the data lake
+CURRENT_USER_ID=$(az ad signed-in-user show --query id -o tsv)
+az role assignment create \
+  --role "Storage Blob Data Reader" \
+  --assignee "$CURRENT_USER_ID" \
+  --scope "$(az storage account show --name "$DL_NAME" --query id -o tsv)"
+
+# Wait for RBAC propagation
+sleep 60
+
 # Get the function host key
 FUNC_KEY=$(az functionapp keys list \
   --resource-group "$RESOURCE_GROUP" \
@@ -431,6 +443,16 @@ az monitor app-insights query \
 ### PowerShell
 
 ```powershell
+# Grant yourself Storage Blob Data Reader on the data lake
+$CURRENT_USER_ID = az ad signed-in-user show --query id -o tsv
+az role assignment create `
+  --role "Storage Blob Data Reader" `
+  --assignee $CURRENT_USER_ID `
+  --scope $(az storage account show --name $DL_NAME --query id -o tsv)
+
+# Wait for RBAC propagation
+Start-Sleep -Seconds 60
+
 # Get the function host key
 $FUNC_KEY = az functionapp keys list `
   --resource-group $RESOURCE_GROUP `

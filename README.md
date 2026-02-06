@@ -243,7 +243,19 @@ func azure functionapp publish $FUNCTION_APP_NAME --python
 
 #### Step 7: Validate
 
+Before browsing data, grant yourself `Storage Blob Data Reader` on the ADLS Gen2 account (the Bicep only assigns roles to the Function App's managed identity, not to the deploying user):
+
 ```powershell
+# Grant yourself Storage Blob Data Reader on the data lake
+$CURRENT_USER_ID = az ad signed-in-user show --query id -o tsv
+az role assignment create `
+  --role "Storage Blob Data Reader" `
+  --assignee $CURRENT_USER_ID `
+  --scope $(az storage account show --name $STORAGE_ACCOUNT_NAME --query id -o tsv)
+
+# Wait for RBAC propagation
+Start-Sleep -Seconds 60
+
 # Health check
 Invoke-RestMethod "https://$FUNCTION_APP_NAME.azurewebsites.net/api/health"
 

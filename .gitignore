@@ -52,6 +52,9 @@ credentials.json
 .env
 .env.local
 
+# Bicep parameters (contain tenant IDs, credentials)
+*.bicepparam
+
 # Azure deployment
 .azure/
 
@@ -62,3 +65,15 @@ credentials.json
 
 # GitHub
 .github/workflows/*.log
+
+# AI assistant config (internal)
+.claude/
+CLAUDE.md
+
+# Windows artifacts
+nul
+
+# Coverage reports
+htmlcov/
+.coverage
+coverage.xml

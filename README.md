@@ -323,9 +323,11 @@ Examples:
 
 1. Open **Power BI Desktop** → **Get Data** → **Azure** → **Azure Data Lake Storage Gen2**
 2. Enter the storage URL: `https://<storage-account>.dfs.core.windows.net/`
-3. Sign in with your organizational account (requires **Storage Blob Data Reader** on the `curated` container)
+3. Sign in with your organizational account
 4. Navigate to `curated/` → select a table folder (e.g., `repeatOffenders`)
 5. Combine files to load all date-partitioned Parquet files
+
+> **Important:** Each Power BI user must have the **Storage Blob Data Reader** role on the ADLS Gen2 storage account. See the [Power BI Setup Guide](docs/POWERBI_SETUP.md#verify-storage-access) for instructions on granting access.
 
 ### Power Query (M) Example
 

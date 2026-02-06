@@ -37,7 +37,18 @@ Storage Account URL:  https://<storageAccountName>.dfs.core.windows.net/
 Container:            curated
 ```
 
-> Ask your Azure administrator to assign you the **Storage Blob Data Reader** role via the Azure Portal under the storage account's **Access Control (IAM)** blade.
+> **Important:** Each user who needs to access the data from Power BI must have the **Storage Blob Data Reader** role on the ADLS Gen2 storage account. This is not granted automatically — an administrator must assign it.
+>
+> To grant access via Azure CLI:
+>
+> ```powershell
+> # Grant a user Storage Blob Data Reader on the data lake
+> $USER_ID = az ad user show --id "user@yourorg.com" --query id -o tsv
+> $STORAGE_ID = az storage account show --name "<storageAccountName>" --query id -o tsv
+> az role assignment create --role "Storage Blob Data Reader" --assignee $USER_ID --scope $STORAGE_ID
+> ```
+>
+> Or via **Azure Portal → Storage account → Access Control (IAM) → Add role assignment → Storage Blob Data Reader**.
 
 ---
 

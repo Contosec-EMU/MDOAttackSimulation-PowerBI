@@ -183,19 +183,19 @@ param graphClientId = '<YOUR_APP_REGISTRATION_CLIENT_ID>'
 #### Step 4: Deploy Infrastructure
 
 ```powershell
-az deployment group create `
+$DEPLOYMENT_OUTPUT = az deployment group create `
   --resource-group $RESOURCE_GROUP `
   --template-file infra/main.bicep `
-  --parameters infra/main.bicepparam `
-  --query "properties.outputs"
+  --parameters infra/main.bicepparam | ConvertFrom-Json
 
 # Capture outputs
-$KEYVAULT_NAME = az deployment group show -g $RESOURCE_GROUP -n main `
-  --query "properties.outputs.keyVaultName.value" -o tsv
-$FUNCTION_APP_NAME = az deployment group show -g $RESOURCE_GROUP -n main `
-  --query "properties.outputs.functionAppName.value" -o tsv
-$STORAGE_ACCOUNT_NAME = az deployment group show -g $RESOURCE_GROUP -n main `
-  --query "properties.outputs.dataLakeAccountName.value" -o tsv
+$KEYVAULT_NAME        = $DEPLOYMENT_OUTPUT.properties.outputs.keyVaultName.value
+$FUNCTION_APP_NAME    = $DEPLOYMENT_OUTPUT.properties.outputs.functionAppName.value
+$STORAGE_ACCOUNT_NAME = $DEPLOYMENT_OUTPUT.properties.outputs.dataLakeAccountName.value
+
+Write-Host "Key Vault:        $KEYVAULT_NAME"
+Write-Host "Function App:     $FUNCTION_APP_NAME"
+Write-Host "Storage Account:  $STORAGE_ACCOUNT_NAME"
 ```
 
 #### Step 5: Store the Client Secret

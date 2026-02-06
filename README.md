@@ -162,10 +162,10 @@ Write-Host "Tenant ID: $(az account show --query tenantId -o tsv)"
 
 #### Step 2: Create a Resource Group
 
-```bash
-SUBSCRIPTION_ID="<your-subscription-id>"
-RESOURCE_GROUP="rg-mdo-attack-simulation"
-LOCATION="eastus"
+```powershell
+$SUBSCRIPTION_ID = "<your-subscription-id>"
+$RESOURCE_GROUP  = "rg-mdo-attack-simulation"
+$LOCATION        = "eastus"
 
 az account set --subscription $SUBSCRIPTION_ID
 az group create --name $RESOURCE_GROUP --location $LOCATION
@@ -182,53 +182,53 @@ param graphClientId = '<YOUR_APP_REGISTRATION_CLIENT_ID>'
 
 #### Step 4: Deploy Infrastructure
 
-```bash
-az deployment group create \
-  --resource-group $RESOURCE_GROUP \
-  --template-file infra/main.bicep \
-  --parameters infra/main.bicepparam \
+```powershell
+az deployment group create `
+  --resource-group $RESOURCE_GROUP `
+  --template-file infra/main.bicep `
+  --parameters infra/main.bicepparam `
   --query "properties.outputs"
 
 # Capture outputs
-KEYVAULT_NAME=$(az deployment group show -g $RESOURCE_GROUP -n main \
-  --query "properties.outputs.keyVaultName.value" -o tsv)
-FUNCTION_APP_NAME=$(az deployment group show -g $RESOURCE_GROUP -n main \
-  --query "properties.outputs.functionAppName.value" -o tsv)
-STORAGE_ACCOUNT_NAME=$(az deployment group show -g $RESOURCE_GROUP -n main \
-  --query "properties.outputs.storageAccountName.value" -o tsv)
+$KEYVAULT_NAME = az deployment group show -g $RESOURCE_GROUP -n main `
+  --query "properties.outputs.keyVaultName.value" -o tsv
+$FUNCTION_APP_NAME = az deployment group show -g $RESOURCE_GROUP -n main `
+  --query "properties.outputs.functionAppName.value" -o tsv
+$STORAGE_ACCOUNT_NAME = az deployment group show -g $RESOURCE_GROUP -n main `
+  --query "properties.outputs.storageAccountName.value" -o tsv
 ```
 
 #### Step 5: Store the Client Secret
 
-```bash
-az keyvault secret set \
-  --vault-name $KEYVAULT_NAME \
-  --name "graph-client-secret" \
+```powershell
+az keyvault secret set `
+  --vault-name $KEYVAULT_NAME `
+  --name "graph-client-secret" `
   --value "<YOUR_CLIENT_SECRET>"
 ```
 
 #### Step 6: Deploy Function Code
 
-```bash
+```powershell
 cd src/function_app
 func azure functionapp publish $FUNCTION_APP_NAME --python
 ```
 
 #### Step 7: Validate
 
-```bash
+```powershell
 # Health check
-curl "https://${FUNCTION_APP_NAME}.azurewebsites.net/api/health"
+Invoke-RestMethod "https://$FUNCTION_APP_NAME.azurewebsites.net/api/health"
 
 # Trigger a manual test run
-FUNCTION_KEY=$(az functionapp keys list -g $RESOURCE_GROUP -n $FUNCTION_APP_NAME \
-  --query "functionKeys.default" -o tsv)
-curl -X POST "https://${FUNCTION_APP_NAME}.azurewebsites.net/api/test-run?code=${FUNCTION_KEY}"
+$FUNCTION_KEY = az functionapp keys list -g $RESOURCE_GROUP -n $FUNCTION_APP_NAME `
+  --query "functionKeys.default" -o tsv
+Invoke-RestMethod -Method Post "https://$FUNCTION_APP_NAME.azurewebsites.net/api/test-run?code=$FUNCTION_KEY"
 
 # Verify Parquet files exist
-az storage fs file list \
-  --account-name $STORAGE_ACCOUNT_NAME \
-  --file-system curated \
+az storage fs file list `
+  --account-name $STORAGE_ACCOUNT_NAME `
+  --file-system curated `
   --recursive --auth-mode login
 ```
 

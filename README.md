@@ -195,7 +195,7 @@ $KEYVAULT_NAME = az deployment group show -g $RESOURCE_GROUP -n main `
 $FUNCTION_APP_NAME = az deployment group show -g $RESOURCE_GROUP -n main `
   --query "properties.outputs.functionAppName.value" -o tsv
 $STORAGE_ACCOUNT_NAME = az deployment group show -g $RESOURCE_GROUP -n main `
-  --query "properties.outputs.storageAccountName.value" -o tsv
+  --query "properties.outputs.dataLakeAccountName.value" -o tsv
 ```
 
 #### Step 5: Store the Client Secret

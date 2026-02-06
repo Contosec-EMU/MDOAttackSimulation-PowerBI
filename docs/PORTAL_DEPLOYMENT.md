@@ -41,7 +41,7 @@ Before you begin, ensure you have:
 | **Entra ID Permissions** | Permission to create App Registrations and grant admin consent (Global Administrator, Application Administrator, or Cloud Application Administrator) |
 | **Browser** | Modern browser (Edge, Chrome, Firefox) — the Azure Portal does not support Internet Explorer |
 
-> 💡 **Tip:** To check your subscription roles, navigate to **Subscriptions → (your subscription) → Access control (IAM) → View my access**.
+> **Tip:** To check your subscription roles, navigate to **Subscriptions → (your subscription) → Access control (IAM) → View my access**.
 
 ---
 
@@ -81,7 +81,7 @@ A resource group is a logical container for all the Azure resources in this solu
 
 <!-- Screenshot: Resource Group creation page with Basics tab filled in -->
 
-> ✅ **Checkpoint:** You should now see `rg-mdo-attack-simulation` listed under Resource Groups.
+> **Checkpoint:** You should now see `rg-mdo-attack-simulation` listed under Resource Groups.
 
 ---
 
@@ -129,7 +129,7 @@ The Virtual Network (VNet) provides network isolation so the Function App can se
 
 <!-- Screenshot: Virtual Network IP addresses tab with snet-functions subnet configured -->
 
-> ✅ **Checkpoint:** Navigate to the VNet resource → **Subnets** to verify `snet-functions` exists with service endpoints for `Microsoft.Storage` and `Microsoft.KeyVault`, and delegation to `Microsoft.Web/serverFarms`.
+> **Checkpoint:** Navigate to the VNet resource → **Subnets** to verify `snet-functions` exists with service endpoints for `Microsoft.Storage` and `Microsoft.KeyVault`, and delegation to `Microsoft.Web/serverFarms`.
 
 ---
 
@@ -167,7 +167,7 @@ Log Analytics is the backend data store for Application Insights. It stores diag
 
 <!-- Screenshot: Log Analytics Workspace creation page -->
 
-> ✅ **Checkpoint:** Log Analytics workspace `mdoast-law` exists with 90-day retention.
+> **Checkpoint:** Log Analytics workspace `mdoast-law` exists with 90-day retention.
 
 ---
 
@@ -206,7 +206,7 @@ Application Insights provides monitoring, live metrics, and alerting for the Fun
 
 <!-- Screenshot: Application Insights creation with workspace-based mode -->
 
-> 📋 **Save this value:**
+> **Save this value:**
 > - **Connection String:** `InstrumentationKey=xxxxxxxx-xxxx-...` (from the Overview page, Properties section)
 
 ---
@@ -260,7 +260,7 @@ This is a **separate** storage account used internally by Azure Functions for tr
 
 <!-- Screenshot: Function storage account Advanced tab showing key access disabled -->
 
-> 📋 **Save this value:**
+> **Save this value:**
 > - **Function Storage Account name:** e.g., `mdoastfn2024prod`
 
 ---
@@ -343,11 +343,11 @@ After the storage account is created:
 
 <!-- Screenshot: Storage account Containers page showing curated, raw, and state containers -->
 
-> 📋 **Save these values:**
+> **Save these values:**
 > - **Data Lake Storage Account name:** e.g., `mdoastdl2024prod`
 > - **DFS endpoint:** `https://mdoastdl2024prod.dfs.core.windows.net` (visible on the storage account's **Endpoints** page under **Data Lake Storage**)
 
-> ✅ **Checkpoint:** The storage account **Overview** page should show **Hierarchical namespace: Enabled**. Three containers (`curated`, `raw`, `state`) should be visible under **Containers**.
+> **Checkpoint:** The storage account **Overview** page should show **Hierarchical namespace: Enabled**. Three containers (`curated`, `raw`, `state`) should be visible under **Containers**.
 
 ---
 
@@ -399,7 +399,7 @@ Key Vault securely stores the Graph API client secret. The Function App retrieve
 <!-- Screenshot: Key Vault Access configuration tab showing RBAC selected -->
 <!-- Screenshot: Key Vault Networking tab showing VNet rule and trusted services bypass -->
 
-> 📋 **Save this value:**
+> **Save this value:**
 > - **Key Vault URI:** `https://mdoast-kv-2024prod.vault.azure.net/` (visible on the Key Vault's **Overview** page)
 
 ---
@@ -441,7 +441,7 @@ The App Service Plan defines the compute resources for the Function App. We use 
 
 <!-- Screenshot: App Service Plan creation with B1 Linux selected -->
 
-> ✅ **Checkpoint:** The plan should show SKU `B1`, OS `Linux`, Region `West US 2`.
+> **Checkpoint:** The plan should show SKU `B1`, OS `Linux`, Region `West US 2`.
 
 ---
 
@@ -508,7 +508,7 @@ The Function App hosts the Python code that ingests data from Microsoft Graph.
 <!-- Screenshot: Function App Basics tab with Python 3.11 and Linux -->
 <!-- Screenshot: Function App Networking tab with VNet integration configured -->
 
-> 📋 **Save this value:**
+> **Save this value:**
 > - **Function App name:** e.g., `mdoast-func-2024prod`
 
 ---
@@ -532,10 +532,10 @@ The system-assigned managed identity allows the Function App to authenticate to 
 
 <!-- Screenshot: Function App Identity page showing System assigned = On with Object ID -->
 
-> 📋 **Save this value:**
+> **Save this value:**
 > - **Managed Identity Object ID:** `xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx`
 
-> 💡 **Note:** If the identity was already created during Function App creation (Step 9), you may see it already enabled here. Still copy the Object ID.
+> **Note:** If the identity was already created during Function App creation (Step 9), you may see it already enabled here. Still copy the Object ID.
 
 ---
 
@@ -607,7 +607,7 @@ Repeat again on the **function** storage account:
 
 <!-- Screenshot: Key Vault IAM role assignment for Key Vault Secrets User -->
 
-> ✅ **Checkpoint — Summary of RBAC Assignments:**
+> **Checkpoint — Summary of RBAC Assignments:**
 >
 > | Resource | Role | Assignee |
 > |----------|------|----------|
@@ -648,7 +648,7 @@ The App Registration provides the identity that the Function App uses to call Mi
 
 After creation, you'll be on the app's **Overview** page. Copy these values:
 
-> 📋 **Save these values:**
+> **Save these values:**
 > - **Application (client) ID:** `xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx`
 > - **Directory (tenant) ID:** `xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx`
 
@@ -692,7 +692,7 @@ After granting consent, you should see:
 
 > ⚠️ **CRITICAL:** The secret value is only displayed **once**. If you navigate away without copying it, you must create a new one. The `Value` looks like: `aBc~dEf1G2h3I4j5K6l7M8n9...`
 
-> 📋 **Save this value:**
+> **Save this value:**
 > - **Client Secret Value:** `aBc~dEf1G2h3...` (copy the full value)
 
 ---
@@ -731,7 +731,7 @@ Store the Graph API client secret securely in Key Vault where the Function App c
 
 > ⚠️ **The secret name MUST be exactly `graph-client-secret`** — the function code looks for this specific name.
 
-> ✅ **Checkpoint:** Navigate to Key Vault → Secrets. You should see `graph-client-secret` listed with status **Enabled**.
+> **Checkpoint:** Navigate to Key Vault → Secrets. You should see `graph-client-secret` listed with status **Enabled**.
 
 ---
 
@@ -1096,4 +1096,4 @@ rg-mdo-attack-simulation
 | Virtual Network | — | Free |
 | **Total** | | **~$20–30/month** |
 
-> 💡 Costs vary by region and usage. Use the [Azure Pricing Calculator](https://azure.microsoft.com/pricing/calculator/) for precise estimates.
+> Costs vary by region and usage. Use the [Azure Pricing Calculator](https://azure.microsoft.com/pricing/calculator/) for precise estimates.

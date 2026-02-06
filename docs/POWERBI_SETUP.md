@@ -37,7 +37,7 @@ Storage Account URL:  https://<storageAccountName>.dfs.core.windows.net/
 Container:            curated
 ```
 
-> 💡 Ask your Azure administrator to assign you the **Storage Blob Data Reader** role via the Azure Portal under the storage account's **Access Control (IAM)** blade.
+> Ask your Azure administrator to assign you the **Storage Blob Data Reader** role via the Azure Portal under the storage account's **Access Control (IAM)** blade.
 
 ---
 
@@ -818,7 +818,7 @@ RETURN
 
 <!-- Screenshot: Scheduled refresh configuration showing daily at 3:00 AM UTC -->
 
-> 💡 **Why 3:00 AM?** The Azure Function ingests data at 2:00 AM UTC. Adding a 1-hour buffer ensures all Parquet files are fully written before Power BI reads them.
+> **Why 3:00 AM?** The Azure Function ingests data at 2:00 AM UTC. Adding a 1-hour buffer ensures all Parquet files are fully written before Power BI reads them.
 
 ### On-Premises Data Gateway
 
@@ -841,7 +841,7 @@ A gateway is required if **any** of these apply:
    - **Authentication**: OAuth2
 4. **Map the dataset** to use the gateway in your semantic model settings
 
-> 💡 **Cost-saving tip**: The gateway VM can be set to auto-shutdown after the refresh window. See [Gateway Quick Reference](GATEWAY_QUICK_REFERENCE.md) for VM start/stop commands.
+> **Cost-saving tip**: The gateway VM can be set to auto-shutdown after the refresh window. See [Gateway Quick Reference](GATEWAY_QUICK_REFERENCE.md) for VM start/stop commands.
 
 ---
 

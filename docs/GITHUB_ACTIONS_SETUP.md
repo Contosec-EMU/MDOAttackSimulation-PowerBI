@@ -384,7 +384,7 @@ Add Slack/Teams notification step to workflow:
 
 ## Security Best Practices
 
-### ✅ What This Setup Does
+### What This Setup Does
 
 - **No long-lived secrets**: OIDC tokens are short-lived (1 hour) and auto-rotated
 - **Principle of least privilege**: Service principal only has Contributor on resource group

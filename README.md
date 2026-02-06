@@ -6,7 +6,19 @@
 
 End-to-end Azure solution to ingest Microsoft Defender for Office 365 (MDO) Attack Simulation Training data from Microsoft Graph API into Azure Data Lake Storage Gen2 as Parquet files, optimized for Power BI consumption.
 
-## ✨ Features
+### Why this solution?
+
+Attack Simulation Training reports are only available within the Microsoft Defender XDR console, which presents challenges for many organizations:
+
+- **Limited audience** — C-level executives and business stakeholders who need to see phishing readiness metrics from a business or executive perspective often don't have (or shouldn't need) access to the Defender XDR security console.
+- **Manual workarounds are unsustainable** — The common alternative of manually exporting CSV files from XDR and importing them into Power BI is time-consuming, error-prone, and doesn't scale for teams running regular simulation campaigns.
+- **No native Power BI integration** — There is no built-in connector to bring Attack Simulation Training data directly into Power BI for custom dashboards and automated reporting.
+
+This solution bridges that gap by automatically syncing simulation data into your Azure Data Lake on a schedule, making it available in Power BI for self-service reporting — without requiring XDR access or manual data exports.
+
+> **Modular by design** — The data processing and storage layers are decoupled, so the destination can be adapted to your needs. While this solution targets ADLS Gen2 + Power BI out of the box, the writer module can be replaced to send data to **Microsoft Fabric / OneLake**, **Azure SQL Database**, **Azure Synapse Analytics**, or **Dataverse** with minimal code changes.
+
+## Features
 
 - **9 Data Tables** — Simulations, users, events, trainings, payloads, and more
 - **Async Architecture** — Built with `aiohttp` and Azure SDK async for high throughput
@@ -287,7 +299,7 @@ in
 4. Set the refresh schedule to run **1 hour after** the Function timer (e.g., 3:00 AM if the Function runs at 2:00 AM)
 5. Enable scheduled refresh
 
-> 💡 **Tip**: For Power BI Pro without Premium, you may need an [On-Premises Data Gateway](https://learn.microsoft.com/en-us/power-bi/connect-data/service-gateway-onprem) to access ADLS Gen2.
+> **Tip**: For Power BI Pro without Premium, you may need an [On-Premises Data Gateway](https://learn.microsoft.com/en-us/power-bi/connect-data/service-gateway-onprem) to access ADLS Gen2.
 
 ## Project Structure
 

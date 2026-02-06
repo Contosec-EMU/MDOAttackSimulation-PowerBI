@@ -2,7 +2,7 @@
 
 Fast-track guide to get GitHub Actions deployment running in 10 minutes.
 
-## 🚀 Quick Setup (4 Steps)
+## Quick Setup (4 Steps)
 
 ### 1. Authenticate to Azure
 
@@ -47,11 +47,11 @@ git push origin main
 
 ---
 
-## 📋 Post-Deployment Checklist
+## Post-Deployment Checklist
 
 After GitHub Actions completes successfully:
 
-### ✅ Store Graph API Secret in Key Vault
+### Store Graph API Secret in Key Vault
 
 ```bash
 # Get Key Vault name from Azure Portal or Bicep output
@@ -61,7 +61,7 @@ az keyvault secret set \
   --value "YOUR_GRAPH_API_CLIENT_SECRET"
 ```
 
-### ✅ Verify Function Health
+### Verify Function Health
 
 ```bash
 # Test health endpoint
@@ -70,7 +70,7 @@ curl https://mdoast-func-west.azurewebsites.net/api/health
 
 Expected: `{"status": "healthy"}`
 
-### ✅ Trigger Test Run
+### Trigger Test Run
 
 ```bash
 # Get function key
@@ -83,7 +83,7 @@ FUNCTION_KEY=$(az functionapp keys list \
 curl -X POST "https://mdoast-func-west.azurewebsites.net/api/test-run?code=${FUNCTION_KEY}"
 ```
 
-### ✅ Check Data in Storage
+### Check Data in Storage
 
 ```bash
 # List parquet files
@@ -95,7 +95,7 @@ az storage blob list \
 
 ---
 
-## 🔧 Common Commands
+## Common Commands
 
 ### Manual Workflow Trigger
 
@@ -183,7 +183,7 @@ Request these from your Azure admin.
 
 ---
 
-## 💡 Tips
+## Tips
 
 - **First deployment takes 5-10 minutes** (infrastructure creation)
 - **Subsequent code deployments take 2-3 minutes**

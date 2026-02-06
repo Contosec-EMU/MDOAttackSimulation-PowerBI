@@ -478,6 +478,26 @@ az monitor app-insights query `
 | Data Lake files | Parquet files under `curated/{apiName}/{YYYY-MM-DD}/` |
 | Logs | Trace messages showing ingestion progress |
 
+> ⚠️ **Storage firewall note:** The ADLS Gen2 storage account is deployed with network rules that deny public access by default. If you are listing or browsing files from outside the VNet, you will get an authorization error. To verify data from your local machine, temporarily add your IP:
+>
+> **Bash:**
+> ```bash
+> MY_IP=$(curl -s https://api.ipify.org)
+> az storage account network-rule add --account-name "$DL_NAME" --ip-address "$MY_IP"
+> # After verifying, remove the exception:
+> az storage account network-rule remove --account-name "$DL_NAME" --ip-address "$MY_IP"
+> ```
+>
+> **PowerShell:**
+> ```powershell
+> $MY_IP = (Invoke-RestMethod -Uri "https://api.ipify.org")
+> az storage account network-rule add --account-name $DL_NAME --ip-address "$MY_IP"
+> # After verifying, remove the exception:
+> az storage account network-rule remove --account-name $DL_NAME --ip-address "$MY_IP"
+> ```
+>
+> Alternatively, for testing from a network outside your organization, you can temporarily enable public access via **Azure Portal → Storage account → Networking → Enabled from all networks**. This is not recommended for production.
+
 ---
 
 ## Post-Deployment Configuration

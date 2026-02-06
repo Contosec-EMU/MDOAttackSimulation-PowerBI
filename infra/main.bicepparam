@@ -20,9 +20,19 @@ param graphClientId = 'd46d827f-8a75-4274-ae77-5c9c06b97be4'
 // Format: {second} {minute} {hour} {day} {month} {day-of-week}
 param timerSchedule = '0 0 2 * * *'
 
+// Sync Mode Configuration (ASTSync-inspired improvements)
+// - "full": Fetches all data every run (default, good for initial setup)
+// - "incremental": Uses 7-day lookback, tracks state for efficiency
+param syncMode = 'full'
+
+// Whether to sync simulation details (extended endpoint)
+// Set to false to only sync core user coverage endpoints
+param syncSimulations = true
+
 // Power BI Access: Enable resource instance rules to allow Power BI Service
 // to access ADLS Gen2 even with public access denied
-param enablePowerBiAccess = true
+// NOTE: Temporarily disabled - will configure via Azure Portal after deployment
+param enablePowerBiAccess = false
 
 param tags = {
   project: 'MDOAttackSimulation'

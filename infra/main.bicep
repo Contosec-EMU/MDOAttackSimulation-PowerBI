@@ -18,6 +18,16 @@ param graphClientId string
 @description('Timer schedule (CRON) - default daily at 2:00 AM UTC')
 param timerSchedule string = '0 0 2 * * *'
 
+@description('Sync mode: full (default) or incremental (7-day lookback)')
+@allowed([
+  'full'
+  'incremental'
+])
+param syncMode string = 'full'
+
+@description('Whether to sync simulation details (extended endpoint)')
+param syncSimulations bool = true
+
 @description('Allow all Power BI workspaces in the tenant to access ADLS Gen2')
 param enablePowerBiAccess bool = true
 
@@ -33,7 +43,7 @@ var funcStorageAccountName = '${prefix}fn${uniqueSuffix}'
 var dataLakeAccountName = '${prefix}dl${uniqueSuffix}'
 var functionAppName = '${prefix}-func-${uniqueSuffix}'
 var appServicePlanName = '${prefix}-asp-${uniqueSuffix}'
-var keyVaultName = '${prefix}-kv-${uniqueSuffix}'
+var keyVaultName = '${prefix}-kv2-${uniqueSuffix}'
 var appInsightsName = '${prefix}-appi-${uniqueSuffix}'
 var logAnalyticsName = '${prefix}-law-${uniqueSuffix}'
 var vnetName = '${prefix}-vnet-${uniqueSuffix}'
@@ -133,7 +143,7 @@ resource funcStorageAccount 'Microsoft.Storage/storageAccounts@2023-01-01' = {
     supportsHttpsTrafficOnly: true
     minimumTlsVersion: 'TLS1_2'
     allowBlobPublicAccess: false
-    allowSharedKeyAccess: true  // Required for Azure Functions runtime
+    allowSharedKeyAccess: false  // Use identity-based auth instead of account keys
     accessTier: 'Hot'
   }
 }
@@ -269,9 +279,22 @@ resource functionApp 'Microsoft.Web/sites@2023-01-01' = {
       linuxFxVersion: 'PYTHON|3.11'
       pythonVersion: '3.11'
       appSettings: [
+        // Identity-based connection for AzureWebJobsStorage (no account keys)
         {
-          name: 'AzureWebJobsStorage'
-          value: 'DefaultEndpointsProtocol=https;AccountName=${funcStorageAccount.name};EndpointSuffix=${environment().suffixes.storage};AccountKey=${funcStorageAccount.listKeys().keys[0].value}'
+          name: 'AzureWebJobsStorage__accountName'
+          value: funcStorageAccount.name
+        }
+        {
+          name: 'AzureWebJobsStorage__blobServiceUri'
+          value: 'https://${funcStorageAccount.name}.blob.${environment().suffixes.storage}'
+        }
+        {
+          name: 'AzureWebJobsStorage__queueServiceUri'
+          value: 'https://${funcStorageAccount.name}.queue.${environment().suffixes.storage}'
+        }
+        {
+          name: 'AzureWebJobsStorage__tableServiceUri'
+          value: 'https://${funcStorageAccount.name}.table.${environment().suffixes.storage}'
         }
         {
           name: 'FUNCTIONS_EXTENSION_VERSION'
@@ -310,6 +333,15 @@ resource functionApp 'Microsoft.Web/sites@2023-01-01' = {
           name: 'TIMER_SCHEDULE'
           value: timerSchedule
         }
+        // Sync mode configuration (ASTSync-inspired improvements)
+        {
+          name: 'SYNC_MODE'
+          value: syncMode
+        }
+        {
+          name: 'SYNC_SIMULATIONS'
+          value: syncSimulations ? 'true' : 'false'
+        }
       ]
       ftpsState: 'Disabled'
       minTlsVersion: '1.2'
@@ -322,6 +354,42 @@ resource functionApp 'Microsoft.Web/sites@2023-01-01' = {
 // ============================================================================
 // RBAC Assignments
 // ============================================================================
+
+// RBAC roles for Function App on Function Storage Account (for AzureWebJobsStorage)
+// These roles are required for identity-based connections to work
+
+// Storage Blob Data Contributor - allows Function to read/write blobs in function storage
+resource funcStorageBlobDataContributorRole 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(funcStorageAccount.id, functionApp.id, 'Storage Blob Data Contributor')
+  scope: funcStorageAccount
+  properties: {
+    principalId: functionApp.identity.principalId
+    principalType: 'ServicePrincipal'
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'ba92f5b4-2d11-453d-a403-e96b0029c9fe')
+  }
+}
+
+// Storage Queue Data Contributor - allows Function to manage queue messages
+resource funcStorageQueueDataContributorRole 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(funcStorageAccount.id, functionApp.id, 'Storage Queue Data Contributor')
+  scope: funcStorageAccount
+  properties: {
+    principalId: functionApp.identity.principalId
+    principalType: 'ServicePrincipal'
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '974c5e8b-45b9-4653-ba55-5f855dd0fb88')
+  }
+}
+
+// Storage Table Data Contributor - allows Function to read/write table data
+resource funcStorageTableDataContributorRole 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(funcStorageAccount.id, functionApp.id, 'Storage Table Data Contributor')
+  scope: funcStorageAccount
+  properties: {
+    principalId: functionApp.identity.principalId
+    principalType: 'ServicePrincipal'
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '0a9a7e1f-b9d0-4cc4-a60d-0319b160aaa3')
+  }
+}
 
 // Storage Blob Data Contributor for Function App on Data Lake
 resource storageBlobContributorRole 'Microsoft.Authorization/roleAssignments@2022-04-01' = {

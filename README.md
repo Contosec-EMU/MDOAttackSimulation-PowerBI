@@ -6,11 +6,9 @@
 
 End-to-end Azure solution to ingest Microsoft Defender for Office 365 (MDO) Attack Simulation Training data from Microsoft Graph API into Azure Data Lake Storage Gen2 as Parquet files, optimized for Power BI consumption.
 
-> **Inspired by** [cammurray/ASTSync](https://github.com/cammurray/ASTSync) — reimplemented in Python with ADLS Gen2 Parquet output, async architecture, and Power BI integration.
-
 ## ✨ Features
 
-- **9 Data Tables** — Full parity with ASTSync: simulations, users, events, trainings, payloads, and more
+- **9 Data Tables** — Simulations, users, events, trainings, payloads, and more
 - **Async Architecture** — Built with `aiohttp` and Azure SDK async for high throughput
 - **Power BI Optimized** — Parquet files with explicit schemas, Snappy compression, and INT64 timestamps
 - **Incremental Sync** — 7-day lookback reduces API calls by ~70–80% after initial sync
@@ -509,6 +507,5 @@ This project is licensed under the MIT License — see the [LICENSE](LICENSE) fi
 
 ## Acknowledgments
 
-- [cammurray/ASTSync](https://github.com/cammurray/ASTSync) — Original C# implementation that inspired this project
 - [Microsoft Graph API — Attack Simulation Training](https://learn.microsoft.com/en-us/graph/api/resources/security-attacksimulation-overview) — API documentation
 - [Azure Functions Python Developer Guide](https://learn.microsoft.com/en-us/azure/azure-functions/functions-reference-python) — Runtime reference

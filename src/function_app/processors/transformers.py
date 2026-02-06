@@ -153,7 +153,7 @@ def process_simulations(records: List[Dict[str, Any]], snapshot_date: str) -> Li
 
 
 # ============================================================================
-# NEW Processors (beta endpoints — for ASTSync parity)
+# Extended processors (beta endpoints)
 # ============================================================================
 
 def process_simulation_users(records: List[Dict[str, Any]], snapshot_date: str, simulation_id: str = "") -> List[Dict[str, Any]]:

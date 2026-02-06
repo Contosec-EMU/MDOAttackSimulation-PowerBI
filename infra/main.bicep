@@ -333,7 +333,7 @@ resource functionApp 'Microsoft.Web/sites@2023-01-01' = {
           name: 'TIMER_SCHEDULE'
           value: timerSchedule
         }
-        // Sync mode configuration (ASTSync-inspired improvements)
+        // Sync mode configuration
         {
           name: 'SYNC_MODE'
           value: syncMode

@@ -208,7 +208,7 @@ $CURRENT_USER_ID = az ad signed-in-user show --query id -o tsv
 az role assignment create `
   --role "Key Vault Secrets Officer" `
   --assignee $CURRENT_USER_ID `
-  --scope $(az keyvault show --name $KEYVAULT_NAME --query id -o tsv)
+  --scope $(az keyvault show --name $KEYVAULT_NAME --resource-group $RESOURCE_GROUP --query id -o tsv)
 
 # Wait for RBAC propagation
 Start-Sleep -Seconds 60
@@ -251,7 +251,7 @@ $CURRENT_USER_ID = az ad signed-in-user show --query id -o tsv
 az role assignment create `
   --role "Storage Blob Data Reader" `
   --assignee $CURRENT_USER_ID `
-  --scope $(az storage account show --name $STORAGE_ACCOUNT_NAME --query id -o tsv)
+  --scope $(az storage account show --name $STORAGE_ACCOUNT_NAME --resource-group $RESOURCE_GROUP --query id -o tsv)
 
 # Wait for RBAC propagation
 Start-Sleep -Seconds 60

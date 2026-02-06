@@ -1,0 +1,31 @@
+using './gateway-vm.bicep'
+
+// ============================================================================
+// Gateway VM + Bastion - Deployment Parameters
+// ============================================================================
+// Copy this file to gateway-vm.bicepparam and update with your values
+// NEVER commit gateway-vm.bicepparam to source control
+
+param location = 'westus2'
+
+// Existing network resources (update with your resource names)
+param vnetName = '<your-vnet-name>'
+param storageAccountName = '<your-storage-account-name>'
+
+// Subnet configuration
+param vmSubnetPrefix = '10.0.2.0/24'
+param bastionSubnetPrefix = '10.0.3.0/26'
+
+// VM configuration
+param vmSize = 'Standard_D2as_v7'
+param adminUsername = 'azureuser'
+param adminPassword = '<strong-password-here>'  // Min 12 chars, complexity required
+
+// Resource naming
+param namePrefix = 'mdoast'
+param uniqueSuffix = '<your-unique-suffix>'
+
+// Cost optimization
+param enableAutoShutdown = true
+param autoShutdownTime = '0200'  // 2 AM UTC
+param autoShutdownTimeZone = 'Pacific Standard Time'

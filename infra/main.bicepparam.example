@@ -1,0 +1,34 @@
+using 'main.bicep'
+
+// ============================================================================
+// MDO Attack Simulation - Deployment Parameters
+// ============================================================================
+// Copy this file to main.bicepparam and update with your values
+// NEVER commit main.bicepparam to source control
+
+param prefix = 'mdoast'
+param location = 'westus2'
+
+// Entra ID Configuration (REQUIRED - update these)
+param tenantId = '<your-tenant-id>'
+param graphClientId = '<your-app-registration-client-id>'
+
+// Timer schedule: CRON expression (default: daily at 2:00 AM UTC)
+param timerSchedule = '0 0 2 * * *'
+
+// Sync Mode Configuration
+// - "full": Fetches all data every run (default)
+// - "incremental": Uses 7-day lookback for efficiency
+param syncMode = 'full'
+
+// Whether to sync detailed simulation data
+param syncSimulations = true
+
+// Power BI Access (set to true after configuring in portal)
+param enablePowerBiAccess = false
+
+param tags = {
+  project: 'MDOAttackSimulation'
+  environment: 'production'
+  costCenter: 'security'
+}

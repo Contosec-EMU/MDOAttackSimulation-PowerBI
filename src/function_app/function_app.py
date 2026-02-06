@@ -1,36 +1,63 @@
 """
 MDO Attack Simulation Training - Graph API Ingestion Function
-Ingests data from Microsoft Graph Attack Simulation Training APIs into ADLS Gen2.
 
-APIs covered:
-- getAttackSimulationRepeatOffenders
-- getAttackSimulationSimulationUserCoverage
-- getAttackSimulationTrainingUserCoverage
+Azure Function app that ingests Microsoft Defender for Office 365 Attack Simulation
+Training data from Microsoft Graph API into ADLS Gen2 as Parquet files,
+optimized for Power BI consumption.
 
-Output:
-- Raw container: JSON files (archival)
-- Curated container: Parquet files (optimized for Power BI)
+Endpoints:
+    - Timer trigger: Scheduled ingestion (default: daily 2:00 AM UTC)
+    - GET /api/health: Health check
+    - POST /api/test-run: Manual trigger for testing
+    - GET /api/sync-status: View sync configuration and state
+    - POST /api/reset-sync-state: Reset state to force full sync
+
+Data Sources (9 Parquet tables):
+    - repeatOffenders (v1.0)
+    - simulationUserCoverage (v1.0)
+    - trainingUserCoverage (v1.0)
+    - simulations (beta)
+    - simulationUsers (beta)
+    - simulationUserEvents (beta)
+    - trainings (beta)
+    - payloads (beta)
+    - users (v1.0)
 """
 
-import azure.functions as func
-import logging
-import os
+import asyncio
 import json
+import logging
+import time
 import uuid
 from datetime import datetime, timezone
-from typing import Optional, Generator
-import time
-import io
-import random
+from typing import Any, Dict, List
 
-import requests
-from requests.exceptions import JSONDecodeError
-import pandas as pd
-import pyarrow as pa
-import pyarrow.parquet as pq
-from azure.identity import DefaultAzureCredential, ManagedIdentityCredential
+import azure.functions as func
+from azure.identity import DefaultAzureCredential
 from azure.keyvault.secrets import SecretClient
-from azure.storage.filedatalake import DataLakeServiceClient
+
+from config import (
+    FunctionConfig,
+    INCREMENTAL_LOOKBACK_DAYS,
+    API_CONFIGS,
+    EXTENDED_API_CONFIGS,
+    APIEndpoint,
+)
+from clients.graph_api import AsyncGraphAPIClient
+from clients.adls_writer import AsyncADLSWriter
+from processors.transformers import (
+    process_repeat_offenders,
+    process_simulation_user_coverage,
+    process_training_user_coverage,
+    process_simulations,
+    process_simulation_users,
+    process_simulation_user_events,
+    process_trainings,
+    process_payloads,
+    process_users,
+)
+from services.sync_state import SyncStateManager
+from utils.security import add_security_headers
 
 # Initialize Function App
 app = func.FunctionApp()
@@ -38,305 +65,15 @@ app = func.FunctionApp()
 # Configure logging
 logger = logging.getLogger(__name__)
 
-# Configuration constants
-TOKEN_REFRESH_BUFFER_SECONDS = 60
-REQUEST_TIMEOUT_SECONDS = 30
-DEFAULT_RETRY_AFTER_SECONDS = 60
-BACKOFF_BASE_SECONDS = 5
-PAGINATION_DELAY_SECONDS = 0.5
-MAX_PAGES_DEFAULT = 1000
-MAX_STRING_LENGTH = 1000
-
-# Required environment variables for the function to operate
-REQUIRED_ENV_VARS = ["TENANT_ID", "GRAPH_CLIENT_ID", "KEY_VAULT_URL", "STORAGE_ACCOUNT_URL"]
-
-
-def validate_environment_variables() -> None:
-    """Validate that all required environment variables are set.
-
-    Raises:
-        EnvironmentError: If any required variables are missing
-    """
-    missing = [var for var in REQUIRED_ENV_VARS if var not in os.environ]
-    if missing:
-        raise EnvironmentError(f"Missing required environment variables: {', '.join(missing)}")
-
-
-def sanitize_string(value, max_length: int = MAX_STRING_LENGTH) -> Optional[str]:
-    """Sanitize string input from API responses."""
-    if value is None:
-        return None
-    if not isinstance(value, str):
-        value = str(value)
-    value = value.strip()
-    if len(value) > max_length:
-        logger.warning(f"String truncated from {len(value)} to {max_length} chars")
-        value = value[:max_length]
-    return value
-
-
-def add_security_headers(response: func.HttpResponse) -> func.HttpResponse:
-    """Add security headers to HTTP response."""
-    response.headers['X-Content-Type-Options'] = 'nosniff'
-    response.headers['X-Frame-Options'] = 'DENY'
-    response.headers['X-XSS-Protection'] = '1; mode=block'
-    response.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains'
-    response.headers['Content-Security-Policy'] = "default-src 'none'; frame-ancestors 'none'"
-    return response
-
-
-class GraphAPIClient:
-    """Client for Microsoft Graph API with pagination and retry support."""
-
-    GRAPH_BASE_URL = "https://graph.microsoft.com/v1.0"
-    TOKEN_URL = "https://login.microsoftonline.com/{tenant_id}/oauth2/v2.0/token"
-
-    def __init__(self, tenant_id: str, client_id: str, client_secret: str):
-        self.tenant_id = tenant_id
-        self.client_id = client_id
-        self.client_secret = client_secret
-        self._access_token: Optional[str] = None
-        self._token_expires: float = 0
-        self.session = requests.Session()  # Connection pooling
-
-    def _get_access_token(self, force_refresh: bool = False) -> str:
-        """Get OAuth2 access token using client credentials flow."""
-        if not force_refresh and self._access_token and time.time() < self._token_expires - TOKEN_REFRESH_BUFFER_SECONDS:
-            return self._access_token
-
-        token_url = self.TOKEN_URL.format(tenant_id=self.tenant_id)
-        data = {
-            "grant_type": "client_credentials",
-            "client_id": self.client_id,
-            "client_secret": self.client_secret,
-            "scope": "https://graph.microsoft.com/.default"
-        }
-
-        response = self.session.post(token_url, data=data, timeout=REQUEST_TIMEOUT_SECONDS)
-        response.raise_for_status()
-
-        try:
-            token_data = response.json()
-        except JSONDecodeError as e:
-            logger.error(f"Failed to parse token response as JSON: {e}. Response text (first 500 chars): {response.text[:500]}")
-            raise
-
-        self._access_token = token_data["access_token"]
-        self._token_expires = time.time() + token_data.get("expires_in", 3600)
-
-        return self._access_token
-
-    def _make_request(self, url: str, retries: int = 3, _token_retry: bool = False) -> dict:
-        """Make HTTP GET request with retry logic."""
-        headers = {
-            "Authorization": f"Bearer {self._get_access_token()}",
-            "Content-Type": "application/json"
-        }
-
-        for attempt in range(retries):
-            try:
-                response = self.session.get(url, headers=headers, timeout=REQUEST_TIMEOUT_SECONDS)
-
-                if response.status_code == 401 and not _token_retry:
-                    logger.warning("Received 401 Unauthorized. Invalidating token and retrying once...")
-                    self._access_token = None
-                    self._token_expires = 0
-                    return self._make_request(url, retries=retries, _token_retry=True)
-
-                if response.status_code == 429:
-                    retry_after = int(response.headers.get("Retry-After", DEFAULT_RETRY_AFTER_SECONDS))
-                    logger.warning(f"Rate limited. Waiting {retry_after} seconds...")
-                    time.sleep(retry_after)
-                    continue
-
-                # Don't retry non-retryable client errors (4xx except 401, 429)
-                if 400 <= response.status_code < 500 and response.status_code not in (401, 429):
-                    logger.error(f"Non-retryable client error: {response.status_code}")
-                    response.raise_for_status()
-
-                response.raise_for_status()
-
-                try:
-                    return response.json()
-                except JSONDecodeError as e:
-                    logger.error(f"Failed to parse response as JSON: {e}. Response text (first 500 chars): {response.text[:500]}")
-                    raise
-
-            except requests.exceptions.RequestException as e:
-                if attempt == retries - 1:
-                    raise
-                # Add jitter to exponential backoff
-                wait_time = (2 ** attempt) * BACKOFF_BASE_SECONDS + random.uniform(0, 2)
-                logger.warning(f"Request failed (attempt {attempt + 1}): {e}. Retrying in {wait_time:.2f}s...")
-                time.sleep(wait_time)
-
-        # This line is now reachable if all retries are exhausted without raising
-        raise RuntimeError(f"Failed to complete request after {retries} retries")
-
-    def get_paginated_data(self, endpoint: str, max_pages: int = MAX_PAGES_DEFAULT) -> Generator[dict, None, None]:
-        """Fetch all pages of data from a Graph API endpoint.
-
-        Args:
-            endpoint: The Graph API endpoint to query
-            max_pages: Maximum number of pages to fetch (safety limit)
-
-        Raises:
-            RuntimeError: If max_pages is exceeded
-        """
-        url = f"{self.GRAPH_BASE_URL}/{endpoint}"
-        page_count = 0
-
-        while url:
-            page_count += 1
-            if page_count > max_pages:
-                raise RuntimeError(f"Pagination safety limit exceeded: {max_pages} pages")
-
-            logger.info(f"Fetching page {page_count}: {url[:100]}...")
-            data = self._make_request(url)
-
-            for item in data.get("value", []):
-                yield item
-
-            url = data.get("@odata.nextLink")
-
-            if url:
-                time.sleep(PAGINATION_DELAY_SECONDS)
-
-
-class ADLSWriter:
-    """Writer for Azure Data Lake Storage Gen2 with JSON and Parquet support."""
-
-    def __init__(self, account_url: str):
-        account_url = account_url.rstrip('/')
-        if not account_url.startswith("https://"):
-            account_url = f"https://{account_url}"
-        if ".dfs.core.windows.net" not in account_url:
-            account_name = account_url.replace("https://", "").split(".")[0]
-            account_url = f"https://{account_name}.dfs.core.windows.net"
-
-        credential = DefaultAzureCredential()
-        self.service_client = DataLakeServiceClient(account_url=account_url, credential=credential)
-
-    def _ensure_container_exists(self, container: str) -> None:
-        """Verify container exists, create if not."""
-        try:
-            file_system_client = self.service_client.get_file_system_client(container)
-            if not file_system_client.exists():
-                logger.info(f"Creating container: {container}")
-                file_system_client.create_file_system()
-        except Exception as e:
-            logger.error(f"Failed to verify/create container {container}: {e}")
-            raise
-
-    def _upload_with_retry(self, file_client, data: bytes, max_retries: int = 3) -> None:
-        """Upload data with retry logic for transient failures."""
-        for attempt in range(max_retries):
-            try:
-                file_client.upload_data(data, overwrite=True)
-                return
-            except Exception as e:
-                if attempt == max_retries - 1:
-                    raise
-                wait_time = (2 ** attempt) * 2 + random.uniform(0, 1)
-                logger.warning(f"Storage upload failed (attempt {attempt + 1}): {e}. Retrying in {wait_time:.1f}s...")
-                time.sleep(wait_time)
-
-    def write_json(self, container: str, path: str, data: list) -> int:
-        """Write JSON data to ADLS Gen2."""
-        if not data:
-            logger.warning(f"No data to write to {container}/{path}")
-            return 0
-
-        # Ensure container exists before writing
-        self._ensure_container_exists(container)
-
-        json_bytes = json.dumps(data, indent=2, default=str).encode('utf-8')
-
-        file_system_client = self.service_client.get_file_system_client(container)
-        file_client = file_system_client.get_file_client(path)
-
-        # Upload with retry logic
-        self._upload_with_retry(file_client, json_bytes)
-
-        logger.info(f"Written {len(data)} records to {container}/{path}")
-        return len(data)
-
-    def write_parquet(self, container: str, path: str, data: list) -> int:
-        """Write data to ADLS Gen2 as Parquet format.
-
-        Optimized for Power BI consumption with appropriate data types and compression.
-        """
-        if not data:
-            logger.warning(f"No data to write to {container}/{path}")
-            return 0
-
-        # Convert to pandas DataFrame for easier type inference
-        df = pd.DataFrame(data)
-
-        # Optimize data types for Power BI
-        df = self._optimize_schema_for_powerbi(df)
-
-        # Write to Parquet with optimal settings for Power BI
-        parquet_buffer = io.BytesIO()
-        df.to_parquet(
-            parquet_buffer,
-            engine='pyarrow',
-            compression='snappy',  # Fast compression, good balance for Power BI
-            index=False,
-            use_deprecated_int96_timestamps=False,  # Use INT64 timestamps (better for Power BI)
-            coerce_timestamps='ms',  # Millisecond precision
-            allow_truncated_timestamps=True
-        )
-
-        parquet_bytes = parquet_buffer.getvalue()
-
-        # Ensure container exists before writing
-        self._ensure_container_exists(container)
-
-        # Upload to ADLS
-        file_system_client = self.service_client.get_file_system_client(container)
-        file_client = file_system_client.get_file_client(path)
-
-        # Upload with retry logic
-        self._upload_with_retry(file_client, parquet_bytes)
-
-        logger.info(f"Written {len(data)} records to {container}/{path} (Parquet, {len(parquet_bytes):,} bytes)")
-        return len(data)
-
-    def _optimize_schema_for_powerbi(self, df: pd.DataFrame) -> pd.DataFrame:
-        """Optimize DataFrame schema for Power BI consumption.
-
-        Power BI works best with:
-        - Explicit data types (avoid objects where possible)
-        - Datetime columns as datetime64
-        - Numeric columns as appropriate int/float types
-        - String columns as string dtype
-        """
-        for col in df.columns:
-            # Convert datetime strings to datetime64
-            if 'date' in col.lower() or 'datetime' in col.lower():
-                if df[col].dtype == 'object':
-                    try:
-                        df[col] = pd.to_datetime(df[col], utc=True, errors='coerce')
-                    except Exception as e:
-                        logger.warning(f"Could not convert {col} to datetime: {e}")
-
-            # Convert count columns to int32 (sufficient for most counts)
-            elif 'count' in col.lower() or col.endswith('Count'):
-                if df[col].dtype == 'object' or df[col].dtype == 'float64':
-                    try:
-                        df[col] = df[col].fillna(0).astype('int32')
-                    except Exception as e:
-                        logger.warning(f"Could not convert {col} to int32: {e}")
-
-            # Ensure string columns are explicitly string type
-            elif df[col].dtype == 'object':
-                try:
-                    df[col] = df[col].astype('string')
-                except Exception as e:
-                    logger.warning(f"Could not convert {col} to string: {e}")
-
-        return df
+# Map processor names to functions
+PROCESSOR_MAP = {
+    "process_repeat_offenders": process_repeat_offenders,
+    "process_simulation_user_coverage": process_simulation_user_coverage,
+    "process_training_user_coverage": process_training_user_coverage,
+    "process_simulations": process_simulations,
+    "process_trainings": process_trainings,
+    "process_payloads": process_payloads,
+}
 
 
 def get_key_vault_secret(vault_url: str, secret_name: str) -> str:
@@ -347,223 +84,383 @@ def get_key_vault_secret(vault_url: str, secret_name: str) -> str:
     return secret.value
 
 
-def flatten_attack_user(user_detail: dict) -> dict:
-    """Flatten attackSimulationUser nested structure with input sanitization."""
-    if not user_detail:
-        return {"userId": None, "displayName": None, "email": None}
-    return {
-        "userId": sanitize_string(user_detail.get("userId")),
-        "displayName": sanitize_string(user_detail.get("displayName")),
-        "email": sanitize_string(user_detail.get("email"))
-    }
+async def _process_and_write(
+    graph_client: AsyncGraphAPIClient,
+    adls_writer: AsyncADLSWriter,
+    ep_config: APIEndpoint,
+    snapshot_date: str,
+    use_beta: bool = False,
+    lookback_date: datetime = None,
+    sync_mode: str = "full",
+) -> int:
+    """Fetch, process, and write data for a single API endpoint.
 
-
-def process_repeat_offenders(records: list, snapshot_date: str) -> list:
-    """Process repeat offenders data."""
-    processed = []
-    for record in records:
-        user = flatten_attack_user(record.get("attackSimulationUser", {}))
-        processed.append({
-            "snapshotDateUtc": snapshot_date,
-            "userId": user.get("userId"),
-            "displayName": user.get("displayName"),
-            "email": user.get("email"),
-            "repeatOffenceCount": record.get("repeatOffenceCount")
-        })
-    return processed
-
-
-def process_simulation_user_coverage(records: list, snapshot_date: str) -> list:
-    """Process simulation user coverage data."""
-    processed = []
-    for record in records:
-        user = flatten_attack_user(record.get("attackSimulationUser", {}))
-        processed.append({
-            "snapshotDateUtc": snapshot_date,
-            "userId": user.get("userId"),
-            "displayName": user.get("displayName"),
-            "email": user.get("email"),
-            "simulationCount": record.get("simulationCount"),
-            "latestSimulationDateTime": record.get("latestSimulationDateTime"),
-            "clickCount": record.get("clickCount"),
-            "compromisedCount": record.get("compromisedCount")
-        })
-    return processed
-
-
-def process_training_user_coverage(records: list, snapshot_date: str) -> list:
-    """Process training user coverage data.
-
-    The Graph API returns userTrainings as an array of training objects with status,
-    not pre-aggregated counts. This function aggregates them into counts.
-
-    API Response structure:
-    {
-        "userTrainings": [
-            {"trainingStatus": "completed", "displayName": "...", ...},
-            {"trainingStatus": "assigned", ...}
-        ],
-        "attackSimulationUser": {...}
-    }
+    Returns:
+        Number of records processed
     """
-    processed = []
-    for record in records:
-        user = flatten_attack_user(record.get("attackSimulationUser", {}))
-        trainings = record.get("userTrainings", [])
+    api_name = ep_config.name
+    endpoint = ep_config.endpoint
+    processor_name = ep_config.processor_name
 
-        # Aggregate counts from the userTrainings array
-        # Valid statuses per MS docs: assigned, completed, inProgress, notStarted
-        assigned_count = len(trainings)
-        completed_count = sum(1 for t in trainings if t.get("trainingStatus") == "completed")
-        in_progress_count = sum(1 for t in trainings if t.get("trainingStatus") == "inProgress")
-        not_started_count = sum(1 for t in trainings if t.get("trainingStatus") in ("notStarted", "assigned"))
+    # Apply incremental filter if supported
+    if (sync_mode == "incremental"
+            and ep_config.supports_incremental
+            and lookback_date):
+        filter_template = ep_config.incremental_filter or ""
+        if filter_template:
+            lookback_str = lookback_date.strftime("%Y-%m-%dT%H:%M:%SZ")
+            filter_clause = filter_template.format(lookback_date=lookback_str)
+            endpoint = f"{endpoint}?{filter_clause}"
+            logger.info(f"Using incremental filter for {api_name}")
 
-        processed.append({
-            "snapshotDateUtc": snapshot_date,
-            "userId": user.get("userId"),
-            "displayName": user.get("displayName"),
-            "email": user.get("email"),
-            "assignedTrainingsCount": assigned_count,
-            "completedTrainingsCount": completed_count,
-            "inProgressTrainingsCount": in_progress_count,
-            "notStartedTrainingsCount": not_started_count
-        })
-    return processed
+    # Fetch data
+    raw_data: List[Dict[str, Any]] = []
+    async for item in graph_client.get_paginated_data(endpoint, use_beta=use_beta):
+        raw_data.append(item)
+    logger.info(f"Fetched {len(raw_data)} records from {api_name}")
 
+    if not raw_data:
+        return 0
 
-# API endpoint configurations
-API_CONFIGS = [
-    {
-        "name": "repeatOffenders",
-        "endpoint": "reports/security/getAttackSimulationRepeatOffenders",
-        "processor": process_repeat_offenders
-    },
-    {
-        "name": "simulationUserCoverage",
-        "endpoint": "reports/security/getAttackSimulationSimulationUserCoverage",
-        "processor": process_simulation_user_coverage
-    },
-    {
-        "name": "trainingUserCoverage",
-        "endpoint": "reports/security/getAttackSimulationTrainingUserCoverage",
-        "processor": process_training_user_coverage
-    }
-]
+    # Process data
+    processor = PROCESSOR_MAP.get(processor_name)
+    if not processor:
+        logger.error(f"Unknown processor: {processor_name}")
+        return 0
+    processed_data = processor(raw_data, snapshot_date)
+
+    # Write to curated (Parquet) and raw (JSON) containers
+    curated_path = f"{api_name}/{snapshot_date}/{api_name}.parquet"
+    await adls_writer.write_parquet("curated", curated_path, processed_data, schema_name=api_name)
+
+    raw_path = f"{api_name}/{snapshot_date}/{api_name}_raw.json"
+    await adls_writer.write_json("raw", raw_path, raw_data)
+
+    return len(processed_data)
 
 
-@app.timer_trigger(schedule="%TIMER_SCHEDULE%",
-                   arg_name="timer",
-                   run_on_startup=False)
-def mdo_attack_simulation_ingest(timer: func.TimerRequest) -> None:
+async def _process_simulation_details(
+    graph_client: AsyncGraphAPIClient,
+    adls_writer: AsyncADLSWriter,
+    simulation_ids: List[str],
+    snapshot_date: str,
+) -> int:
+    """Fetch simulationUsers and events for each simulation, plus user enrichment.
+
+    Returns:
+        Total number of records processed
     """
-    Timer-triggered function to ingest MDO Attack Simulation Training data.
-    Runs on schedule defined by TIMER_SCHEDULE environment variable.
+    total = 0
+    all_user_ids: set = set()
+    all_sim_users: List[Dict[str, Any]] = []
+    all_sim_events: List[Dict[str, Any]] = []
+
+    for sim_id in simulation_ids:
+        logger.info(f"Fetching users for simulation {sim_id}...")
+        endpoint = f"security/attackSimulation/simulations/{sim_id}/report/simulationUsers"
+        raw_users: List[Dict[str, Any]] = []
+        try:
+            async for item in graph_client.get_paginated_data(endpoint, use_beta=True):
+                raw_users.append(item)
+        except Exception as e:
+            logger.warning(f"Failed to fetch users for simulation {sim_id}: {e}")
+            continue
+
+        if raw_users:
+            sim_users = process_simulation_users(raw_users, snapshot_date, simulation_id=sim_id)
+            sim_events = process_simulation_user_events(raw_users, snapshot_date, simulation_id=sim_id)
+            all_sim_users.extend(sim_users)
+            all_sim_events.extend(sim_events)
+
+            # Collect user IDs for enrichment
+            for user in raw_users:
+                sim_user = user.get("simulationUser", {}) or {}
+                uid = sim_user.get("userId")
+                if uid:
+                    all_user_ids.add(uid)
+
+    # Write simulation users
+    if all_sim_users:
+        path = f"simulationUsers/{snapshot_date}/simulationUsers.parquet"
+        await adls_writer.write_parquet("curated", path, all_sim_users, schema_name="simulationUsers")
+        await adls_writer.write_json("raw", f"simulationUsers/{snapshot_date}/simulationUsers_raw.json", all_sim_users)
+        total += len(all_sim_users)
+
+    # Write simulation user events
+    if all_sim_events:
+        path = f"simulationUserEvents/{snapshot_date}/simulationUserEvents.parquet"
+        await adls_writer.write_parquet("curated", path, all_sim_events, schema_name="simulationUserEvents")
+        await adls_writer.write_json("raw", f"simulationUserEvents/{snapshot_date}/simulationUserEvents_raw.json", all_sim_events)
+        total += len(all_sim_events)
+
+    # Enrich with Entra user details
+    if all_user_ids:
+        total += await _enrich_users(graph_client, adls_writer, list(all_user_ids), snapshot_date)
+
+    return total
+
+
+async def _enrich_users(
+    graph_client: AsyncGraphAPIClient,
+    adls_writer: AsyncADLSWriter,
+    user_ids: List[str],
+    snapshot_date: str,
+) -> int:
+    """Fetch Entra ID user details for enrichment."""
+    logger.info(f"Enriching {len(user_ids)} users from Entra ID...")
+    raw_users: List[Dict[str, Any]] = []
+
+    for uid in user_ids:
+        try:
+            user_data = await graph_client.get_single_resource(f"users/{uid}", use_beta=False)
+            raw_users.append(user_data)
+        except Exception as e:
+            logger.warning(f"Failed to fetch user {uid}: {e}")
+            raw_users.append({"id": uid, "accountEnabled": None})
+
+    if raw_users:
+        processed = process_users(raw_users, snapshot_date)
+        path = f"users/{snapshot_date}/users.parquet"
+        await adls_writer.write_parquet("curated", path, processed, schema_name="users")
+        await adls_writer.write_json("raw", f"users/{snapshot_date}/users_raw.json", raw_users)
+        return len(processed)
+    return 0
+
+
+async def run_ingestion_async(is_past_due: bool = False) -> Dict[str, Any]:
+    """Core async ingestion logic.
+
+    Returns:
+        Dict with total_records, elapsed_seconds, sync_mode, snapshot_date
     """
     start_time = time.time()
+    config = FunctionConfig.from_environment()
     snapshot_date = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    correlation_id = str(uuid.uuid4())
 
-    logger.info(f"Starting MDO Attack Simulation ingestion - Snapshot: {snapshot_date}")
-
-    if timer.past_due:
+    logger.info(
+        f"Starting ingestion - Snapshot: {snapshot_date}, "
+        f"Mode: {config.sync_mode}, Correlation: {correlation_id}"
+    )
+    if is_past_due:
         logger.warning("Timer is running late!")
 
-    try:
-        # Validate environment before proceeding
-        validate_environment_variables()
+    client_secret = get_key_vault_secret(config.key_vault_url, "graph-client-secret")
 
-        # Get configuration from environment
-        tenant_id = os.environ["TENANT_ID"]
-        client_id = os.environ["GRAPH_CLIENT_ID"]
-        key_vault_url = os.environ["KEY_VAULT_URL"]
-        storage_url = os.environ["STORAGE_ACCOUNT_URL"]
+    async with AsyncGraphAPIClient(config.tenant_id, config.graph_client_id, client_secret) as graph_client:
+        async with AsyncADLSWriter(config.storage_account_url) as adls_writer:
+            state_manager = SyncStateManager(adls_writer)
+            lookback_date = await state_manager.get_lookback_date()
 
-        # Get client secret from Key Vault
-        client_secret = get_key_vault_secret(key_vault_url, "graph-client-secret")
+            if config.sync_mode == "incremental":
+                logger.info(f"Incremental sync: looking back to {lookback_date.isoformat()}")
 
-        # Initialize clients
-        graph_client = GraphAPIClient(tenant_id, client_id, client_secret)
-        adls_writer = ADLSWriter(storage_url)
+            total_records = 0
+            processed_sim_ids: List[str] = []
 
-        total_records = 0
+            # Process core API endpoints (v1.0, always run)
+            for ep_config in API_CONFIGS:
+                try:
+                    count = await _process_and_write(
+                        graph_client, adls_writer, ep_config,
+                        snapshot_date, use_beta=False,
+                        lookback_date=lookback_date, sync_mode=config.sync_mode,
+                    )
+                    total_records += count
+                except Exception as e:
+                    logger.error(f"Failed to process {ep_config.name}: {e}", exc_info=True)
+                    raise
 
-        for api_config in API_CONFIGS:
-            api_name = api_config["name"]
-            logger.info(f"Processing {api_name}...")
+            # Process extended API endpoints (beta, optional)
+            if config.sync_simulations:
+                for ep_config in EXTENDED_API_CONFIGS:
+                    try:
+                        count = await _process_and_write(
+                            graph_client, adls_writer, ep_config,
+                            snapshot_date, use_beta=True,
+                            lookback_date=lookback_date, sync_mode=config.sync_mode,
+                        )
+                        total_records += count
 
-            # Fetch all data from API
-            raw_data = list(graph_client.get_paginated_data(api_config["endpoint"]))
-            logger.info(f"Fetched {len(raw_data)} records from {api_name}")
+                        # Track simulation IDs for detail fetching
+                        if ep_config.name == "simulations" and count > 0:
+                            async for item in graph_client.get_paginated_data(
+                                ep_config.endpoint, use_beta=True
+                            ):
+                                sim_id = item.get("id")
+                                if sim_id:
+                                    processed_sim_ids.append(sim_id)
 
-            if raw_data:
-                # Process data
-                processed_data = api_config["processor"](raw_data, snapshot_date)
+                    except Exception as e:
+                        logger.warning(f"Failed to process extended endpoint {ep_config.name}: {e}")
 
-                # Write to curated container as Parquet (optimized for Power BI)
-                curated_path = f"{api_name}/{snapshot_date}/{api_name}.parquet"
-                adls_writer.write_parquet("curated", curated_path, processed_data)
+            # Process simulation user details (if simulations were synced)
+            if config.sync_simulations and processed_sim_ids:
+                try:
+                    detail_count = await _process_simulation_details(
+                        graph_client, adls_writer, processed_sim_ids, snapshot_date
+                    )
+                    total_records += detail_count
+                except Exception as e:
+                    logger.warning(f"Failed to process simulation details: {e}")
 
-                # Also write raw data for archival (JSON)
-                raw_path = f"{api_name}/{snapshot_date}/{api_name}_raw.json"
-                adls_writer.write_json("raw", raw_path, raw_data)
+            # Update sync state
+            if config.sync_mode == "incremental":
+                await state_manager.update_after_sync(processed_sim_ids)
 
-                total_records += len(processed_data)
+            elapsed = time.time() - start_time
+            logger.info(
+                f"Ingestion complete. Records: {total_records}, "
+                f"Time: {elapsed:.2f}s, Mode: {config.sync_mode}"
+            )
 
-        elapsed = time.time() - start_time
-        logger.info(f"Ingestion complete. Total records: {total_records}, Time: {elapsed:.2f}s")
+            return {
+                "total_records": total_records,
+                "elapsed_seconds": elapsed,
+                "sync_mode": config.sync_mode,
+                "snapshot_date": snapshot_date,
+                "correlation_id": correlation_id,
+            }
 
-    except Exception as e:
-        logger.error(f"Ingestion failed: {str(e)}", exc_info=True)
-        raise
+
+# ============================================================================
+# Azure Function Triggers and Routes
+# ============================================================================
+
+@app.timer_trigger(
+    schedule="%TIMER_SCHEDULE%",
+    arg_name="timer",
+    run_on_startup=False,
+)
+async def mdo_attack_simulation_ingest(timer: func.TimerRequest) -> None:
+    """Timer-triggered function to ingest MDO Attack Simulation Training data."""
+    correlation_id = str(uuid.uuid4())
+    logger.info(f"Timer trigger started - Correlation ID: {correlation_id}")
+    await run_ingestion_async(is_past_due=timer.past_due)
 
 
 @app.function_name(name="health_check")
 @app.route(route="health", methods=["GET"], auth_level=func.AuthLevel.FUNCTION)
-def health_check(req: func.HttpRequest) -> func.HttpResponse:
-    """Health check endpoint (requires function key)."""
+async def health_check(req: func.HttpRequest) -> func.HttpResponse:
+    """Health check endpoint."""
     response = func.HttpResponse(
         json.dumps({"status": "healthy"}),
         mimetype="application/json",
-        status_code=200
+        status_code=200,
     )
     return add_security_headers(response)
 
 
 @app.function_name(name="test_run")
 @app.route(route="test-run", methods=["POST"], auth_level=func.AuthLevel.FUNCTION)
-def test_run(req: func.HttpRequest) -> func.HttpResponse:
-    """Manual trigger endpoint for testing (requires function key)."""
+async def test_run(req: func.HttpRequest) -> func.HttpResponse:
+    """Manual trigger endpoint for testing."""
     correlation_id = str(uuid.uuid4())
     logger.info(f"Test run initiated - Correlation ID: {correlation_id}")
 
     try:
-        # Simulate timer request
-        class MockTimer:
-            past_due = False
-
-        mdo_attack_simulation_ingest(MockTimer())
-
+        result = await run_ingestion_async(is_past_due=False)
         response = func.HttpResponse(
             json.dumps({
                 "status": "success",
                 "message": "Ingestion completed",
-                "correlationId": correlation_id
+                "correlationId": correlation_id,
+                "details": result,
             }),
             mimetype="application/json",
-            status_code=200
+            status_code=200,
         )
         return add_security_headers(response)
-    except Exception as e:
-        # Log full error details server-side
+    except Exception:
         logger.error(f"Test run failed - Correlation ID: {correlation_id}", exc_info=True)
-
-        # Return sanitized error to client (no internal details)
         response = func.HttpResponse(
             json.dumps({
                 "status": "error",
                 "message": "An error occurred during ingestion. Check logs for details.",
-                "correlationId": correlation_id
+                "correlationId": correlation_id,
             }),
             mimetype="application/json",
-            status_code=500
+            status_code=500,
+        )
+        return add_security_headers(response)
+
+
+@app.function_name(name="sync_status")
+@app.route(route="sync-status", methods=["GET"], auth_level=func.AuthLevel.FUNCTION)
+async def sync_status(req: func.HttpRequest) -> func.HttpResponse:
+    """Get current sync configuration and state."""
+    try:
+        config = FunctionConfig.from_environment()
+        result: Dict[str, Any] = {
+            "configuration": {
+                "sync_mode": config.sync_mode,
+                "sync_simulations": config.sync_simulations,
+                "incremental_lookback_days": INCREMENTAL_LOOKBACK_DAYS,
+                "timer_schedule": config.timer_schedule,
+            },
+            "state": None,
+            "endpoints": {
+                "core": [c.name for c in API_CONFIGS],
+                "extended": [c.name for c in EXTENDED_API_CONFIGS],
+            },
+        }
+
+        async with AsyncADLSWriter(config.storage_account_url) as adls_writer:
+            state_manager = SyncStateManager(adls_writer)
+            state = await state_manager.load_state()
+            lookback = await state_manager.get_lookback_date()
+            result["state"] = {
+                "last_sync_utc": state.get("last_sync_utc"),
+                "last_successful_sync_utc": state.get("last_successful_sync_utc"),
+                "tracked_simulation_count": len(state.get("processed_simulation_ids", [])),
+                "lookback_date": lookback.isoformat(),
+                "version": state.get("version"),
+            }
+
+        response = func.HttpResponse(
+            json.dumps(result, indent=2, default=str),
+            mimetype="application/json",
+            status_code=200,
+        )
+        return add_security_headers(response)
+
+    except Exception as e:
+        logger.error(f"Sync status check failed: {e}", exc_info=True)
+        response = func.HttpResponse(
+            json.dumps({"status": "error", "message": "Failed to retrieve sync status."}),
+            mimetype="application/json",
+            status_code=500,
+        )
+        return add_security_headers(response)
+
+
+@app.function_name(name="reset_sync_state")
+@app.route(route="reset-sync-state", methods=["POST"], auth_level=func.AuthLevel.FUNCTION)
+async def reset_sync_state(req: func.HttpRequest) -> func.HttpResponse:
+    """Reset sync state to force a full sync on next run."""
+    try:
+        config = FunctionConfig.from_environment()
+        async with AsyncADLSWriter(config.storage_account_url) as adls_writer:
+            state_manager = SyncStateManager(adls_writer)
+            default_state = state_manager._default_state()
+            await state_manager.save_state(default_state)
+
+        response = func.HttpResponse(
+            json.dumps({
+                "status": "success",
+                "message": "Sync state reset. Next run will perform a full sync.",
+                "new_state": default_state,
+            }, indent=2),
+            mimetype="application/json",
+            status_code=200,
+        )
+        return add_security_headers(response)
+
+    except Exception as e:
+        logger.error(f"Failed to reset sync state: {e}", exc_info=True)
+        response = func.HttpResponse(
+            json.dumps({"status": "error", "message": "Failed to reset sync state."}),
+            mimetype="application/json",
+            status_code=500,
         )
         return add_security_headers(response)

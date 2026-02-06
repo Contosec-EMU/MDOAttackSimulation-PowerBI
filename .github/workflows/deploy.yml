@@ -17,6 +17,7 @@ env:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    environment: production
 
     steps:
       - name: Checkout code
@@ -47,6 +48,11 @@ jobs:
 
           cat deployment_outputs.json
 
+      - name: Wait for RBAC Propagation
+        run: |
+          echo "Waiting 60 seconds for RBAC role assignments to propagate..."
+          sleep 60
+
       - name: Get Function App Name
         id: get-names
         run: |
@@ -58,6 +64,8 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
+          cache: 'pip'
+          cache-dependency-path: 'src/function_app/requirements.txt'
 
       - name: Install Azure Functions Core Tools
         run: |
@@ -71,6 +79,15 @@ jobs:
         run: |
           cd src/function_app
           func azure functionapp publish ${{ steps.get-names.outputs.function_app_name }} --python
+
+      - name: Generate Deployment Summary
+        if: success()
+        run: |
+          echo "## Deployment Summary :rocket:" >> $GITHUB_STEP_SUMMARY
+          echo "- **Function App**: ${{ steps.get-names.outputs.function_app_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Resource Group**: ${{ env.AZURE_RESOURCE_GROUP }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Region**: ${{ env.AZURE_REGION }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Timestamp**: $(date -u)" >> $GITHUB_STEP_SUMMARY
 
       - name: Azure Logout
         if: always()

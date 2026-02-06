@@ -14,6 +14,10 @@ Step-by-step guide to deploy the MDO Attack Simulation Training data pipeline us
 | Git | Latest | [Download](https://git-scm.com/downloads) |
 | Bicep CLI | Latest (bundled with Azure CLI) | Verify: `az bicep version` |
 
+### Azure Permissions
+
+The deploying user must have **Owner** role on the target Azure subscription (or resource group), or the combination of **Contributor** + **User Access Administrator**. This is required because the Bicep template creates RBAC role assignments (e.g., Storage Blob Data Contributor, Key Vault Secrets User) for the Function App's managed identity.
+
 ---
 
 ## Step 1: Clone and Configure

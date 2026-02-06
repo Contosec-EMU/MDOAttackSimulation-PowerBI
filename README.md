@@ -83,7 +83,7 @@ End-to-end Azure solution to ingest Microsoft Defender for Office 365 (MDO) Atta
 
 ## Prerequisites
 
-- **Azure subscription** with permissions to create resources
+- **Azure subscription** with **Owner** role (or **Contributor** + **User Access Administrator**) — required to create resources and assign RBAC roles
 - **Entra ID app registration** with the following **Application** permissions:
   - `AttackSimulation.Read.All`
   - `User.Read.All`

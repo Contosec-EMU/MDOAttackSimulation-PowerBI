@@ -97,7 +97,7 @@ Choose a deployment method:
 
 | Method | Best for | Guide |
 |--------|----------|-------|
-| **GitHub Actions** (Recommended) | Teams, CI/CD, repeatable deployments | [GitHub Actions Setup](GITHUB_ACTIONS_SETUP.md) |
+| **GitHub Actions** (Recommended) | Teams, CI/CD, repeatable deployments | [GitHub Actions Setup](docs/GITHUB_ACTIONS_SETUP.md) |
 | **Azure CLI** | Developers, scripted deployments | [CLI steps below](#option-2-azure-cli) |
 | **Azure Portal** | One-off setup, learning | [Portal steps below](#option-3-azure-portal-manual) |
 
@@ -107,7 +107,7 @@ Choose a deployment method:
 
 Automated CI/CD with OIDC authentication — no secrets to rotate.
 
-→ **See [GitHub Actions Setup Guide](GITHUB_ACTIONS_SETUP.md)** for full instructions, or follow the [Quick Start](scripts/QUICK_START.md) for a 10-minute setup.
+→ **See [GitHub Actions Setup Guide](docs/GITHUB_ACTIONS_SETUP.md)** for full instructions.
 
 ### Option 2: Azure CLI
 
@@ -334,7 +334,7 @@ MDOAttackSimulation_PowerBI/
 │       └── requirements.txt    # Python dependencies
 ├── tests/                      # Test suite
 ├── CONTRIBUTING.md             # Development guide
-├── GITHUB_ACTIONS_SETUP.md     # CI/CD setup guide
+├── docs/                       # Deployment & setup guides
 └── README.md                   # This file
 ```
 

@@ -271,5 +271,5 @@ refactor: extract Graph API client to dedicated module
 ## Getting Help
 
 - [README.md](./README.md) — Deployment guide and architecture overview
-- [Microsoft Graph Attack Simulation API](https://learn.microsoft.com/en-us/graph/api/resources/security-attacksimulation-overview) — API reference
+- [Microsoft Graph Attack Simulation API](https://learn.microsoft.com/en-us/graph/api/resources/attacksimulationroot?view=graph-rest-1.0) — API reference
 - Open an **issue** for bugs or questions with steps to reproduce

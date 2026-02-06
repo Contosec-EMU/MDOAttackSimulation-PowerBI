@@ -519,6 +519,6 @@ This project is licensed under the MIT License — see the [LICENSE](LICENSE) fi
 
 ## Acknowledgments
 
-- [Microsoft Graph API — Attack Simulation Training](https://learn.microsoft.com/en-us/graph/api/resources/security-attacksimulation-overview) — API reference
+- [Microsoft Graph API — Attack Simulation Training](https://learn.microsoft.com/en-us/graph/api/resources/attacksimulationroot?view=graph-rest-1.0) — API reference
 - [Attack simulation training in Microsoft Defender for Office 365](https://learn.microsoft.com/en-us/defender-office-365/attack-simulation-training-get-started) — Product documentation
 - [Azure Functions Python Developer Guide](https://learn.microsoft.com/en-us/azure/azure-functions/functions-reference-python?tabs=get-started%2Casgi%2Capplication-level&pivots=python-mode-v2) — Runtime reference

@@ -479,8 +479,8 @@ exceptions
 
 This solution follows Azure security best practices:
 
-- ✅ **No secrets in code** — Graph API client secret stored in Key Vault
-- ✅ **Managed Identity** — Function authenticates to Key Vault and Storage without stored credentials
+- ✅ **No secrets in code** — Graph API client secret stored securely in Key Vault
+- ✅ **Managed Identity** — Function authenticates to Key Vault and Storage without stored credentials; Key Vault is used to securely retrieve the Graph API client secret for OAuth2 authentication
 - ✅ **RBAC least privilege** — `Storage Blob Data Contributor` and `Key Vault Secrets User` only
 - ✅ **Network isolation** — Key Vault and Storage deny public access by default, allow Azure services only
 - ✅ **Input sanitization** — All API response strings are sanitized (max 1,000 chars, trimmed)

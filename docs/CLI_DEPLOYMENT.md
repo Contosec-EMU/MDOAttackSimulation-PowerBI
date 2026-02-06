@@ -312,6 +312,24 @@ az keyvault secret set `
 
 > **Note:** If your terminal session from Step 2 expired, replace `$CLIENT_SECRET` with the secret value you saved earlier.
 
+> ⚠️ **Firewall note:** The Key Vault is deployed with network rules that deny public access by default. If you are running this from outside the VNet (e.g., your local machine), you will get a `ForbiddenByFirewall` error. Temporarily add your IP:
+>
+> **Bash:**
+> ```bash
+> MY_IP=$(curl -s https://api.ipify.org)
+> az keyvault network-rule add --name "$KV_NAME" --ip-address "$MY_IP/32"
+> # After storing the secret, remove the exception:
+> az keyvault network-rule remove --name "$KV_NAME" --ip-address "$MY_IP/32"
+> ```
+>
+> **PowerShell:**
+> ```powershell
+> $MY_IP = (Invoke-RestMethod -Uri "https://api.ipify.org")
+> az keyvault network-rule add --name $KV_NAME --ip-address "$MY_IP/32"
+> # After storing the secret, remove the exception:
+> az keyvault network-rule remove --name $KV_NAME --ip-address "$MY_IP/32"
+> ```
+
 ---
 
 ## Step 5: Deploy Function Code

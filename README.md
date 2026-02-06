@@ -220,6 +220,20 @@ az keyvault secret set `
   --value "<YOUR_CLIENT_SECRET>"
 ```
 
+> ⚠️ **Firewall note:** The Key Vault is deployed with network rules that deny public access by default. If you are running this from outside the VNet (e.g., your local machine), you will get a `ForbiddenByFirewall` error. Temporarily add your IP to the Key Vault firewall:
+>
+> ```powershell
+> # Add your current public IP to the Key Vault firewall
+> $MY_IP = (Invoke-RestMethod -Uri "https://api.ipify.org")
+> az keyvault network-rule add --name $KEYVAULT_NAME --ip-address "$MY_IP/32"
+> ```
+>
+> After storing the secret, you can remove the exception:
+>
+> ```powershell
+> az keyvault network-rule remove --name $KEYVAULT_NAME --ip-address "$MY_IP/32"
+> ```
+
 #### Step 6: Deploy Function Code
 
 ```powershell

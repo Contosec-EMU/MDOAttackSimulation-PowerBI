@@ -268,9 +268,21 @@ Write-Host "App Insights:  $APPINSIGHTS_NAME"
 
 ## Step 4: Store Secret in Key Vault
 
+The Key Vault uses RBAC authorization. Before you can write secrets, you need the `Key Vault Secrets Officer` role on the vault.
+
 ### Bash
 
 ```bash
+# Grant yourself Key Vault Secrets Officer on the vault
+CURRENT_USER_ID=$(az ad signed-in-user show --query id -o tsv)
+az role assignment create \
+  --role "Key Vault Secrets Officer" \
+  --assignee "$CURRENT_USER_ID" \
+  --scope "$(az keyvault show --name "$KV_NAME" --query id -o tsv)"
+
+# Wait for RBAC propagation
+sleep 60
+
 # Store the Graph API client secret from Step 2
 az keyvault secret set \
   --vault-name "$KV_NAME" \
@@ -281,6 +293,16 @@ az keyvault secret set \
 ### PowerShell
 
 ```powershell
+# Grant yourself Key Vault Secrets Officer on the vault
+$CURRENT_USER_ID = az ad signed-in-user show --query id -o tsv
+az role assignment create `
+  --role "Key Vault Secrets Officer" `
+  --assignee $CURRENT_USER_ID `
+  --scope $(az keyvault show --name $KV_NAME --query id -o tsv)
+
+# Wait for RBAC propagation
+Start-Sleep -Seconds 60
+
 # Store the Graph API client secret from Step 2
 az keyvault secret set `
   --vault-name $KV_NAME `

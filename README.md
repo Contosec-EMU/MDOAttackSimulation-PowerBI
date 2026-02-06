@@ -200,7 +200,20 @@ $STORAGE_ACCOUNT_NAME = az deployment group show -g $RESOURCE_GROUP -n main `
 
 #### Step 5: Store the Client Secret
 
+The Key Vault uses RBAC authorization. You need `Key Vault Secrets Officer` to write secrets:
+
 ```powershell
+# Grant yourself Key Vault Secrets Officer on the vault
+$CURRENT_USER_ID = az ad signed-in-user show --query id -o tsv
+az role assignment create `
+  --role "Key Vault Secrets Officer" `
+  --assignee $CURRENT_USER_ID `
+  --scope $(az keyvault show --name $KEYVAULT_NAME --query id -o tsv)
+
+# Wait for RBAC propagation
+Start-Sleep -Seconds 60
+
+# Store the Graph API client secret
 az keyvault secret set `
   --vault-name $KEYVAULT_NAME `
   --name "graph-client-secret" `

@@ -7,7 +7,11 @@ model Model
 		legacyRedirects
 		returnErrorValuesAsNull
 
+	annotation PBIDesktopVersion = 2.150.2102.0 (26.01)
+
 	annotation PBI_ProTooling = ["DevMode"]
+
+	annotation PBI_QueryOrder = ["StorageAccountUrl","ContainerName","repeatOffenders","simulationUserCoverage","trainingUserCoverage","simulations","simulationUsers","simulationUserEvents","trainings","payloads","users"]
 
 ref table repeatOffenders
 ref table simulationUserCoverage

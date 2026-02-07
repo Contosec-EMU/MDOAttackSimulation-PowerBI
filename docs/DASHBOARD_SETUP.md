@@ -10,89 +10,61 @@ Browser-based alternative to Power BI for viewing MDO Attack Simulation Training
 |---|---|
 | **Existing infrastructure** | The main `infra/main.bicep` must be deployed first |
 | **Azure CLI** | v2.50+ ([Install](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli)) |
-| **Entra ID App Registration** | A separate app registration for the dashboard (for EasyAuth) |
+| **Permissions** | Ability to create Entra ID app registrations (Application Administrator or Global Admin) |
 
-## Step 1: Create an App Registration for the Dashboard
+## Deploy (One Command)
 
-```powershell
-$dashboardApp = az ad app create `
-    --display-name "MDOAttackSimulation-Dashboard" `
-    --web-redirect-uris "https://<dashboard-app-name>.azurewebsites.net/.auth/login/aad/callback" `
-    --query "{appId:appId, id:id}" -o json | ConvertFrom-Json
+The deploy script handles everything: creates the app registration, deploys infrastructure, configures authentication, and publishes the code.
 
-az ad sp create --id $dashboardApp.appId
-
-Write-Host "Dashboard Client ID: $($dashboardApp.appId)"
-```
-
-> **Note:** You will update the redirect URI after deployment when you know the actual app name. See Step 3.
-
-## Step 2: Deploy the Dashboard
-
-### Option A: Deploy Script (Recommended)
+### PowerShell
 
 ```powershell
-# PowerShell
-.\scripts\deploy-dashboard.ps1 `
-    -ResourceGroup "rg-mdo-attack-simulation" `
-    -DashboardClientId $dashboardApp.appId
+.\scripts\deploy-dashboard.ps1 -ResourceGroup "rg-mdo-attack-simulation"
 ```
+
+### Bash
 
 ```bash
-# Bash
-./scripts/deploy-dashboard.sh \
-    -g "rg-mdo-attack-simulation" \
-    -c "<dashboard-client-id>"
+./scripts/deploy-dashboard.sh -g "rg-mdo-attack-simulation"
 ```
 
-### Option B: Manual Deployment
+The script will:
+1. Read existing infrastructure outputs (storage account, App Service Plan, etc.)
+2. Create an Entra ID app registration (single-tenant, scoped to your org)
+3. Deploy `infra/dashboard.bicep` with EasyAuth configured
+4. Update the app registration redirect URI with the actual dashboard URL
+5. Publish the Streamlit app code
 
-```powershell
-# 1. Deploy infrastructure
-az deployment group create `
-    --resource-group "rg-mdo-attack-simulation" `
-    --template-file infra/dashboard.bicep `
-    --parameters `
-        appServicePlanId="<existing-asp-id>" `
-        dataLakeAccountName="<adls-account-name>" `
-        storageAccountUrl="https://<account>.dfs.core.windows.net" `
-        tenantId="<tenant-id>" `
-        dashboardClientId="<dashboard-client-id>" `
-        appInsightsConnectionString="<connection-string>" `
-        subnetId="<subnet-id>"
+> **Already have an app registration?** Pass it with `-DashboardClientId`:
+> ```powershell
+> .\scripts\deploy-dashboard.ps1 -ResourceGroup "rg-mdo-attack-simulation" -DashboardClientId "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+> ```
 
-# 2. Deploy code
-cd src/dashboard
-Compress-Archive -Path * -DestinationPath dashboard.zip
-az webapp deployment source config-zip `
-    --resource-group "rg-mdo-attack-simulation" `
-    --name "<dashboard-app-name>" `
-    --src dashboard.zip
-```
+## Verify
 
-## Step 3: Update the Redirect URI
+Open the dashboard URL shown in the script output. You should be prompted to sign in with your Entra ID credentials, then see the dashboard home page.
 
-After deployment, update the app registration with the actual URL:
+## Alternative: Configure Auth via Azure Portal
 
-```powershell
-$DASHBOARD_URL = az webapp show `
-    --resource-group "rg-mdo-attack-simulation" `
-    --name "<dashboard-app-name>" `
-    --query "defaultHostName" -o tsv
+If you prefer a manual approach or the CLI-based app registration fails due to permissions:
 
-az ad app update --id $dashboardApp.appId `
-    --web-redirect-uris "https://$DASHBOARD_URL/.auth/login/aad/callback"
-```
+1. Deploy without auth by creating the app registration manually in the Azure Portal:
+   - **Entra ID** → **App registrations** → **New registration**
+   - **Name**: `MDOAttackSimulation-Dashboard`
+   - **Supported account types**: Single tenant
+   - **Redirect URI**: `https://<dashboard-app-name>.azurewebsites.net/.auth/login/aad/callback`
+2. Copy the **Application (client) ID** and re-run the deploy script with `-DashboardClientId`
 
-## Step 4: Verify
-
-Open `https://<dashboard-app-name>.azurewebsites.net` in your browser. You should be prompted to sign in with your Entra ID credentials, then see the dashboard home page.
+Or, after deploying the web app without auth:
+1. Navigate to **App Service** → your dashboard app → **Authentication**
+2. Click **Add identity provider** → **Microsoft**
+3. Follow the wizard — it auto-creates the app registration and configures everything
 
 ## Troubleshooting
 
 | Issue | Fix |
 |---|---|
-| "Application not found" on login | Verify the app registration exists and the redirect URI matches |
+| "Application not found" on login | Verify the app registration exists and the redirect URI matches the dashboard URL |
 | Empty tables / no data | Ensure the Azure Function has run at least once |
 | 403 on storage access | Check that the dashboard's managed identity has Storage Blob Data Reader |
 | App takes a long time to start | First cold start can take 30-60 seconds on B1; subsequent loads are faster |

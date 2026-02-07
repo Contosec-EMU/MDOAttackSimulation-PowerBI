@@ -5,12 +5,18 @@
 .DESCRIPTION
     Deploys the dashboard.bicep module and publishes the Streamlit app
     to the Azure Web App on the existing B1 App Service Plan.
+    Automatically creates an Entra ID app registration for EasyAuth
+    if a DashboardClientId is not provided.
 
 .PARAMETER ResourceGroup
     Name of the resource group containing the existing infrastructure.
 
 .PARAMETER DashboardClientId
-    Entra ID App Registration Client ID for the dashboard (EasyAuth).
+    (Optional) Entra ID App Registration Client ID for the dashboard.
+    If not provided, a new app registration is created automatically.
+
+.EXAMPLE
+    .\deploy-dashboard.ps1 -ResourceGroup "rg-mdo-attack-simulation"
 
 .EXAMPLE
     .\deploy-dashboard.ps1 -ResourceGroup "rg-mdo-attack-simulation" -DashboardClientId "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
@@ -20,7 +26,7 @@ param(
     [Parameter(Mandatory=$true)]
     [string]$ResourceGroup,
 
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory=$false)]
     [string]$DashboardClientId
 )
 
@@ -50,8 +56,24 @@ $SUBNET_ID = $MAIN_OUTPUTS.functionSubnetId.value
 Write-Host "  Data Lake: $DATA_LAKE_NAME"
 Write-Host "  Storage URL: $STORAGE_URL"
 
+# Create app registration if not provided
+if (-not $DashboardClientId) {
+    Write-Host "`n2. Creating Entra ID app registration..." -ForegroundColor Yellow
+    $APP_DISPLAY_NAME = "MDOAttackSimulation-Dashboard"
+    # Create with a placeholder redirect URI (updated after deployment)
+    $APP_JSON = az ad app create `
+        --display-name $APP_DISPLAY_NAME `
+        --sign-in-audience AzureADMyOrg `
+        --query "{appId:appId, id:id}" -o json | ConvertFrom-Json
+    $DashboardClientId = $APP_JSON.appId
+    az ad sp create --id $DashboardClientId | Out-Null
+    Write-Host "  App Registration: $APP_DISPLAY_NAME ($DashboardClientId)"
+} else {
+    Write-Host "`n2. Using existing app registration: $DashboardClientId" -ForegroundColor Yellow
+}
+
 # Deploy Bicep
-Write-Host "`n2. Deploying dashboard infrastructure..." -ForegroundColor Yellow
+Write-Host "`n3. Deploying dashboard infrastructure..." -ForegroundColor Yellow
 $DEPLOY_OUTPUT = az deployment group create `
     --resource-group $ResourceGroup `
     --template-file infra/dashboard.bicep `
@@ -71,8 +93,14 @@ $DASHBOARD_URL = $DEPLOY_OUTPUT.properties.outputs.dashboardUrl.value
 Write-Host "  Dashboard App: $DASHBOARD_NAME"
 Write-Host "  Dashboard URL: $DASHBOARD_URL"
 
+# Update app registration redirect URI with the actual URL
+Write-Host "`n4. Updating app registration redirect URI..." -ForegroundColor Yellow
+$REDIRECT_URI = "$DASHBOARD_URL/.auth/login/aad/callback"
+az ad app update --id $DashboardClientId --web-redirect-uris $REDIRECT_URI
+Write-Host "  Redirect URI: $REDIRECT_URI"
+
 # Deploy code
-Write-Host "`n3. Publishing Streamlit app..." -ForegroundColor Yellow
+Write-Host "`n5. Publishing Streamlit app..." -ForegroundColor Yellow
 Push-Location src/dashboard
 $zipFile = [System.IO.Path]::GetTempFileName() + ".zip"
 Compress-Archive -Path * -DestinationPath $zipFile -Force
@@ -85,4 +113,5 @@ Pop-Location
 
 Write-Host "`n=== Deployment Complete ===" -ForegroundColor Green
 Write-Host "Dashboard URL: $DASHBOARD_URL"
+Write-Host "Client ID:     $DashboardClientId"
 Write-Host "`nNote: It may take 1-2 minutes for the app to start after deployment."

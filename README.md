@@ -384,8 +384,8 @@ A browser-based alternative to Power BI that requires **no desktop software or l
 ### Quick Deploy
 
 ```powershell
-# PowerShell
-.\scripts\deploy-dashboard.ps1 -ResourceGroup "rg-mdo-attack-simulation" -DashboardClientId "<client-id>"
+# PowerShell — creates app registration automatically
+.\scripts\deploy-dashboard.ps1 -ResourceGroup "rg-mdo-attack-simulation"
 ```
 
 See [Dashboard Setup Guide](docs/DASHBOARD_SETUP.md) for full instructions, or [src/dashboard/README.md](src/dashboard/README.md) for local development.

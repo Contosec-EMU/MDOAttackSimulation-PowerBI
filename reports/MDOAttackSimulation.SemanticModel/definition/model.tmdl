@@ -7,11 +7,11 @@ model Model
 		legacyRedirects
 		returnErrorValuesAsNull
 
-	annotation PBIDesktopVersion = 2.150.2102.0 (26.01)
+annotation PBI_ProTooling = ["DevMode"]
 
-	annotation PBI_ProTooling = ["DevMode"]
+annotation PBI_QueryOrder = ["StorageAccountUrl","ContainerName","repeatOffenders","simulationUserCoverage","trainingUserCoverage","simulations","simulationUsers","simulationUserEvents","trainings","payloads","users"]
 
-	annotation PBI_QueryOrder = ["StorageAccountUrl","ContainerName","repeatOffenders","simulationUserCoverage","trainingUserCoverage","simulations","simulationUsers","simulationUserEvents","trainings","payloads","users"]
+annotation __PBI_TimeIntelligenceEnabled = 1
 
 ref table repeatOffenders
 ref table simulationUserCoverage
@@ -22,6 +22,24 @@ ref table simulationUserEvents
 ref table trainings
 ref table payloads
 ref table users
-ref table Measures
+ref table _Measures
+ref table DateTableTemplate_9bc6d113-c525-488e-bf39-20b3188a3fb7
+ref table LocalDateTable_5450c278-5fa0-4c5f-87d5-939ed23b32a9
+ref table LocalDateTable_222b61c1-0018-4141-b42d-068273cfede2
+ref table LocalDateTable_fe76eb1f-29e1-4733-b5c0-43db14e0499d
+ref table LocalDateTable_c2b59ddd-5265-4afd-a845-14c00601ca6e
+ref table LocalDateTable_eeee0b8c-8277-4feb-a743-ae21ec1d31f8
+ref table LocalDateTable_482911ee-c6aa-4a78-9f78-edb4da2dc4a5
+ref table LocalDateTable_e672f1b7-06f4-41a1-aa9c-7985b74f56dc
+ref table LocalDateTable_4f2554ee-98d1-4350-96f3-c7f30a90aae3
+ref table LocalDateTable_5e9b2a58-ad5d-4b9a-9fd8-6be955a64bbc
+ref table LocalDateTable_e2cf3045-c2d6-461c-b58c-78a03cf9a0dc
+ref table LocalDateTable_ad30ace9-85b4-410e-87b8-32aa3fb0178a
+ref table LocalDateTable_0d03ba81-715f-48bc-9b3e-56f2ff37c575
+ref table LocalDateTable_779c33d0-5a3b-40ea-bd28-2295949a2b21
+ref table LocalDateTable_1fc067fe-e967-454a-8b1e-63d4eb5eb013
+ref table LocalDateTable_51dbe6cb-8e8f-40de-94c3-34653f42cb3d
+ref table LocalDateTable_108b311e-808f-47ec-ba28-8c6e2284402b
 
 ref cultureInfo en-US
+

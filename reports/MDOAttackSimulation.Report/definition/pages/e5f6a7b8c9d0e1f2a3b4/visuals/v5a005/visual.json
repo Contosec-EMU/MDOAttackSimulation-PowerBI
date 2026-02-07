@@ -1,7 +1,14 @@
 {
   "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/1.5.0/schema.json",
   "name": "v5a005",
-  "position": { "x": 636, "y": 16, "z": 5000, "height": 56, "width": 240, "tabOrder": 5000 },
+  "position": {
+    "x": 636,
+    "y": 16,
+    "z": 5000,
+    "height": 56,
+    "width": 240,
+    "tabOrder": 5000
+  },
   "visual": {
     "visualType": "card",
     "query": {
@@ -11,11 +18,15 @@
             {
               "field": {
                 "Measure": {
-                  "Expression": { "SourceRef": { "Entity": "Measures" } },
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "_Measures"
+                    }
+                  },
                   "Property": "Actual vs Predicted Variance"
                 }
               },
-              "queryRef": "Measures.Actual vs Predicted Variance",
+              "queryRef": "_Measures.Actual vs Predicted Variance",
               "nativeQueryRef": "Actual vs Predicted Variance"
             }
           ]
@@ -23,9 +34,80 @@
       }
     },
     "visualContainerObjects": {
-      "background": [{ "properties": { "show": { "expr": { "Literal": { "Value": "true" } } }, "transparency": { "expr": { "Literal": { "Value": "0D" } } } } }],
-      "border": [{ "properties": { "show": { "expr": { "Literal": { "Value": "true" } } }, "radius": { "expr": { "Literal": { "Value": "8D" } } } } }],
-      "padding": [{ "properties": { "top": { "expr": { "Literal": { "Value": "8D" } } }, "bottom": { "expr": { "Literal": { "Value": "8D" } } }, "left": { "expr": { "Literal": { "Value": "8D" } } }, "right": { "expr": { "Literal": { "Value": "8D" } } } } }]
+      "background": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "transparency": {
+              "expr": {
+                "Literal": {
+                  "Value": "0D"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "border": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "radius": {
+              "expr": {
+                "Literal": {
+                  "Value": "8D"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "padding": [
+        {
+          "properties": {
+            "top": {
+              "expr": {
+                "Literal": {
+                  "Value": "8D"
+                }
+              }
+            },
+            "bottom": {
+              "expr": {
+                "Literal": {
+                  "Value": "8D"
+                }
+              }
+            },
+            "left": {
+              "expr": {
+                "Literal": {
+                  "Value": "8D"
+                }
+              }
+            },
+            "right": {
+              "expr": {
+                "Literal": {
+                  "Value": "8D"
+                }
+              }
+            }
+          }
+        }
+      ]
     },
     "drillFilterOtherVisuals": true
   }

@@ -7,6 +7,11 @@ table trainingUserCoverage
 		summarizeBy: none
 		sourceColumn: snapshotDateUtc
 
+		variation Variation
+			isDefault
+			relationship: ba9e9621-026a-4a3d-a91b-2c122e95324d
+			defaultHierarchy: LocalDateTable_fe76eb1f-29e1-4733-b5c0-43db14e0499d.'Date Hierarchy'
+
 		annotation SummarizationSetBy = Automatic
 
 	column userId
@@ -72,14 +77,17 @@ table trainingUserCoverage
 	partition trainingUserCoverage = m
 		mode: import
 		source =
-			let
-			    Source = AzureStorage.DataLake(StorageAccountUrl),
-			    Container = Source{[Name=ContainerName]}[Content],
-			    Filtered = Table.SelectRows(Container, each Text.StartsWith([Folder Path], ContainerName & "/trainingUserCoverage/")),
-			    Sorted = Table.Sort(Filtered, {{"Date modified", Order.Descending}}),
-			    Latest = Sorted{0}[Content],
-			    Result = Parquet.Document(Latest)
-			in
-			    Result
+				let
+				    Result = try
+				        let
+				            Source = AzureStorage.DataLake(StorageAccountUrl & "/" & ContainerName & "/trainingUserCoverage"),
+				            Sorted = Table.Sort(Source, {{"Date modified", Order.Descending}})
+				        in
+				            Parquet.Document(Sorted{0}[Content])
+				    otherwise
+				        #table({"snapshotDateUtc", "userId", "displayName", "email", "assignedTrainingsCount", "completedTrainingsCount", "inProgressTrainingsCount", "notStartedTrainingsCount"}, {})
+				in
+				    Result
 
 	annotation PBI_ResultType = Table
+

@@ -7,6 +7,11 @@ table simulationUserCoverage
 		summarizeBy: none
 		sourceColumn: snapshotDateUtc
 
+		variation Variation
+			isDefault
+			relationship: a26ce83b-ed2a-42aa-9366-67bdd5de7f2e
+			defaultHierarchy: LocalDateTable_5450c278-5fa0-4c5f-87d5-939ed23b32a9.'Date Hierarchy'
+
 		annotation SummarizationSetBy = Automatic
 
 	column userId
@@ -48,6 +53,11 @@ table simulationUserCoverage
 		summarizeBy: none
 		sourceColumn: latestSimulationDateTime
 
+		variation Variation
+			isDefault
+			relationship: 810cc98e-625a-466b-b88c-b9dfd549b532
+			defaultHierarchy: LocalDateTable_222b61c1-0018-4141-b42d-068273cfede2.'Date Hierarchy'
+
 		annotation SummarizationSetBy = Automatic
 
 	column clickCount
@@ -71,14 +81,17 @@ table simulationUserCoverage
 	partition simulationUserCoverage = m
 		mode: import
 		source =
-			let
-			    Source = AzureStorage.DataLake(StorageAccountUrl),
-			    Container = Source{[Name=ContainerName]}[Content],
-			    Filtered = Table.SelectRows(Container, each Text.StartsWith([Folder Path], ContainerName & "/simulationUserCoverage/")),
-			    Sorted = Table.Sort(Filtered, {{"Date modified", Order.Descending}}),
-			    Latest = Sorted{0}[Content],
-			    Result = Parquet.Document(Latest)
-			in
-			    Result
+				let
+				    Result = try
+				        let
+				            Source = AzureStorage.DataLake(StorageAccountUrl & "/" & ContainerName & "/simulationUserCoverage"),
+				            Sorted = Table.Sort(Source, {{"Date modified", Order.Descending}})
+				        in
+				            Parquet.Document(Sorted{0}[Content])
+				    otherwise
+				        #table({"snapshotDateUtc", "userId", "displayName", "email", "simulationCount", "latestSimulationDateTime", "clickCount", "compromisedCount"}, {})
+				in
+				    Result
 
 	annotation PBI_ResultType = Table
+

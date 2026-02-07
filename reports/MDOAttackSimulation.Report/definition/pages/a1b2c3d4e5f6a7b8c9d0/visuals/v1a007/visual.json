@@ -1,5 +1,5 @@
 {
-  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/1.5.0/schema.json",
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.6.0/schema.json",
   "name": "v1a007",
   "position": {
     "x": 744,
@@ -27,7 +27,8 @@
                 }
               },
               "queryRef": "simulations.attackType",
-              "nativeQueryRef": "attackType"
+              "nativeQueryRef": "attackType",
+              "active": true
             }
           ]
         },
@@ -38,13 +39,13 @@
                 "Measure": {
                   "Expression": {
                     "SourceRef": {
-                      "Entity": "Measures"
+                      "Entity": "_Measures"
                     }
                   },
                   "Property": "Simulation Count"
                 }
               },
-              "queryRef": "Measures.Simulation Count",
+              "queryRef": "_Measures.Simulation Count",
               "nativeQueryRef": "Simulation Count"
             }
           ]

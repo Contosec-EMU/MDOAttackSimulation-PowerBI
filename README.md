@@ -343,11 +343,10 @@ If you prefer to build your own report:
 
 ```powerquery
 let
-    Source = AzureStorage.DataLake("https://<storage-account>.dfs.core.windows.net/"),
-    curated = Source{[Name="curated"]}[Content],
-    repeatOffenders = curated{[Name="repeatOffenders"]}[Content],
+    Source = AzureStorage.DataLake("https://<storage-account>.dfs.core.windows.net/curated/repeatOffenders"),
+    #"Filtered to Parquet" = Table.SelectRows(Source, each Text.EndsWith([Name], ".parquet")),
     #"Combined Files" = Table.Combine(
-        Table.TransformColumns(repeatOffenders, {{"Content", each Parquet.Document(_)}})
+        Table.TransformColumns(#"Filtered to Parquet", {{"Content", each Parquet.Document(_)}})
     )
 in
     #"Combined Files"

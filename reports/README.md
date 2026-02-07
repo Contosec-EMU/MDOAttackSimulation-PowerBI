@@ -30,14 +30,27 @@ When prompted (or via **Transform data > Edit parameters**):
 
 | Parameter | Value | Example |
 |-----------|-------|---------|
-| **StorageAccountUrl** | Your ADLS Gen2 endpoint URL | `https://mdoastdlxyz.dfs.core.windows.net` |
+| **StorageAccountUrl** | Your ADLS Gen2 **DFS** endpoint URL | `https://mdoastdlxyz.dfs.core.windows.net` |
 | **ContainerName** | Container with curated Parquet files | `curated` |
 
-Click **Apply Changes** and authenticate with your Azure AD credentials.
+> ⚠️ **Important:** Use the **DFS** endpoint (`.dfs.core.windows.net`), **not** the Blob endpoint (`.blob.core.windows.net`). The Blob endpoint will return a 400 error.
 
-### 4. Refresh Data
+Click **OK**, then **Apply Changes**.
+
+### 4. Authenticate
+
+When the Azure Data Lake Storage Gen2 credential prompt appears:
+
+1. Select **Organizational account** on the left
+2. Click **Sign in** and authenticate with your Azure AD credentials
+3. In the **"Select which level to apply these settings to"** dropdown, choose the **root storage account URL** (e.g., `https://mdoastdlxyz.dfs.core.windows.net/`) — this avoids being prompted for each table
+4. Click **Connect**
+
+### 5. Refresh Data
 
 Click **Home > Refresh** to load data from your storage account.
+
+> **Note:** If some tables (e.g., `repeatOffenders`, `payloads`) don't have data yet, they will load as empty tables without blocking the rest of the report. They will populate automatically on the next refresh after the Azure Function produces data for those endpoints.
 
 ## Report Pages
 
@@ -108,7 +121,7 @@ The semantic model connects to 9 Parquet tables in your ADLS Gen2 `curated` cont
 Since PBIR is JSON-based, you can:
 
 - **Edit visuals** directly in Power BI Desktop
-- **Modify DAX measures** in the TMDL files under `MDOAttackSimulation.SemanticModel/definition/tables/Measures.tmdl`
+- **Modify DAX measures** in the TMDL files under `MDOAttackSimulation.SemanticModel/definition/tables/_Measures.tmdl`
 - **Add relationships** in `relationships.tmdl`
 - **Add tables** by creating new `.tmdl` files in the `tables/` folder
 - **Version control** all changes with Git (every visual is a separate JSON file)
@@ -144,6 +157,6 @@ reports/
 │       ├── model.tmdl                          # Model configuration
 │       ├── expressions.tmdl                    # StorageAccountUrl parameter
 │       ├── relationships.tmdl                  # 7 table relationships
-│       └── tables/                             # 9 data tables + Measures
+│       └── tables/                             # 9 data tables + _Measures
 └── README.md                                   # This file
 ```

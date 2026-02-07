@@ -7,6 +7,11 @@ table trainings
 		summarizeBy: none
 		sourceColumn: snapshotDateUtc
 
+		variation Variation
+			isDefault
+			relationship: 9abc10eb-3727-443f-8cb2-dd2b4070e852
+			defaultHierarchy: LocalDateTable_1fc067fe-e967-454a-8b1e-63d4eb5eb013.'Date Hierarchy'
+
 		annotation SummarizationSetBy = Automatic
 
 	column trainingId
@@ -80,6 +85,11 @@ table trainings
 		summarizeBy: none
 		sourceColumn: lastModifiedDateTime
 
+		variation Variation
+			isDefault
+			relationship: 150e3381-6e81-47ef-8eb3-2968d6f2043c
+			defaultHierarchy: LocalDateTable_51dbe6cb-8e8f-40de-94c3-34653f42cb3d.'Date Hierarchy'
+
 		annotation SummarizationSetBy = Automatic
 
 	column createdById
@@ -133,14 +143,17 @@ table trainings
 	partition trainings = m
 		mode: import
 		source =
-			let
-			    Source = AzureStorage.DataLake(StorageAccountUrl),
-			    Container = Source{[Name=ContainerName]}[Content],
-			    Filtered = Table.SelectRows(Container, each Text.StartsWith([Folder Path], ContainerName & "/trainings/")),
-			    Sorted = Table.Sort(Filtered, {{"Date modified", Order.Descending}}),
-			    Latest = Sorted{0}[Content],
-			    Result = Parquet.Document(Latest)
-			in
-			    Result
+				let
+				    Result = try
+				        let
+				            Source = AzureStorage.DataLake(StorageAccountUrl & "/" & ContainerName & "/trainings"),
+				            Sorted = Table.Sort(Source, {{"Date modified", Order.Descending}})
+				        in
+				            Parquet.Document(Sorted{0}[Content])
+				    otherwise
+				        #table({"snapshotDateUtc", "trainingId", "displayName", "description", "durationInMinutes", "source", "type", "availabilityStatus", "hasEvaluation", "lastModifiedDateTime", "createdById", "createdByDisplayName", "createdByEmail", "lastModifiedById", "lastModifiedByDisplayName", "lastModifiedByEmail"}, {})
+				in
+				    Result
 
 	annotation PBI_ResultType = Table
+

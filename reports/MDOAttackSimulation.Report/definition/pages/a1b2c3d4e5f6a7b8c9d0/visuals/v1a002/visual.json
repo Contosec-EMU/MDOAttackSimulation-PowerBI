@@ -20,13 +20,13 @@
                 "Measure": {
                   "Expression": {
                     "SourceRef": {
-                      "Entity": "Measures"
+                      "Entity": "_Measures"
                     }
                   },
                   "Property": "Compromise Rate"
                 }
               },
-              "queryRef": "Measures.Compromise Rate",
+              "queryRef": "_Measures.Compromise Rate",
               "nativeQueryRef": "Compromise Rate"
             }
           ]

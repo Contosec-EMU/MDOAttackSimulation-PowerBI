@@ -1,7 +1,14 @@
 {
-  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/1.5.0/schema.json",
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.6.0/schema.json",
   "name": "v3a005",
-  "position": { "x": 16, "y": 416, "z": 5000, "height": 288, "width": 1248, "tabOrder": 5000 },
+  "position": {
+    "x": 16,
+    "y": 416,
+    "z": 5000,
+    "height": 288,
+    "width": 1248,
+    "tabOrder": 5000
+  },
   "visual": {
     "visualType": "lineChart",
     "query": {
@@ -11,12 +18,17 @@
             {
               "field": {
                 "Column": {
-                  "Expression": { "SourceRef": { "Entity": "simulationUserEvents" } },
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "simulationUserEvents"
+                    }
+                  },
                   "Property": "eventDateTime"
                 }
               },
               "queryRef": "simulationUserEvents.eventDateTime",
-              "nativeQueryRef": "eventDateTime"
+              "nativeQueryRef": "eventDateTime",
+              "active": true
             }
           ]
         },
@@ -25,11 +37,15 @@
             {
               "field": {
                 "Measure": {
-                  "Expression": { "SourceRef": { "Entity": "Measures" } },
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "_Measures"
+                    }
+                  },
                   "Property": "Compromise Rate"
                 }
               },
-              "queryRef": "Measures.Compromise Rate",
+              "queryRef": "_Measures.Compromise Rate",
               "nativeQueryRef": "Compromise Rate"
             }
           ]
@@ -37,9 +53,80 @@
       }
     },
     "visualContainerObjects": {
-      "background": [{ "properties": { "show": { "expr": { "Literal": { "Value": "true" } } }, "transparency": { "expr": { "Literal": { "Value": "0D" } } } } }],
-      "border": [{ "properties": { "show": { "expr": { "Literal": { "Value": "true" } } }, "radius": { "expr": { "Literal": { "Value": "8D" } } } } }],
-      "padding": [{ "properties": { "top": { "expr": { "Literal": { "Value": "8D" } } }, "bottom": { "expr": { "Literal": { "Value": "8D" } } }, "left": { "expr": { "Literal": { "Value": "8D" } } }, "right": { "expr": { "Literal": { "Value": "8D" } } } } }]
+      "background": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "transparency": {
+              "expr": {
+                "Literal": {
+                  "Value": "0D"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "border": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "radius": {
+              "expr": {
+                "Literal": {
+                  "Value": "8D"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "padding": [
+        {
+          "properties": {
+            "top": {
+              "expr": {
+                "Literal": {
+                  "Value": "8D"
+                }
+              }
+            },
+            "bottom": {
+              "expr": {
+                "Literal": {
+                  "Value": "8D"
+                }
+              }
+            },
+            "left": {
+              "expr": {
+                "Literal": {
+                  "Value": "8D"
+                }
+              }
+            },
+            "right": {
+              "expr": {
+                "Literal": {
+                  "Value": "8D"
+                }
+              }
+            }
+          }
+        }
+      ]
     },
     "drillFilterOtherVisuals": true
   }

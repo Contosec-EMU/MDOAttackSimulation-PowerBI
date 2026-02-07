@@ -1,22 +1,52 @@
 {
-  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/1.5.0/schema.json",
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.6.0/schema.json",
   "name": "v3a003",
-  "position": { "x": 424, "y": 84, "z": 3000, "height": 320, "width": 420, "tabOrder": 3000 },
+  "position": {
+    "x": 424,
+    "y": 84,
+    "z": 3000,
+    "height": 320,
+    "width": 420,
+    "tabOrder": 3000
+  },
   "visual": {
     "visualType": "scatterChart",
     "query": {
       "queryState": {
+        "Size": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "repeatOffenders"
+                    }
+                  },
+                  "Property": "repeatOffenceCount"
+                }
+              },
+              "queryRef": "repeatOffenders.repeatOffenceCount",
+              "nativeQueryRef": "repeatOffenceCount"
+            }
+          ]
+        },
         "X": {
           "projections": [
             {
               "field": {
                 "Column": {
-                  "Expression": { "SourceRef": { "Entity": "simulationUserCoverage" } },
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "simulationUserCoverage"
+                    }
+                  },
                   "Property": "simulationCount"
                 }
               },
               "queryRef": "simulationUserCoverage.simulationCount",
-              "nativeQueryRef": "simulationCount"
+              "nativeQueryRef": "simulationCount",
+              "active": true
             }
           ]
         },
@@ -25,7 +55,11 @@
             {
               "field": {
                 "Column": {
-                  "Expression": { "SourceRef": { "Entity": "simulationUserCoverage" } },
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "simulationUserCoverage"
+                    }
+                  },
                   "Property": "compromisedCount"
                 }
               },
@@ -33,27 +67,84 @@
               "nativeQueryRef": "compromisedCount"
             }
           ]
-        },
-        "Size": {
-          "projections": [
-            {
-              "field": {
-                "Column": {
-                  "Expression": { "SourceRef": { "Entity": "repeatOffenders" } },
-                  "Property": "repeatOffenceCount"
-                }
-              },
-              "queryRef": "repeatOffenders.repeatOffenceCount",
-              "nativeQueryRef": "repeatOffenceCount"
-            }
-          ]
         }
       }
     },
     "visualContainerObjects": {
-      "background": [{ "properties": { "show": { "expr": { "Literal": { "Value": "true" } } }, "transparency": { "expr": { "Literal": { "Value": "0D" } } } } }],
-      "border": [{ "properties": { "show": { "expr": { "Literal": { "Value": "true" } } }, "radius": { "expr": { "Literal": { "Value": "8D" } } } } }],
-      "padding": [{ "properties": { "top": { "expr": { "Literal": { "Value": "8D" } } }, "bottom": { "expr": { "Literal": { "Value": "8D" } } }, "left": { "expr": { "Literal": { "Value": "8D" } } }, "right": { "expr": { "Literal": { "Value": "8D" } } } } }]
+      "background": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "transparency": {
+              "expr": {
+                "Literal": {
+                  "Value": "0D"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "border": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "radius": {
+              "expr": {
+                "Literal": {
+                  "Value": "8D"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "padding": [
+        {
+          "properties": {
+            "top": {
+              "expr": {
+                "Literal": {
+                  "Value": "8D"
+                }
+              }
+            },
+            "bottom": {
+              "expr": {
+                "Literal": {
+                  "Value": "8D"
+                }
+              }
+            },
+            "left": {
+              "expr": {
+                "Literal": {
+                  "Value": "8D"
+                }
+              }
+            },
+            "right": {
+              "expr": {
+                "Literal": {
+                  "Value": "8D"
+                }
+              }
+            }
+          }
+        }
+      ]
     },
     "drillFilterOtherVisuals": true
   }

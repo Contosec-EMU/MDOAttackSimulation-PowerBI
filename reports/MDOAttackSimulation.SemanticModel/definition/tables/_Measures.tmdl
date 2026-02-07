@@ -1,0 +1,122 @@
+table _Measures
+	lineageTag: aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee
+
+	measure 'Compromise Rate' =
+			DIVIDE(
+			    COUNTROWS(FILTER(simulationUsers, simulationUsers[isCompromised] = TRUE())),
+			    COUNTROWS(simulationUsers),
+			    0
+			)
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: m0000001-0000-0000-0000-000000000001
+
+	measure 'Training Completion Rate' =
+			DIVIDE(
+			    SUM(trainingUserCoverage[completedTrainingsCount]),
+			    SUM(trainingUserCoverage[assignedTrainingsCount]),
+			    0
+			)
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: m0000002-0000-0000-0000-000000000002
+
+	measure 'Avg Training Duration' = AVERAGE(trainings[durationInMinutes])
+		formatString: #,0.0
+		lineageTag: m0000003-0000-0000-0000-000000000003
+
+	measure 'Repeat Offender Count' =
+			COUNTROWS(
+			    FILTER(repeatOffenders, repeatOffenders[repeatOffenceCount] > 1)
+			)
+		formatString: #,0
+		lineageTag: m0000004-0000-0000-0000-000000000004
+
+	measure 'Active Simulations' =
+			COUNTROWS(
+			    FILTER(
+			        simulations,
+			        simulations[status] = "succeeded"
+			            && NOT(ISBLANK(simulations[launchDateTime]))
+			    )
+			)
+		formatString: #,0
+		lineageTag: m0000005-0000-0000-0000-000000000005
+
+	measure 'Simulation Count' = COUNTROWS(simulations)
+		formatString: #,0
+		lineageTag: m0000006-0000-0000-0000-000000000006
+
+	measure 'Monthly Compromised Users' =
+			CALCULATE(
+			    COUNTROWS(FILTER(simulationUsers, simulationUsers[isCompromised] = TRUE())),
+			    DATESMTD(simulationUsers[compromisedDateTime])
+			)
+		formatString: #,0
+		lineageTag: m0000007-0000-0000-0000-000000000007
+
+	measure 'Phish Report Rate' =
+			DIVIDE(
+			    SUM(simulations[reportReportedCount]),
+			    SUM(simulations[reportTotalUserCount]),
+			    0
+			)
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: m0000008-0000-0000-0000-000000000008
+
+	measure 'Department Risk Score' =
+			VAR _compromised =
+			    CALCULATE(
+			        COUNTROWS(FILTER(simulationUsers, simulationUsers[isCompromised] = TRUE())),
+			        USERELATIONSHIP(simulationUsers[userId], users[userId])
+			    )
+			VAR _total =
+			    CALCULATE(
+			        COUNTROWS(simulationUsers),
+			        USERELATIONSHIP(simulationUsers[userId], users[userId])
+			    )
+			RETURN
+			    DIVIDE(_compromised, _total, 0) * 100
+		formatString: #,0.0
+		lineageTag: m0000009-0000-0000-0000-000000000009
+
+	measure 'Actual vs Predicted Variance' =
+			VAR _actual =
+			    DIVIDE(
+			        SUM(simulations[reportCompromisedCount]),
+			        SUM(simulations[reportTotalUserCount]),
+			        0
+			    )
+			VAR _predicted = AVERAGE(payloads[predictedCompromiseRate])
+			RETURN
+			    _actual - _predicted
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: m0000010-0000-0000-0000-000000000010
+
+	measure 'Click Rate' =
+			DIVIDE(
+			    SUM(simulations[reportClickCount]),
+			    SUM(simulations[reportTotalUserCount]),
+			    0
+			)
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: m0000011-0000-0000-0000-000000000011
+
+	measure 'Total Users Targeted' = SUM(simulations[reportTotalUserCount])
+		formatString: #,0
+		lineageTag: m0000012-0000-0000-0000-000000000012
+
+	column Value
+		isHidden
+		formatString: 0
+		lineageTag: mval0001-0000-0000-0000-000000000000
+		summarizeBy: sum
+		isNameInferred
+		sourceColumn: [Value]
+
+		annotation SummarizationSetBy = Automatic
+
+	partition _Measures = calculated
+		mode: import
+		source = {0}
+
+	annotation PBI_Id = measures_table_001
+

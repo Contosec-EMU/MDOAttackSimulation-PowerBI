@@ -2,7 +2,7 @@ table payloads
 	lineageTag: a8000001-0000-0000-0000-000000000008
 
 	column snapshotDateUtc
-		dataType: dateTime
+		dataType: string
 		lineageTag: a8010001-0000-0000-0000-000000000008
 		summarizeBy: none
 		sourceColumn: snapshotDateUtc
@@ -66,9 +66,9 @@ table payloads
 		annotation SummarizationSetBy = Automatic
 
 	column predictedCompromiseRate
-		dataType: double
+		dataType: string
 		lineageTag: a8010009-0000-0000-0000-000000000008
-		summarizeBy: sum
+		summarizeBy: none
 		sourceColumn: predictedCompromiseRate
 
 		annotation SummarizationSetBy = Automatic
@@ -114,7 +114,7 @@ table payloads
 		annotation SummarizationSetBy = Automatic
 
 	column isCurrentEvent
-		dataType: boolean
+		dataType: string
 		lineageTag: a8010015-0000-0000-0000-000000000008
 		summarizeBy: none
 		sourceColumn: isCurrentEvent
@@ -122,7 +122,7 @@ table payloads
 		annotation SummarizationSetBy = Automatic
 
 	column isControversial
-		dataType: boolean
+		dataType: string
 		lineageTag: a8010016-0000-0000-0000-000000000008
 		summarizeBy: none
 		sourceColumn: isControversial
@@ -130,7 +130,7 @@ table payloads
 		annotation SummarizationSetBy = Automatic
 
 	column lastModifiedDateTime
-		dataType: dateTime
+		dataType: string
 		lineageTag: a8010017-0000-0000-0000-000000000008
 		summarizeBy: none
 		sourceColumn: lastModifiedDateTime
@@ -188,14 +188,17 @@ table payloads
 	partition payloads = m
 		mode: import
 		source =
-			let
-			    Source = AzureStorage.DataLake(StorageAccountUrl),
-			    Container = Source{[Name=ContainerName]}[Content],
-			    Filtered = Table.SelectRows(Container, each Text.StartsWith([Folder Path], ContainerName & "/payloads/")),
-			    Sorted = Table.Sort(Filtered, {{"Date modified", Order.Descending}}),
-			    Latest = Sorted{0}[Content],
-			    Result = Parquet.Document(Latest)
-			in
-			    Result
+				let
+				    Result = try
+				        let
+				            Source = AzureStorage.DataLake(StorageAccountUrl & "/" & ContainerName & "/payloads"),
+				            Sorted = Table.Sort(Source, {{"Date modified", Order.Descending}})
+				        in
+				            Parquet.Document(Sorted{0}[Content])
+				    otherwise
+				        #table({"snapshotDateUtc", "payloadId", "displayName", "description", "simulationAttackType", "platform", "status", "source", "predictedCompromiseRate", "complexity", "technique", "theme", "brand", "industry", "isCurrentEvent", "isControversial", "lastModifiedDateTime", "createdById", "createdByDisplayName", "createdByEmail", "lastModifiedById", "lastModifiedByDisplayName", "lastModifiedByEmail"}, {})
+				in
+				    Result
 
 	annotation PBI_ResultType = Table
+

@@ -20,13 +20,13 @@
                 "Measure": {
                   "Expression": {
                     "SourceRef": {
-                      "Entity": "Measures"
+                      "Entity": "_Measures"
                     }
                   },
                   "Property": "Training Completion Rate"
                 }
               },
-              "queryRef": "Measures.Training Completion Rate",
+              "queryRef": "_Measures.Training Completion Rate",
               "nativeQueryRef": "Training Completion Rate"
             }
           ]

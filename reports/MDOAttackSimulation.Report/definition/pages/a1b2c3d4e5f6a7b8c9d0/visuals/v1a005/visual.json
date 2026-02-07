@@ -20,13 +20,13 @@
                 "Measure": {
                   "Expression": {
                     "SourceRef": {
-                      "Entity": "Measures"
+                      "Entity": "_Measures"
                     }
                   },
                   "Property": "Active Simulations"
                 }
               },
-              "queryRef": "Measures.Active Simulations",
+              "queryRef": "_Measures.Active Simulations",
               "nativeQueryRef": "Active Simulations"
             }
           ]

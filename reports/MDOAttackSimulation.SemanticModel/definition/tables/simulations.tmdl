@@ -7,6 +7,11 @@ table simulations
 		summarizeBy: none
 		sourceColumn: snapshotDateUtc
 
+		variation Variation
+			isDefault
+			relationship: db893c4a-3cd9-4e47-a78b-730c4597d239
+			defaultHierarchy: LocalDateTable_c2b59ddd-5265-4afd-a845-14c00601ca6e.'Date Hierarchy'
+
 		annotation SummarizationSetBy = Automatic
 
 	column simulationId
@@ -63,6 +68,11 @@ table simulations
 		summarizeBy: none
 		sourceColumn: createdDateTime
 
+		variation Variation
+			isDefault
+			relationship: e7f9ba5c-8758-48da-820b-f8b824f75709
+			defaultHierarchy: LocalDateTable_eeee0b8c-8277-4feb-a743-ae21ec1d31f8.'Date Hierarchy'
+
 		annotation SummarizationSetBy = Automatic
 
 	column launchDateTime
@@ -70,6 +80,11 @@ table simulations
 		lineageTag: a4010009-0000-0000-0000-000000000004
 		summarizeBy: none
 		sourceColumn: launchDateTime
+
+		variation Variation
+			isDefault
+			relationship: 0df10b77-0313-4c9f-9952-489810f185d4
+			defaultHierarchy: LocalDateTable_482911ee-c6aa-4a78-9f78-edb4da2dc4a5.'Date Hierarchy'
 
 		annotation SummarizationSetBy = Automatic
 
@@ -79,6 +94,11 @@ table simulations
 		summarizeBy: none
 		sourceColumn: completionDateTime
 
+		variation Variation
+			isDefault
+			relationship: bb6d1597-db32-4434-9c18-125d5de53fe0
+			defaultHierarchy: LocalDateTable_e672f1b7-06f4-41a1-aa9c-7985b74f56dc.'Date Hierarchy'
+
 		annotation SummarizationSetBy = Automatic
 
 	column lastModifiedDateTime
@@ -86,6 +106,11 @@ table simulations
 		lineageTag: a4010011-0000-0000-0000-000000000004
 		summarizeBy: none
 		sourceColumn: lastModifiedDateTime
+
+		variation Variation
+			isDefault
+			relationship: fb6be9f7-34c5-4c18-8ced-936fc3114e96
+			defaultHierarchy: LocalDateTable_4f2554ee-98d1-4350-96f3-c7f30a90aae3.'Date Hierarchy'
 
 		annotation SummarizationSetBy = Automatic
 
@@ -217,14 +242,17 @@ table simulations
 	partition simulations = m
 		mode: import
 		source =
-			let
-			    Source = AzureStorage.DataLake(StorageAccountUrl),
-			    Container = Source{[Name=ContainerName]}[Content],
-			    Filtered = Table.SelectRows(Container, each Text.StartsWith([Folder Path], ContainerName & "/simulations/")),
-			    Sorted = Table.Sort(Filtered, {{"Date modified", Order.Descending}}),
-			    Latest = Sorted{0}[Content],
-			    Result = Parquet.Document(Latest)
-			in
-			    Result
+				let
+				    Result = try
+				        let
+				            Source = AzureStorage.DataLake(StorageAccountUrl & "/" & ContainerName & "/simulations"),
+				            Sorted = Table.Sort(Source, {{"Date modified", Order.Descending}})
+				        in
+				            Parquet.Document(Sorted{0}[Content])
+				    otherwise
+				        #table({"snapshotDateUtc", "simulationId", "displayName", "description", "status", "attackType", "attackTechnique", "createdDateTime", "launchDateTime", "completionDateTime", "lastModifiedDateTime", "isAutomated", "automationId", "durationInDays", "payloadId", "payloadDisplayName", "reportTotalUserCount", "reportCompromisedCount", "reportClickCount", "reportReportedCount", "createdById", "createdByDisplayName", "createdByEmail", "lastModifiedById", "lastModifiedByDisplayName", "lastModifiedByEmail"}, {})
+				in
+				    Result
 
 	annotation PBI_ResultType = Table
+

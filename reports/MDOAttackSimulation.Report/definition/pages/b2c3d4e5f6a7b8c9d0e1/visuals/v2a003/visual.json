@@ -20,13 +20,13 @@
                 "Measure": {
                   "Expression": {
                     "SourceRef": {
-                      "Entity": "Measures"
+                      "Entity": "_Measures"
                     }
                   },
                   "Property": "Phish Report Rate"
                 }
               },
-              "queryRef": "Measures.Phish Report Rate",
+              "queryRef": "_Measures.Phish Report Rate",
               "nativeQueryRef": "Phish Report Rate"
             }
           ]

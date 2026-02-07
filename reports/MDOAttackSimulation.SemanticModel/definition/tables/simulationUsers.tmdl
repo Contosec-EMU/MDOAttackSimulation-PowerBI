@@ -7,6 +7,11 @@ table simulationUsers
 		summarizeBy: none
 		sourceColumn: snapshotDateUtc
 
+		variation Variation
+			isDefault
+			relationship: b22fc56a-b9ff-4f52-98a6-e5066101b961
+			defaultHierarchy: LocalDateTable_5e9b2a58-ad5d-4b9a-9fd8-6be955a64bbc.'Date Hierarchy'
+
 		annotation SummarizationSetBy = Automatic
 
 	column simulationId
@@ -47,6 +52,11 @@ table simulationUsers
 		summarizeBy: none
 		sourceColumn: compromisedDateTime
 
+		variation Variation
+			isDefault
+			relationship: eb72756d-cced-4a2c-bb1f-78cc4e533ad3
+			defaultHierarchy: LocalDateTable_e2cf3045-c2d6-461c-b58c-78a03cf9a0dc.'Date Hierarchy'
+
 		annotation SummarizationSetBy = Automatic
 
 	column reportedPhishDateTime
@@ -54,6 +64,11 @@ table simulationUsers
 		lineageTag: a5010007-0000-0000-0000-000000000005
 		summarizeBy: none
 		sourceColumn: reportedPhishDateTime
+
+		variation Variation
+			isDefault
+			relationship: 67d8c7ec-b45e-4524-ba13-a1e14957b933
+			defaultHierarchy: LocalDateTable_ad30ace9-85b4-410e-87b8-32aa3fb0178a.'Date Hierarchy'
 
 		annotation SummarizationSetBy = Automatic
 
@@ -102,14 +117,17 @@ table simulationUsers
 	partition simulationUsers = m
 		mode: import
 		source =
-			let
-			    Source = AzureStorage.DataLake(StorageAccountUrl),
-			    Container = Source{[Name=ContainerName]}[Content],
-			    Filtered = Table.SelectRows(Container, each Text.StartsWith([Folder Path], ContainerName & "/simulationUsers/")),
-			    Sorted = Table.Sort(Filtered, {{"Date modified", Order.Descending}}),
-			    Latest = Sorted{0}[Content],
-			    Result = Parquet.Document(Latest)
-			in
-			    Result
+				let
+				    Result = try
+				        let
+				            Source = AzureStorage.DataLake(StorageAccountUrl & "/" & ContainerName & "/simulationUsers"),
+				            Sorted = Table.Sort(Source, {{"Date modified", Order.Descending}})
+				        in
+				            Parquet.Document(Sorted{0}[Content])
+				    otherwise
+				        #table({"snapshotDateUtc", "simulationId", "userId", "email", "displayName", "compromisedDateTime", "reportedPhishDateTime", "assignedTrainingsCount", "completedTrainingsCount", "inProgressTrainingsCount", "isCompromised"}, {})
+				in
+				    Result
 
 	annotation PBI_ResultType = Table
+

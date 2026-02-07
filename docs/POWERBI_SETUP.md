@@ -54,6 +54,12 @@ Container:            curated
 
 ## 2. Connecting to Data
 
+> 💡 **Recommended: Use the Pre-Built Report Template**
+>
+> The easiest way to connect is using the included `.pbip` project file, which has all 9 tables, relationships, and DAX measures pre-configured. See the [reports README](../reports/README.md) for quick start instructions.
+>
+> The manual steps below are for users who want to build their own report from scratch.
+
 ### Step 1: Open Power BI Desktop and Connect
 
 1. Open **Power BI Desktop**
@@ -64,10 +70,11 @@ Container:            curated
 
 ### Step 2: Enter the Storage URL
 
-1. In the **URL** field, enter:
+1. In the **URL** field, enter your **DFS endpoint** (not the Blob endpoint):
    ```
    https://<storageAccountName>.dfs.core.windows.net/
    ```
+   > ⚠️ **Important:** Use `.dfs.core.windows.net` — the `.blob.core.windows.net` endpoint will return errors with ADLS Gen2.
 2. Click **OK**
 
 <!-- Screenshot: ADLS Gen2 connection dialog with URL field -->
@@ -76,7 +83,8 @@ Container:            curated
 
 1. Select the **Organizational account** tab
 2. Click **Sign in** and authenticate with your Entra ID credentials
-3. Click **Connect**
+3. In the **"Select which level to apply these settings to"** dropdown, choose the **root storage account URL** (e.g., `https://<storageAccountName>.dfs.core.windows.net/`) — this avoids being prompted again for each table subfolder
+4. Click **Connect**
 
 <!-- Screenshot: Authentication dialog showing Organizational account tab -->
 
@@ -107,10 +115,8 @@ Replace `<tableName>` with each of the 9 table names:
 
 ```powerquery
 let
-    Source = AzureStorage.DataLake("https://<storageAccountName>.dfs.core.windows.net/"),
-    curated = Source{[Name="curated"]}[Content],
-    tableFolder = curated{[Name="<tableName>"]}[Content],
-    #"Filtered to Parquet" = Table.SelectRows(tableFolder, each Text.EndsWith([Name], ".parquet")),
+    Source = AzureStorage.DataLake("https://<storageAccountName>.dfs.core.windows.net/curated/<tableName>"),
+    #"Filtered to Parquet" = Table.SelectRows(Source, each Text.EndsWith([Name], ".parquet")),
     #"Combined Files" = Table.Combine(
         Table.TransformColumns(#"Filtered to Parquet", {{"Content", each Parquet.Document(_)}})
     )
@@ -127,10 +133,8 @@ Create one query per table (replace `<storageAccountName>` with your actual acco
 
 ```powerquery
 let
-    Source = AzureStorage.DataLake("https://<storageAccountName>.dfs.core.windows.net/"),
-    curated = Source{[Name="curated"]}[Content],
-    tableFolder = curated{[Name="repeatOffenders"]}[Content],
-    #"Filtered to Parquet" = Table.SelectRows(tableFolder, each Text.EndsWith([Name], ".parquet")),
+    Source = AzureStorage.DataLake("https://<storageAccountName>.dfs.core.windows.net/curated/repeatOffenders"),
+    #"Filtered to Parquet" = Table.SelectRows(Source, each Text.EndsWith([Name], ".parquet")),
     #"Combined Files" = Table.Combine(
         Table.TransformColumns(#"Filtered to Parquet", {{"Content", each Parquet.Document(_)}})
     )
@@ -144,10 +148,8 @@ in
 
 ```powerquery
 let
-    Source = AzureStorage.DataLake("https://<storageAccountName>.dfs.core.windows.net/"),
-    curated = Source{[Name="curated"]}[Content],
-    tableFolder = curated{[Name="simulationUserCoverage"]}[Content],
-    #"Filtered to Parquet" = Table.SelectRows(tableFolder, each Text.EndsWith([Name], ".parquet")),
+    Source = AzureStorage.DataLake("https://<storageAccountName>.dfs.core.windows.net/curated/simulationUserCoverage"),
+    #"Filtered to Parquet" = Table.SelectRows(Source, each Text.EndsWith([Name], ".parquet")),
     #"Combined Files" = Table.Combine(
         Table.TransformColumns(#"Filtered to Parquet", {{"Content", each Parquet.Document(_)}})
     )
@@ -161,10 +163,8 @@ in
 
 ```powerquery
 let
-    Source = AzureStorage.DataLake("https://<storageAccountName>.dfs.core.windows.net/"),
-    curated = Source{[Name="curated"]}[Content],
-    tableFolder = curated{[Name="trainingUserCoverage"]}[Content],
-    #"Filtered to Parquet" = Table.SelectRows(tableFolder, each Text.EndsWith([Name], ".parquet")),
+    Source = AzureStorage.DataLake("https://<storageAccountName>.dfs.core.windows.net/curated/trainingUserCoverage"),
+    #"Filtered to Parquet" = Table.SelectRows(Source, each Text.EndsWith([Name], ".parquet")),
     #"Combined Files" = Table.Combine(
         Table.TransformColumns(#"Filtered to Parquet", {{"Content", each Parquet.Document(_)}})
     )
@@ -178,10 +178,8 @@ in
 
 ```powerquery
 let
-    Source = AzureStorage.DataLake("https://<storageAccountName>.dfs.core.windows.net/"),
-    curated = Source{[Name="curated"]}[Content],
-    tableFolder = curated{[Name="simulations"]}[Content],
-    #"Filtered to Parquet" = Table.SelectRows(tableFolder, each Text.EndsWith([Name], ".parquet")),
+    Source = AzureStorage.DataLake("https://<storageAccountName>.dfs.core.windows.net/curated/simulations"),
+    #"Filtered to Parquet" = Table.SelectRows(Source, each Text.EndsWith([Name], ".parquet")),
     #"Combined Files" = Table.Combine(
         Table.TransformColumns(#"Filtered to Parquet", {{"Content", each Parquet.Document(_)}})
     )
@@ -195,10 +193,8 @@ in
 
 ```powerquery
 let
-    Source = AzureStorage.DataLake("https://<storageAccountName>.dfs.core.windows.net/"),
-    curated = Source{[Name="curated"]}[Content],
-    tableFolder = curated{[Name="simulationUsers"]}[Content],
-    #"Filtered to Parquet" = Table.SelectRows(tableFolder, each Text.EndsWith([Name], ".parquet")),
+    Source = AzureStorage.DataLake("https://<storageAccountName>.dfs.core.windows.net/curated/simulationUsers"),
+    #"Filtered to Parquet" = Table.SelectRows(Source, each Text.EndsWith([Name], ".parquet")),
     #"Combined Files" = Table.Combine(
         Table.TransformColumns(#"Filtered to Parquet", {{"Content", each Parquet.Document(_)}})
     )
@@ -212,10 +208,8 @@ in
 
 ```powerquery
 let
-    Source = AzureStorage.DataLake("https://<storageAccountName>.dfs.core.windows.net/"),
-    curated = Source{[Name="curated"]}[Content],
-    tableFolder = curated{[Name="simulationUserEvents"]}[Content],
-    #"Filtered to Parquet" = Table.SelectRows(tableFolder, each Text.EndsWith([Name], ".parquet")),
+    Source = AzureStorage.DataLake("https://<storageAccountName>.dfs.core.windows.net/curated/simulationUserEvents"),
+    #"Filtered to Parquet" = Table.SelectRows(Source, each Text.EndsWith([Name], ".parquet")),
     #"Combined Files" = Table.Combine(
         Table.TransformColumns(#"Filtered to Parquet", {{"Content", each Parquet.Document(_)}})
     )
@@ -229,10 +223,8 @@ in
 
 ```powerquery
 let
-    Source = AzureStorage.DataLake("https://<storageAccountName>.dfs.core.windows.net/"),
-    curated = Source{[Name="curated"]}[Content],
-    tableFolder = curated{[Name="trainings"]}[Content],
-    #"Filtered to Parquet" = Table.SelectRows(tableFolder, each Text.EndsWith([Name], ".parquet")),
+    Source = AzureStorage.DataLake("https://<storageAccountName>.dfs.core.windows.net/curated/trainings"),
+    #"Filtered to Parquet" = Table.SelectRows(Source, each Text.EndsWith([Name], ".parquet")),
     #"Combined Files" = Table.Combine(
         Table.TransformColumns(#"Filtered to Parquet", {{"Content", each Parquet.Document(_)}})
     )
@@ -246,10 +238,8 @@ in
 
 ```powerquery
 let
-    Source = AzureStorage.DataLake("https://<storageAccountName>.dfs.core.windows.net/"),
-    curated = Source{[Name="curated"]}[Content],
-    tableFolder = curated{[Name="payloads"]}[Content],
-    #"Filtered to Parquet" = Table.SelectRows(tableFolder, each Text.EndsWith([Name], ".parquet")),
+    Source = AzureStorage.DataLake("https://<storageAccountName>.dfs.core.windows.net/curated/payloads"),
+    #"Filtered to Parquet" = Table.SelectRows(Source, each Text.EndsWith([Name], ".parquet")),
     #"Combined Files" = Table.Combine(
         Table.TransformColumns(#"Filtered to Parquet", {{"Content", each Parquet.Document(_)}})
     )
@@ -263,10 +253,8 @@ in
 
 ```powerquery
 let
-    Source = AzureStorage.DataLake("https://<storageAccountName>.dfs.core.windows.net/"),
-    curated = Source{[Name="curated"]}[Content],
-    tableFolder = curated{[Name="users"]}[Content],
-    #"Filtered to Parquet" = Table.SelectRows(tableFolder, each Text.EndsWith([Name], ".parquet")),
+    Source = AzureStorage.DataLake("https://<storageAccountName>.dfs.core.windows.net/curated/users"),
+    #"Filtered to Parquet" = Table.SelectRows(Source, each Text.EndsWith([Name], ".parquet")),
     #"Combined Files" = Table.Combine(
         Table.TransformColumns(#"Filtered to Parquet", {{"Content", each Parquet.Document(_)}})
     )
@@ -281,10 +269,8 @@ If you only want the most recent day's data instead of all historical snapshots,
 
 ```powerquery
 let
-    Source = AzureStorage.DataLake("https://<storageAccountName>.dfs.core.windows.net/"),
-    curated = Source{[Name="curated"]}[Content],
-    tableFolder = curated{[Name="<tableName>"]}[Content],
-    #"Filtered to Parquet" = Table.SelectRows(tableFolder, each Text.EndsWith([Name], ".parquet")),
+    Source = AzureStorage.DataLake("https://<storageAccountName>.dfs.core.windows.net/curated/<tableName>"),
+    #"Filtered to Parquet" = Table.SelectRows(Source, each Text.EndsWith([Name], ".parquet")),
     #"Combined Files" = Table.Combine(
         Table.TransformColumns(#"Filtered to Parquet", {{"Content", each Parquet.Document(_)}})
     ),
@@ -586,7 +572,9 @@ In Power BI Desktop, go to **Model** view and create these relationships:
 
 ## 4. Recommended DAX Measures
 
-Create a dedicated **Measures** table in Power BI for organization: **Modeling** → **New Table** → `Measures = ROW("Value", 0)`.
+Create a dedicated measures table in Power BI for organization: **Modeling** → **New Table** → `_Measures = ROW("Value", 0)`.
+
+> ⚠️ **Note:** Do not use `Measures` as the table name — it is a reserved word in TMDL/PBIR format and will cause errors when saving as a `.pbip` project. Use `_Measures` instead.
 
 ### Compromise Rate
 

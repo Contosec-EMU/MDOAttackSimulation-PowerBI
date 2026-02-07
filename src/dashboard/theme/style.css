@@ -1,0 +1,110 @@
+/* MDO Attack Simulation Dashboard — Fluent Design-inspired theme */
+
+/* Typography */
+@import url('https://static2.sharepointonline.com/files/fabric/assets/fonts/segoeui-westeuropean/segoeui-regular.woff2');
+
+html, body, [class*="css"] {
+    font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif;
+    color: #323130;
+}
+
+/* Header */
+header[data-testid="stHeader"] {
+    background-color: #ffffff;
+    border-bottom: 1px solid #edebe9;
+}
+
+/* Sidebar */
+section[data-testid="stSidebar"] {
+    background-color: #faf9f8;
+    border-right: 1px solid #edebe9;
+}
+
+section[data-testid="stSidebar"] .stMarkdown h1 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #323130;
+}
+
+/* Metric cards */
+div[data-testid="stMetric"] {
+    background-color: #ffffff;
+    border: 1px solid #edebe9;
+    border-radius: 8px;
+    padding: 16px 20px;
+    box-shadow: 0 1.6px 3.6px rgba(0,0,0,0.06), 0 0.3px 0.9px rgba(0,0,0,0.04);
+    border-left: 4px solid #0078d4;
+}
+
+div[data-testid="stMetric"] label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #605e5c;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+div[data-testid="stMetric"] [data-testid="stMetricValue"] {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #0078d4;
+}
+
+/* Data tables */
+div[data-testid="stDataFrame"] {
+    border: 1px solid #edebe9;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+/* Tabs */
+button[data-baseweb="tab"] {
+    font-weight: 600;
+    color: #605e5c;
+}
+
+button[data-baseweb="tab"][aria-selected="true"] {
+    color: #0078d4;
+    border-bottom-color: #0078d4;
+}
+
+/* Plotly chart containers */
+div.stPlotlyChart {
+    background-color: #ffffff;
+    border: 1px solid #edebe9;
+    border-radius: 8px;
+    padding: 8px;
+    box-shadow: 0 1.6px 3.6px rgba(0,0,0,0.06), 0 0.3px 0.9px rgba(0,0,0,0.04);
+}
+
+/* Info/warning boxes */
+div[data-testid="stAlert"] {
+    border-radius: 8px;
+}
+
+/* Section dividers */
+hr {
+    border: none;
+    border-top: 1px solid #edebe9;
+    margin: 1.5rem 0;
+}
+
+/* Page title */
+h1 {
+    font-weight: 700;
+    color: #201f1e;
+    font-size: 1.6rem;
+}
+
+h2 {
+    font-weight: 600;
+    color: #323130;
+    font-size: 1.2rem;
+    margin-top: 1.5rem;
+}
+
+h3 {
+    font-weight: 600;
+    color: #605e5c;
+    font-size: 1rem;
+}

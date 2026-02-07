@@ -77,3 +77,8 @@ nul
 htmlcov/
 .coverage
 coverage.xml
+
+# Power BI Desktop local artifacts
+**/.pbi/
+**/LocalDateTable_*.tmdl
+**/DateTableTemplate_*.tmdl

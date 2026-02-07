@@ -252,12 +252,13 @@ az role assignment create --role "Storage Blob Data Reader" --assignee $CURRENT_
 # Wait for RBAC propagation
 Start-Sleep -Seconds 60
 
+# Get the function key (all endpoints require authentication)
+$FUNCTION_KEY = (az functionapp keys list -g $RESOURCE_GROUP -n $FUNCTION_APP_NAME --query "functionKeys.default" -o tsv)
+
 # Health check
-Invoke-RestMethod "https://$FUNCTION_APP_NAME.azurewebsites.net/api/health"
+Invoke-RestMethod "https://$FUNCTION_APP_NAME.azurewebsites.net/api/health?code=$FUNCTION_KEY"
 
 # Trigger a manual test run
-$FUNCTION_KEY = az functionapp keys list -g $RESOURCE_GROUP -n $FUNCTION_APP_NAME `
-  --query "functionKeys.default" -o tsv
 Invoke-RestMethod -Method Post "https://$FUNCTION_APP_NAME.azurewebsites.net/api/test-run?code=$FUNCTION_KEY"
 
 # Verify Parquet files exist

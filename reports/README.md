@@ -2,6 +2,8 @@
 
 Pre-built Power BI report templates for Microsoft Defender for Office 365 Attack Simulation Training data. These templates use the **PBIR (Power BI Enhanced Report Format)** — a JSON-based, source-control friendly format.
 
+> **Note:** These report templates are provided as **functional starting points**, not polished dashboards. The authors are security engineers, not data visualization designers — the layouts, visuals, and formatting are intentionally basic. You are encouraged to customize the reports to match your organization's branding, reporting standards, and analytical needs.
+
 ## Requirements
 
 - **Power BI Desktop** (March 2024 or later) with Developer Mode enabled
@@ -20,9 +22,9 @@ Pre-built Power BI report templates for Microsoft Defender for Office 365 Attack
 
 ### 2. Open the Project
 
-1. In Power BI Desktop, go to **File > Open report > Browse reports**
-2. Navigate to this `reports/` folder
-3. Open **`MDOAttackSimulation.pbip`**
+1. In **File Explorer**, navigate to the `reports/` folder and **double-click** `MDOAttackSimulation.pbip`
+
+> **Tip:** If double-clicking doesn't work (or the file opens in a text editor), open Power BI Desktop first, then go to **File > Open report > Browse reports** and select the `.pbip` file.
 
 ### 3. Configure Your Storage Connection
 

@@ -318,11 +318,11 @@ Examples:
 
 ### Pre-Built Report Templates (Recommended)
 
-This repository includes ready-to-use Power BI report templates in the [`reports/`](reports/) folder with 5 dashboard pages, 12 DAX measures, and all table relationships pre-configured.
+This repository includes ready-to-use Power BI report templates in the [`reports/`](reports/) folder with 5 dashboard pages, 12 DAX measures, and all table relationships pre-configured. These are **basic starter templates** — the authors are security engineers, not data visualization designers — so you are encouraged to customize them to fit your organization's needs.
 
 1. Open **Power BI Desktop** (March 2024+) with Developer Mode enabled
-2. Open `reports/MDOAttackSimulation.pbip`
-3. Set the `StorageAccountUrl` parameter to your ADLS Gen2 endpoint
+2. In **File Explorer**, double-click `reports/MDOAttackSimulation.pbip` (or open from Power BI Desktop via **File > Open report**)
+3. Set the `StorageAccountUrl` parameter to your ADLS Gen2 DFS endpoint (e.g., `https://<name>.dfs.core.windows.net`)
 4. Click **Refresh** to load data
 
 See the [reports README](reports/README.md) for detailed setup instructions and troubleshooting.

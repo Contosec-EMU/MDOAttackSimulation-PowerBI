@@ -123,6 +123,8 @@ Automated CI/CD with OIDC authentication — no secrets to rotate.
 
 → **See [GitHub Actions Setup Guide](docs/GITHUB_ACTIONS_SETUP.md)** for full instructions.
 
+> **Resource group naming:** All examples in this guide use `rg-mdo-attack-simulation` as the resource group name. Replace it with your organization's naming convention (e.g., `rg-mdo-attack-sim-prod`). All scripts accept custom names via parameters.
+
 ### Option 2: Azure CLI
 
 #### Step 1: Create the Entra ID App Registration

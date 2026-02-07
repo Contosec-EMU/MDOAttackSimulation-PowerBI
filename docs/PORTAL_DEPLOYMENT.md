@@ -43,6 +43,8 @@ Before you begin, ensure you have:
 
 > **Tip:** To check your subscription roles, navigate to **Subscriptions → (your subscription) → Access control (IAM) → View my access**.
 
+> **Resource group naming:** This guide uses `rg-mdo-attack-simulation` as an example throughout. Replace it with your organization's naming convention when following the steps.
+
 ---
 
 ## Step 1: Create Resource Group

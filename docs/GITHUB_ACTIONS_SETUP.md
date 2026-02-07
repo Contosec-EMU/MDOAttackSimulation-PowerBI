@@ -298,6 +298,8 @@ The workflow uses the `production` environment:
 - Can restrict deployments to specific branches
 - Can configure environment secrets (override repository secrets)
 
+> **Note:** The workflow reads the resource group from the `AZURE_RESOURCE_GROUP` repository variable. Set this in your GitHub repo under **Settings → Secrets and variables → Actions → Variables**.
+
 ## Troubleshooting
 
 ### Error: "az: command not found"

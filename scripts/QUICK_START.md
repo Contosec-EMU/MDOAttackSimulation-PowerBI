@@ -2,6 +2,8 @@
 
 Fast-track guide to get GitHub Actions deployment running in 10 minutes.
 
+> **Note:** Examples use `rg-mdo-attack-simulation` — replace with your resource group name.
+
 ## Quick Setup (4 Steps)
 
 ### 1. Authenticate to Azure

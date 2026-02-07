@@ -12,6 +12,8 @@ Browser-based alternative to Power BI for viewing MDO Attack Simulation Training
 | **Azure CLI** | v2.50+ ([Install](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli)) |
 | **Permissions** | Ability to create Entra ID app registrations (Application Administrator or Global Admin) |
 
+> **Note:** Examples use `rg-mdo-attack-simulation` — replace with your actual resource group name.
+
 ## Deploy (One Command)
 
 The deploy script handles everything: creates the app registration, deploys infrastructure, configures authentication, and publishes the code.

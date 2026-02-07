@@ -11,7 +11,7 @@ permissions:
   contents: read    # Required for checkout
 
 env:
-  AZURE_RESOURCE_GROUP: 'rg-mdo-attack-simulation'
+  AZURE_RESOURCE_GROUP: ${{ vars.AZURE_RESOURCE_GROUP || 'rg-mdo-attack-simulation' }}
   AZURE_REGION: 'westus2'
 
 jobs:

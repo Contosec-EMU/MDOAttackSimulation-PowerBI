@@ -134,16 +134,51 @@ Write-Host "  Redirect URI: $REDIRECT_URI"
 
 # Deploy code
 Write-Host "`n5. Publishing Streamlit app..." -ForegroundColor Yellow
+Write-Host "  This may take 5-10 minutes (Kudu installs Python dependencies remotely)." -ForegroundColor Gray
 Push-Location src/dashboard
 $zipFile = [System.IO.Path]::GetTempFileName() + ".zip"
 Compress-Archive -Path * -DestinationPath $zipFile -Force
-az webapp deploy `
-    --resource-group $ResourceGroup `
-    --name $DASHBOARD_NAME `
-    --src-path $zipFile `
-    --type zip
+
+$maxAttempts = 2
+$deployed = $false
+for ($attempt = 1; $attempt -le $maxAttempts; $attempt++) {
+    if ($attempt -gt 1) {
+        Write-Host "`n  Retrying deployment (attempt $attempt of $maxAttempts)..." -ForegroundColor Yellow
+    }
+    az webapp deploy `
+        --resource-group $ResourceGroup `
+        --name $DASHBOARD_NAME `
+        --src-path $zipFile `
+        --type zip 2>&1
+    if ($LASTEXITCODE -eq 0) {
+        $deployed = $true
+        break
+    }
+    if ($attempt -lt $maxAttempts) {
+        Write-Host "  Build failed — this is usually a transient network timeout on B1 plans." -ForegroundColor Yellow
+        Write-Host "  Waiting 30 seconds before retry..." -ForegroundColor Gray
+        Start-Sleep -Seconds 30
+    }
+}
+
 Remove-Item $zipFile
 Pop-Location
+
+if (-not $deployed) {
+    Write-Host "`n=== Deployment Failed ===" -ForegroundColor Red
+    Write-Host "The code deployment failed after $maxAttempts attempts." -ForegroundColor Red
+    Write-Host ""
+    Write-Host "This is typically caused by a network timeout downloading Python packages." -ForegroundColor Yellow
+    Write-Host "The infrastructure and auth configuration were deployed successfully." -ForegroundColor Yellow
+    Write-Host ""
+    Write-Host "To retry just the code deployment:" -ForegroundColor Cyan
+    Write-Host "  az webapp deploy --resource-group $ResourceGroup --name $DASHBOARD_NAME --src-path <zip-file> --type zip"
+    Write-Host ""
+    Write-Host "If it keeps failing, disable remote build and install dependencies locally:" -ForegroundColor Cyan
+    Write-Host "  az webapp config appsettings set --resource-group $ResourceGroup --name $DASHBOARD_NAME --settings SCM_DO_BUILD_DURING_DEPLOYMENT=false"
+    Write-Host "  Then redeploy with a zip that includes the installed packages."
+    exit 1
+}
 
 Write-Host "`n=== Deployment Complete ===" -ForegroundColor Green
 Write-Host "Dashboard URL: $DASHBOARD_URL"

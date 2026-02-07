@@ -123,16 +123,50 @@ echo "  Redirect URI: $REDIRECT_URI"
 
 # Deploy code
 echo -e "\n5. Publishing Streamlit app..."
+echo "  This may take 5-10 minutes (Kudu installs Python dependencies remotely)."
 cd src/dashboard
 ZIP_FILE=$(mktemp).zip
 zip -r "$ZIP_FILE" . -x '__pycache__/*' '*.pyc' '.venv/*'
-az webapp deploy \
-    --resource-group "$RESOURCE_GROUP" \
-    --name "$DASHBOARD_NAME" \
-    --src-path "$ZIP_FILE" \
-    --type zip
+
+MAX_ATTEMPTS=2
+DEPLOYED=false
+for ATTEMPT in $(seq 1 $MAX_ATTEMPTS); do
+    if [ "$ATTEMPT" -gt 1 ]; then
+        echo -e "\n  Retrying deployment (attempt $ATTEMPT of $MAX_ATTEMPTS)..."
+    fi
+    if az webapp deploy \
+        --resource-group "$RESOURCE_GROUP" \
+        --name "$DASHBOARD_NAME" \
+        --src-path "$ZIP_FILE" \
+        --type zip; then
+        DEPLOYED=true
+        break
+    fi
+    if [ "$ATTEMPT" -lt "$MAX_ATTEMPTS" ]; then
+        echo "  Build failed — this is usually a transient network timeout on B1 plans."
+        echo "  Waiting 30 seconds before retry..."
+        sleep 30
+    fi
+done
+
 rm -f "$ZIP_FILE"
 cd ../..
+
+if [ "$DEPLOYED" != "true" ]; then
+    echo -e "\n=== Deployment Failed ==="
+    echo "The code deployment failed after $MAX_ATTEMPTS attempts."
+    echo ""
+    echo "This is typically caused by a network timeout downloading Python packages."
+    echo "The infrastructure and auth configuration were deployed successfully."
+    echo ""
+    echo "To retry just the code deployment:"
+    echo "  az webapp deploy --resource-group $RESOURCE_GROUP --name $DASHBOARD_NAME --src-path <zip-file> --type zip"
+    echo ""
+    echo "If it keeps failing, disable remote build and install dependencies locally:"
+    echo "  az webapp config appsettings set --resource-group $RESOURCE_GROUP --name $DASHBOARD_NAME --settings SCM_DO_BUILD_DURING_DEPLOYMENT=false"
+    echo "  Then redeploy with a zip that includes the installed packages."
+    exit 1
+fi
 
 echo -e "\n=== Deployment Complete ==="
 echo "Dashboard URL: $DASHBOARD_URL"

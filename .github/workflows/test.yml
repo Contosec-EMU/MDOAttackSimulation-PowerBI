@@ -2,9 +2,8 @@ name: Tests & Quality
 
 on:
   pull_request:
-    branches: [main, public-release]
-  push:
-    branches: [main, public-release]
+    branches: [main]
+  workflow_dispatch:
 
 permissions:
   contents: read

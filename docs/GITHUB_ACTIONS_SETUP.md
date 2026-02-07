@@ -457,14 +457,16 @@ The GitHub Actions workflow is designed to minimize Azure costs:
 - **Bicep Docs**: https://learn.microsoft.com/en-us/azure/azure-resource-manager/bicep/
 - **Azure Functions Deployment**: https://learn.microsoft.com/en-us/azure/azure-functions/functions-how-to-github-actions
 
-## Next Steps
+## Next Steps: Set Up Reporting
 
-After successful deployment:
+Your data pipeline is running and writing Parquet files to ADLS Gen2. Choose how you want to visualize the data:
 
-1. **Connect Power BI** to ADLS Gen2 (see `README.md`)
-2. **Configure Graph API app registration** with `AttackSimulation.Read.All` permission
-3. **Set up monitoring alerts** in Azure Monitor
-4. **Schedule Power BI refresh** to match function trigger schedule
+| Option | Best for | Guide |
+|--------|----------|-------|
+| **Power BI Desktop** | Rich interactive dashboards, scheduled refresh, sharing via Power BI Service | [Power BI Setup Guide](POWERBI_SETUP.md) |
+| **Streamlit Dashboard** | Browser-based, no Power BI license needed, lightweight executive view | [Dashboard Setup Guide](DASHBOARD_SETUP.md) |
+
+You can set up both — they read the same data from ADLS Gen2.
 
 ---
 

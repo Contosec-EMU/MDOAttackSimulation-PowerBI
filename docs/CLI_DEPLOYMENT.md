@@ -110,9 +110,9 @@ az ad app create `
   --sign-in-audience AzureADMyOrg
 
 # Get the application (client) ID
-$APP_ID = az ad app list `
+$APP_ID = (az ad app list `
   --display-name "MDO Attack Simulation Ingestion" `
-  --query "[0].appId" -o tsv
+  --query "[0].appId" -o tsv)
 
 Write-Host "App (Client) ID: $APP_ID"
 
@@ -130,11 +130,11 @@ az ad app permission add `
 az ad app permission admin-consent --id $APP_ID
 
 # Create client secret (valid for 2 years)
-$CLIENT_SECRET = az ad app credential reset `
+$CLIENT_SECRET = (az ad app credential reset `
   --id $APP_ID `
   --display-name "Function App Secret" `
   --years 2 `
-  --query "password" -o tsv
+  --query "password" -o tsv)
 
 Write-Host "Client Secret: $CLIENT_SECRET"
 Write-Host "Tenant ID: $(az account show --query tenantId -o tsv)"
@@ -218,21 +218,21 @@ az deployment group create `
 # Capture deployment outputs for subsequent steps
 $DEPLOYMENT_NAME = "main"
 
-$FUNC_NAME = az deployment group show `
+$FUNC_NAME = (az deployment group show `
   -g $RESOURCE_GROUP -n $DEPLOYMENT_NAME `
-  --query "properties.outputs.functionAppName.value" -o tsv
+  --query "properties.outputs.functionAppName.value" -o tsv)
 
-$KV_NAME = az deployment group show `
+$KV_NAME = (az deployment group show `
   -g $RESOURCE_GROUP -n $DEPLOYMENT_NAME `
-  --query "properties.outputs.keyVaultName.value" -o tsv
+  --query "properties.outputs.keyVaultName.value" -o tsv)
 
-$DL_NAME = az deployment group show `
+$DL_NAME = (az deployment group show `
   -g $RESOURCE_GROUP -n $DEPLOYMENT_NAME `
-  --query "properties.outputs.dataLakeAccountName.value" -o tsv
+  --query "properties.outputs.dataLakeAccountName.value" -o tsv)
 
-$APPINSIGHTS_NAME = az deployment group show `
+$APPINSIGHTS_NAME = (az deployment group show `
   -g $RESOURCE_GROUP -n $DEPLOYMENT_NAME `
-  --query "properties.outputs.appInsightsName.value" -o tsv
+  --query "properties.outputs.appInsightsName.value" -o tsv)
 
 Write-Host "Function App:  $FUNC_NAME"
 Write-Host "Key Vault:     $KV_NAME"
@@ -294,11 +294,12 @@ az keyvault secret set \
 
 ```powershell
 # Grant yourself Key Vault Secrets Officer on the vault
-$CURRENT_USER_ID = az ad signed-in-user show --query id -o tsv
+$CURRENT_USER_ID = (az ad signed-in-user show --query id -o tsv)
+$KV_SCOPE = (az keyvault show --name $KV_NAME --resource-group $RESOURCE_GROUP --query id -o tsv)
 az role assignment create `
   --role "Key Vault Secrets Officer" `
   --assignee $CURRENT_USER_ID `
-  --scope $(az keyvault show --name $KV_NAME --resource-group $RESOURCE_GROUP --query id -o tsv)
+  --scope $KV_SCOPE
 
 # Wait for RBAC propagation
 Start-Sleep -Seconds 60
@@ -444,20 +445,21 @@ az monitor app-insights query \
 
 ```powershell
 # Grant yourself Storage Blob Data Reader on the data lake
-$CURRENT_USER_ID = az ad signed-in-user show --query id -o tsv
+$CURRENT_USER_ID = (az ad signed-in-user show --query id -o tsv)
+$DL_SCOPE = (az storage account show --name $DL_NAME --resource-group $RESOURCE_GROUP --query id -o tsv)
 az role assignment create `
   --role "Storage Blob Data Reader" `
   --assignee $CURRENT_USER_ID `
-  --scope $(az storage account show --name $DL_NAME --resource-group $RESOURCE_GROUP --query id -o tsv)
+  --scope $DL_SCOPE
 
 # Wait for RBAC propagation
 Start-Sleep -Seconds 60
 
 # Get the function host key
-$FUNC_KEY = az functionapp keys list `
+$FUNC_KEY = (az functionapp keys list `
   --resource-group $RESOURCE_GROUP `
   --name $FUNC_NAME `
-  --query "functionKeys.default" -o tsv
+  --query "functionKeys.default" -o tsv)
 
 $FUNC_URL = "https://$FUNC_NAME.azurewebsites.net"
 
@@ -686,10 +688,10 @@ az role assignment list \
 
 ```powershell
 # Get the Function App managed identity principal ID
-$PRINCIPAL_ID = az functionapp identity show `
+$PRINCIPAL_ID = (az functionapp identity show `
   --resource-group $RESOURCE_GROUP `
   --name $FUNC_NAME `
-  --query "principalId" -o tsv
+  --query "principalId" -o tsv)
 
 # List role assignments for the managed identity
 az role assignment list `

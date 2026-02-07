@@ -187,13 +187,27 @@ After infrastructure deployment completes:
 ```bash
 # Get Key Vault name from deployment output (format: kv-<prefix>-<region>)
 KV_NAME="kv-mdoast-west"  # Update with actual name
+RESOURCE_GROUP="rg-mdo-attack-simulation"
+```
 
+> 📝 **RBAC required:** You need `Key Vault Secrets Officer` on the vault before you can write secrets. If you get an "Access denied" or "Forbidden" error, grant yourself the role first:
+>
+> ```bash
+> CURRENT_USER_ID=$(az ad signed-in-user show --query id -o tsv)
+> KV_SCOPE=$(az keyvault show --name "$KV_NAME" --resource-group "$RESOURCE_GROUP" --query id -o tsv)
+> az role assignment create --role "Key Vault Secrets Officer" --assignee "$CURRENT_USER_ID" --scope "$KV_SCOPE"
+> sleep 60
+> ```
+
+```bash
 # Store Graph API client secret
 az keyvault secret set \
   --vault-name $KV_NAME \
   --name "graph-client-secret" \
   --value "<your-graph-api-client-secret>"
 ```
+
+> ⚠️ **Firewall note:** The Key Vault is deployed with network rules that deny public access by default. If running from outside the VNet, temporarily add your IP: `az keyvault network-rule add --name "$KV_NAME" --ip-address "$(curl -s https://api.ipify.org)/32"`
 
 **Important**: This is the ONLY secret you need to manually store. The Function App retrieves it at runtime using its managed identity.
 
@@ -205,13 +219,20 @@ az keyvault secret set \
 # Get function app name (format: <prefix>-func-<region>)
 FUNC_NAME="mdoast-func-west"  # Update with actual name
 
-# Test health endpoint
+# Get function app hostname
 az functionapp show \
   --name $FUNC_NAME \
   --resource-group rg-mdo-attack-simulation \
   --query defaultHostName -o tsv
 
-curl https://<function-app-url>/api/health
+# Get function key (all HTTP endpoints require AuthLevel.FUNCTION)
+FUNCTION_KEY=$(az functionapp keys list \
+  --name $FUNC_NAME \
+  --resource-group rg-mdo-attack-simulation \
+  --query functionKeys.default -o tsv)
+
+# Test health endpoint
+curl "https://<function-app-url>/api/health?code=${FUNCTION_KEY}"
 ```
 
 Expected response: `{"status": "healthy"}`
@@ -219,15 +240,22 @@ Expected response: `{"status": "healthy"}`
 ### Trigger Manual Test Run
 
 ```bash
-# Get function key
-FUNCTION_KEY=$(az functionapp keys list \
-  --name $FUNC_NAME \
-  --resource-group rg-mdo-attack-simulation \
-  --query functionKeys.default -o tsv)
-
 # Trigger test run
 curl -X POST "https://<function-app-url>/api/test-run?code=${FUNCTION_KEY}"
 ```
+
+### Verify Data in Storage
+
+To browse ingested data in ADLS Gen2, your user account needs `Storage Blob Data Reader`:
+
+```bash
+CURRENT_USER_ID=$(az ad signed-in-user show --query id -o tsv)
+DL_NAME="<your-datalake-account-name>"  # Update with actual name
+STORAGE_SCOPE=$(az storage account show --name "$DL_NAME" --resource-group "$RESOURCE_GROUP" --query id -o tsv)
+az role assignment create --role "Storage Blob Data Reader" --assignee "$CURRENT_USER_ID" --scope "$STORAGE_SCOPE"
+```
+
+> ⚠️ **Firewall note:** The storage account is deployed with network rules that deny public access by default. If running from outside the VNet, temporarily add your IP: `az storage account network-rule add --account-name "$DL_NAME" --ip-address "$(curl -s https://api.ipify.org)"`
 
 ### View Logs in Azure
 

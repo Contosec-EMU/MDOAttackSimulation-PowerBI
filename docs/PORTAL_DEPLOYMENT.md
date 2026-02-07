@@ -701,6 +701,20 @@ After granting consent, you should see:
 
 Store the Graph API client secret securely in Key Vault where the Function App can retrieve it using managed identity.
 
+### Prerequisites: Grant Yourself Key Vault Access
+
+Before you can create secrets, your own user account needs the **Key Vault Secrets Officer** role:
+
+1. Navigate to **Key vaults** → select your key vault (e.g., `mdoast-kv-2024prod`)
+2. In the left menu, click **Access Control (IAM)**
+3. Click **➕ Add** → **Add role assignment**
+4. **Role** tab: Search for and select `Key Vault Secrets Officer` → click **Next**
+5. **Members** tab: Select **User, group, or service principal** → click **➕ Select members**
+6. Search for and select **your own user account** → click **Select** → click **Next**
+7. Click **Review + assign**
+
+> ⏱ **Wait approximately 60 seconds** for the role assignment to propagate before proceeding. If you get a "Forbidden" error creating the secret, wait a bit longer and retry.
+
 ### Navigation
 
 1. Navigate to **Key vaults** → select your key vault (e.g., `mdoast-kv-2024prod`)
@@ -732,6 +746,13 @@ Store the Graph API client secret securely in Key Vault where the Function App c
 > ⚠️ **The secret name MUST be exactly `graph-client-secret`** — the function code looks for this specific name.
 
 > **Checkpoint:** Navigate to Key Vault → Secrets. You should see `graph-client-secret` listed with status **Enabled**.
+
+> ⚠️ **ForbiddenByFirewall error?** If you receive a `ForbiddenByFirewall` error when creating the secret, your IP address is being blocked by the Key Vault firewall. To fix this temporarily:
+> 1. Navigate to **Key vaults** → select your key vault → **Networking** (under Settings)
+> 2. Under **Firewall**, click **➕ Add your client IP address** (or manually enter your public IP)
+> 3. Click **Apply** and wait ~30 seconds
+> 4. Retry creating the secret
+> 5. *(Optional)* After the secret is stored, you can remove your IP from the firewall to restore the locked-down configuration
 
 ---
 
@@ -910,8 +931,14 @@ function_app.zip
 
 ### 16b: Test the Health Endpoint
 
+> ⚠️ **Function key required:** All HTTP endpoints (`health`, `test_run`, `sync_status`, `reset_sync_state`) require a function key. To get the key:
+> 1. Navigate to **Function App** → select your function app
+> 2. In the left menu, click **App Keys** (under Functions)
+> 3. Under **Function Keys**, copy the value of the `default` key
+> 4. Append `?code=<your-function-key>` to all endpoint URLs (e.g., `https://<app>.azurewebsites.net/api/health?code=abc123...`)
+
 1. Click on the `health` function
-2. Click **Get function URL** and copy it
+2. Click **Get function URL** and copy it (the URL already includes the `?code=` parameter)
 3. Open a new browser tab and paste the URL — you should see a response like:
    ```json
    {"status": "healthy", "timestamp": "2024-01-15T10:30:00Z"}
@@ -941,6 +968,23 @@ Alternatively:
 > ⏱ **Note:** The test run may take 2–10 minutes to complete depending on data volume. Check Application Insights for progress.
 
 ### 16d: Verify Data in Storage
+
+> ⚠️ **Portal access requires Storage Blob Data Reader:** To browse container data in the Azure Portal (or connect from Power BI), your user account needs the **Storage Blob Data Reader** role:
+> 1. Navigate to **Storage accounts** → select the **data lake** storage account (e.g., `mdoastdl2024prod`)
+> 2. In the left menu, click **Access Control (IAM)**
+> 3. Click **➕ Add** → **Add role assignment**
+> 4. **Role** tab: Search for and select `Storage Blob Data Reader` → click **Next**
+> 5. **Members** tab: Select **User, group, or service principal** → click **➕ Select members**
+> 6. Search for and select each user who needs read access (including yourself and any Power BI users) → click **Select** → click **Next**
+> 7. Click **Review + assign**
+>
+> Repeat this for every user who will connect to the data lake from Power BI.
+
+> ⚠️ **Authorization errors browsing storage?** If you still get authorization errors after assigning the role, your IP address may be blocked by the storage firewall. To fix this temporarily:
+> 1. Navigate to **Storage accounts** → select the data lake storage account → **Networking** (under Security + networking)
+> 2. Under **Firewall**, add your client IP address
+> 3. Click **Save** and wait ~30 seconds before retrying
+> 4. *(Optional)* After verification, remove your IP to restore the locked-down configuration
 
 1. Navigate to **Storage accounts** → select the **data lake** storage account
 2. Click **Containers** in the left menu

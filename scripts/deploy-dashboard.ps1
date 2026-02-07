@@ -34,24 +34,57 @@ $ErrorActionPreference = "Stop"
 
 Write-Host "=== MDO Attack Simulation — Dashboard Deployment ===" -ForegroundColor Cyan
 
-# Get existing infrastructure outputs
+# Verify resource group exists
 Write-Host "`n1. Reading existing infrastructure..." -ForegroundColor Yellow
-$MAIN_OUTPUTS = az deployment group show `
-    --resource-group $ResourceGroup `
-    --name main `
-    --query "properties.outputs" -o json | ConvertFrom-Json
+$rgExists = az group exists --name $ResourceGroup -o tsv
+if ($rgExists -ne "true") {
+    Write-Host "ERROR: Resource group '$ResourceGroup' not found. Deploy the main infrastructure first." -ForegroundColor Red
+    exit 1
+}
+
+# Find the main deployment outputs (try common deployment names)
+$MAIN_OUTPUTS = $null
+foreach ($deployName in @("main", "azure-deploy", $ResourceGroup)) {
+    $MAIN_OUTPUTS = az deployment group show `
+        --resource-group $ResourceGroup `
+        --name $deployName `
+        --query "properties.outputs" -o json 2>$null | ConvertFrom-Json
+    if ($MAIN_OUTPUTS) {
+        Write-Host "  Found deployment: $deployName"
+        break
+    }
+}
+
+if (-not $MAIN_OUTPUTS) {
+    Write-Host "ERROR: Could not find the main Bicep deployment in resource group '$ResourceGroup'." -ForegroundColor Red
+    Write-Host "  Expected a deployment named 'main'. List deployments with:" -ForegroundColor Yellow
+    Write-Host "    az deployment group list --resource-group $ResourceGroup --query ""[].name"" -o tsv" -ForegroundColor Yellow
+    exit 1
+}
 
 $APP_SERVICE_PLAN_NAME = az appservice plan list `
     --resource-group $ResourceGroup `
     --query "[0].id" -o tsv
 
+if (-not $APP_SERVICE_PLAN_NAME) {
+    Write-Host "ERROR: No App Service Plan found in resource group '$ResourceGroup'." -ForegroundColor Red
+    exit 1
+}
+
 $DATA_LAKE_NAME = $MAIN_OUTPUTS.dataLakeAccountName.value
 $STORAGE_URL = $MAIN_OUTPUTS.adlsGen2Endpoint.value
+$SUBNET_ID = $MAIN_OUTPUTS.functionSubnetId.value
+
+if (-not $DATA_LAKE_NAME -or -not $STORAGE_URL -or -not $SUBNET_ID) {
+    Write-Host "ERROR: Missing expected outputs from main deployment (dataLakeAccountName, adlsGen2Endpoint, functionSubnetId)." -ForegroundColor Red
+    Write-Host "  The main infrastructure may need to be redeployed." -ForegroundColor Yellow
+    exit 1
+}
+
 $APP_INSIGHTS_CS = az monitor app-insights component show `
     --resource-group $ResourceGroup `
     --query "[0].connectionString" -o tsv
 $TENANT_ID = az account show --query tenantId -o tsv
-$SUBNET_ID = $MAIN_OUTPUTS.functionSubnetId.value
 
 Write-Host "  Data Lake: $DATA_LAKE_NAME"
 Write-Host "  Storage URL: $STORAGE_URL"

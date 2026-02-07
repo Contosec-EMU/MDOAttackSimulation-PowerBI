@@ -27,32 +27,56 @@ done
 
 echo "=== MDO Attack Simulation — Dashboard Deployment ==="
 
-# Get existing infrastructure outputs
+# Verify resource group exists
 echo -e "\n1. Reading existing infrastructure..."
+if [ "$(az group exists --name "$RESOURCE_GROUP" -o tsv)" != "true" ]; then
+    echo "ERROR: Resource group '$RESOURCE_GROUP' not found. Deploy the main infrastructure first." >&2
+    exit 1
+fi
+
+# Find the main deployment outputs (try common deployment names)
+MAIN_OUTPUT_JSON=""
+for DEPLOY_NAME in main azure-deploy "$RESOURCE_GROUP"; do
+    MAIN_OUTPUT_JSON=$(az deployment group show \
+        --resource-group "$RESOURCE_GROUP" \
+        --name "$DEPLOY_NAME" \
+        --query "properties.outputs" -o json 2>/dev/null) && break
+    MAIN_OUTPUT_JSON=""
+done
+
+if [ -z "$MAIN_OUTPUT_JSON" ]; then
+    echo "ERROR: Could not find the main Bicep deployment in resource group '$RESOURCE_GROUP'." >&2
+    echo "  Expected a deployment named 'main'. List deployments with:" >&2
+    echo "    az deployment group list --resource-group $RESOURCE_GROUP --query \"[].name\" -o tsv" >&2
+    exit 1
+fi
+
 APP_SERVICE_PLAN_ID=$(az appservice plan list \
     --resource-group "$RESOURCE_GROUP" \
     --query "[0].id" -o tsv)
 
-DATA_LAKE_NAME=$(az deployment group show \
-    --resource-group "$RESOURCE_GROUP" \
-    --name main \
-    --query "properties.outputs.dataLakeAccountName.value" -o tsv)
+if [ -z "$APP_SERVICE_PLAN_ID" ]; then
+    echo "ERROR: No App Service Plan found in resource group '$RESOURCE_GROUP'." >&2
+    exit 1
+fi
 
-STORAGE_URL=$(az deployment group show \
-    --resource-group "$RESOURCE_GROUP" \
-    --name main \
-    --query "properties.outputs.adlsGen2Endpoint.value" -o tsv)
+DATA_LAKE_NAME=$(echo "$MAIN_OUTPUT_JSON" | jq -r '.dataLakeAccountName.value')
+STORAGE_URL=$(echo "$MAIN_OUTPUT_JSON" | jq -r '.adlsGen2Endpoint.value')
+SUBNET_ID=$(echo "$MAIN_OUTPUT_JSON" | jq -r '.functionSubnetId.value')
+
+if [ -z "$DATA_LAKE_NAME" ] || [ "$DATA_LAKE_NAME" = "null" ] || \
+   [ -z "$STORAGE_URL" ] || [ "$STORAGE_URL" = "null" ] || \
+   [ -z "$SUBNET_ID" ] || [ "$SUBNET_ID" = "null" ]; then
+    echo "ERROR: Missing expected outputs from main deployment (dataLakeAccountName, adlsGen2Endpoint, functionSubnetId)." >&2
+    echo "  The main infrastructure may need to be redeployed." >&2
+    exit 1
+fi
 
 APP_INSIGHTS_CS=$(az monitor app-insights component show \
     --resource-group "$RESOURCE_GROUP" \
     --query "[0].connectionString" -o tsv)
 
 TENANT_ID=$(az account show --query tenantId -o tsv)
-
-SUBNET_ID=$(az deployment group show \
-    --resource-group "$RESOURCE_GROUP" \
-    --name main \
-    --query "properties.outputs.functionSubnetId.value" -o tsv)
 
 echo "  Data Lake: $DATA_LAKE_NAME"
 echo "  Storage URL: $STORAGE_URL"

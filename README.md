@@ -99,7 +99,7 @@ This solution bridges that gap by automatically syncing simulation data into you
 - **Entra ID app registration** with the following **Application** permissions:
   - `AttackSimulation.Read.All`
   - `User.Read.All`
-- **Admin consent** granted for the above permissions
+- **Admin consent** granted for the above permissions (requires **Global Administrator** or **Privileged Role Administrator**)
 - **Azure CLI** (v2.50+) — [Install](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli)
 - **Azure Functions Core Tools v4** — [Install](https://learn.microsoft.com/en-us/azure/azure-functions/functions-run-local#install-the-azure-functions-core-tools)
 - **Python 3.11** — [Download](https://www.python.org/downloads/)

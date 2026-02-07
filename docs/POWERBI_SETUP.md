@@ -832,15 +832,13 @@ A gateway is required if **any** of these apply:
 
 #### Gateway Setup (If Required)
 
-1. **Install the gateway** on a VM with network access to the storage account — see [Gateway VM Setup](GATEWAY_VM_SETUP.md) and [Gateway Quick Reference](GATEWAY_QUICK_REFERENCE.md)
+1. **Install the gateway** on a VM with network access to the storage account — see [Microsoft: On-Premises Data Gateway](https://learn.microsoft.com/en-us/power-bi/connect-data/service-gateway-onprem)
 2. **Register the gateway** in Power BI Service under **Settings** → **Manage connections and gateways**
 3. **Add the data source**:
    - **Type**: Azure Data Lake Storage Gen2
    - **URL**: `https://<storageAccountName>.dfs.core.windows.net/`
    - **Authentication**: OAuth2
 4. **Map the dataset** to use the gateway in your semantic model settings
-
-> **Cost-saving tip**: The gateway VM can be set to auto-shutdown after the refresh window. See [Gateway Quick Reference](GATEWAY_QUICK_REFERENCE.md) for VM start/stop commands.
 
 ---
 
@@ -869,7 +867,7 @@ A gateway is required if **any** of these apply:
 | Error | Cause | Fix |
 |---|---|---|
 | "Data source error: Unable to connect" | Network restrictions blocking Power BI | Set `enablePowerBiAccess=true` in Bicep, or configure an On-Premises Data Gateway |
-| "The gateway is offline" | Gateway VM is stopped or service is down | Start the gateway VM and verify the gateway service is running — see [Gateway Quick Reference](GATEWAY_QUICK_REFERENCE.md) |
+| "The gateway is offline" | Gateway VM is stopped or service is down | Start the gateway VM and verify the gateway service is running |
 | "Timeout expired" | Large dataset or slow network | Reduce data volume by loading only the latest snapshot, or increase the timeout in gateway settings |
 | "The content of the request is not valid" | Corrupted Parquet file | Check function logs for write errors; re-trigger ingestion via `/api/test-run` |
 
@@ -893,8 +891,6 @@ A gateway is required if **any** of these apply:
 ## Additional Resources
 
 - [README — Power BI Setup section](../README.md#power-bi-setup)
-- [Gateway VM Setup](GATEWAY_VM_SETUP.md)
-- [Gateway Quick Reference](GATEWAY_QUICK_REFERENCE.md)
 - [Microsoft: Connect to ADLS Gen2 from Power BI](https://learn.microsoft.com/en-us/power-bi/connect-data/service-azure-and-power-bi)
 - [Microsoft: On-Premises Data Gateway](https://learn.microsoft.com/en-us/power-bi/connect-data/service-gateway-onprem)
 - [Microsoft: DAX Reference](https://learn.microsoft.com/en-us/dax/)

@@ -389,17 +389,12 @@ MDOAttackSimulation_PowerBI/
 │       ├── deploy.yml          # CI/CD deployment workflow
 │       └── test.yml            # Test workflow
 ├── docs/
-│   ├── GATEWAY_QUICK_REFERENCE.md
-│   ├── GATEWAY_VM_SETUP.md
 │   └── DASHBOARD_SETUP.md      # Streamlit dashboard setup guide
 ├── infra/
 │   ├── main.bicep              # Azure infrastructure (IaC)
 │   ├── main.bicepparam         # Deployment parameters
 │   ├── main.bicepparam.example # Example parameters (safe to commit)
-│   ├── dashboard.bicep         # Streamlit dashboard infrastructure
-│   ├── gateway-vm.bicep        # Optional gateway VM infrastructure
-│   ├── gateway-vm.bicepparam
-│   └── gateway-vm.bicepparam.example
+│   └── dashboard.bicep         # Streamlit dashboard infrastructure
 ├── reports/                    # Power BI report templates (PBIR format)
 │   ├── MDOAttackSimulation.pbip
 │   ├── MDOAttackSimulation.Report/    # 5 dashboard pages, 30 visuals
@@ -410,8 +405,6 @@ MDOAttackSimulation_PowerBI/
 │   ├── deploy.sh               # Bash deployment script
 │   ├── deploy-dashboard.ps1    # Dashboard deployment (PowerShell)
 │   ├── deploy-dashboard.sh     # Dashboard deployment (Bash)
-│   ├── deploy-gateway-vm.ps1
-│   ├── deploy-gateway-vm.sh
 │   ├── setup-github-oidc.ps1   # GitHub OIDC setup (PowerShell)
 │   ├── setup-github-oidc.sh    # GitHub OIDC setup (Bash)
 │   └── QUICK_START.md          # 10-minute quick start guide

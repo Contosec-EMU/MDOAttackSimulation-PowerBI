@@ -316,7 +316,20 @@ Examples:
 
 ## Power BI Setup
 
-### Connect to ADLS Gen2
+### Pre-Built Report Templates (Recommended)
+
+This repository includes ready-to-use Power BI report templates in the [`reports/`](reports/) folder with 5 dashboard pages, 12 DAX measures, and all table relationships pre-configured.
+
+1. Open **Power BI Desktop** (March 2024+) with Developer Mode enabled
+2. Open `reports/MDOAttackSimulation.pbip`
+3. Set the `StorageAccountUrl` parameter to your ADLS Gen2 endpoint
+4. Click **Refresh** to load data
+
+See the [reports README](reports/README.md) for detailed setup instructions and troubleshooting.
+
+### Manual Connection (Alternative)
+
+If you prefer to build your own report:
 
 1. Open **Power BI Desktop** → **Get Data** → **Azure** → **Azure Data Lake Storage Gen2**
 2. Enter the storage URL: `https://<storage-account>.dfs.core.windows.net/`
@@ -369,6 +382,10 @@ MDOAttackSimulation_PowerBI/
 │   ├── gateway-vm.bicep        # Optional gateway VM infrastructure
 │   ├── gateway-vm.bicepparam
 │   └── gateway-vm.bicepparam.example
+├── reports/                    # Power BI report templates (PBIR format)
+│   ├── MDOAttackSimulation.pbip
+│   ├── MDOAttackSimulation.Report/    # 5 dashboard pages, 30 visuals
+│   └── MDOAttackSimulation.SemanticModel/  # 9 tables, 12 DAX measures
 ├── scripts/
 │   ├── create-app-registration.ps1
 │   ├── deploy.ps1              # PowerShell deployment script

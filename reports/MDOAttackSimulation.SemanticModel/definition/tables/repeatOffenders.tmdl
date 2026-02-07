@@ -1,0 +1,58 @@
+table repeatOffenders
+	lineageTag: a1000001-0000-0000-0000-000000000001
+
+	column snapshotDateUtc
+		dataType: dateTime
+		lineageTag: a1010001-0000-0000-0000-000000000001
+		summarizeBy: none
+		sourceColumn: snapshotDateUtc
+
+		annotation SummarizationSetBy = Automatic
+
+	column userId
+		dataType: string
+		lineageTag: a1010002-0000-0000-0000-000000000001
+		summarizeBy: none
+		sourceColumn: userId
+
+		annotation SummarizationSetBy = Automatic
+
+	column displayName
+		dataType: string
+		lineageTag: a1010003-0000-0000-0000-000000000001
+		summarizeBy: none
+		sourceColumn: displayName
+
+		annotation SummarizationSetBy = Automatic
+
+	column email
+		dataType: string
+		lineageTag: a1010004-0000-0000-0000-000000000001
+		summarizeBy: none
+		sourceColumn: email
+
+		annotation SummarizationSetBy = Automatic
+
+	column repeatOffenceCount
+		dataType: int64
+		formatString: 0
+		lineageTag: a1010005-0000-0000-0000-000000000001
+		summarizeBy: sum
+		sourceColumn: repeatOffenceCount
+
+		annotation SummarizationSetBy = Automatic
+
+	partition repeatOffenders = m
+		mode: import
+		source =
+			let
+			    Source = AzureStorage.DataLake(StorageAccountUrl),
+			    Container = Source{[Name=ContainerName]}[Content],
+			    Filtered = Table.SelectRows(Container, each Text.StartsWith([Folder Path], ContainerName & "/repeatOffenders/")),
+			    Sorted = Table.Sort(Filtered, {{"Date modified", Order.Descending}}),
+			    Latest = Sorted{0}[Content],
+			    Result = Parquet.Document(Latest)
+			in
+			    Result
+
+	annotation PBI_ResultType = Table

@@ -1,0 +1,23 @@
+model Model
+	culture: en-US
+	defaultPowerBIDataSourceVersion: powerBI_V3
+	discourageImplicitMeasures
+	sourceQueryCulture: en-US
+	dataAccessOptions
+		legacyRedirects
+		returnErrorValuesAsNull
+
+	annotation PBI_ProTooling = ["DevMode"]
+
+ref table repeatOffenders
+ref table simulationUserCoverage
+ref table trainingUserCoverage
+ref table simulations
+ref table simulationUsers
+ref table simulationUserEvents
+ref table trainings
+ref table payloads
+ref table users
+ref table Measures
+
+ref cultureInfo en-US

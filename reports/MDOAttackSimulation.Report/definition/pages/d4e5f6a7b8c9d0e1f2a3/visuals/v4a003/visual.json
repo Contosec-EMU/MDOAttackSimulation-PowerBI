@@ -1,0 +1,66 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/1.5.0/schema.json",
+  "name": "v4a003",
+  "position": { "x": 16, "y": 148, "z": 3000, "height": 320, "width": 620, "tabOrder": 3000 },
+  "visual": {
+    "visualType": "clusteredColumnChart",
+    "query": {
+      "queryState": {
+        "Category": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": { "SourceRef": { "Entity": "users" } },
+                  "Property": "department"
+                }
+              },
+              "queryRef": "users.department",
+              "nativeQueryRef": "department"
+            }
+          ]
+        },
+        "Y": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": { "SourceRef": { "Entity": "trainingUserCoverage" } },
+                  "Property": "completedTrainingsCount"
+                }
+              },
+              "queryRef": "trainingUserCoverage.completedTrainingsCount",
+              "nativeQueryRef": "completedTrainingsCount"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": { "SourceRef": { "Entity": "trainingUserCoverage" } },
+                  "Property": "inProgressTrainingsCount"
+                }
+              },
+              "queryRef": "trainingUserCoverage.inProgressTrainingsCount",
+              "nativeQueryRef": "inProgressTrainingsCount"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": { "SourceRef": { "Entity": "trainingUserCoverage" } },
+                  "Property": "notStartedTrainingsCount"
+                }
+              },
+              "queryRef": "trainingUserCoverage.notStartedTrainingsCount",
+              "nativeQueryRef": "notStartedTrainingsCount"
+            }
+          ]
+        }
+      }
+    },
+    "visualContainerObjects": {
+      "background": [{ "properties": { "show": { "expr": { "Literal": { "Value": "true" } } }, "transparency": { "expr": { "Literal": { "Value": "0D" } } } } }],
+      "border": [{ "properties": { "show": { "expr": { "Literal": { "Value": "true" } } }, "radius": { "expr": { "Literal": { "Value": "8D" } } } } }],
+      "padding": [{ "properties": { "top": { "expr": { "Literal": { "Value": "8D" } } }, "bottom": { "expr": { "Literal": { "Value": "8D" } } }, "left": { "expr": { "Literal": { "Value": "8D" } } }, "right": { "expr": { "Literal": { "Value": "8D" } } } } }]
+    },
+    "drillFilterOtherVisuals": true
+  }
+}

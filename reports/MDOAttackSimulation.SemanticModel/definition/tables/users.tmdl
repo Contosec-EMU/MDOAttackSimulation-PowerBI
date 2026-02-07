@@ -1,0 +1,113 @@
+table users
+	lineageTag: a9000001-0000-0000-0000-000000000009
+
+	column snapshotDateUtc
+		dataType: dateTime
+		lineageTag: a9010001-0000-0000-0000-000000000009
+		summarizeBy: none
+		sourceColumn: snapshotDateUtc
+
+		annotation SummarizationSetBy = Automatic
+
+	column userId
+		dataType: string
+		lineageTag: a9010002-0000-0000-0000-000000000009
+		summarizeBy: none
+		sourceColumn: userId
+
+		annotation SummarizationSetBy = Automatic
+
+	column displayName
+		dataType: string
+		lineageTag: a9010003-0000-0000-0000-000000000009
+		summarizeBy: none
+		sourceColumn: displayName
+
+		annotation SummarizationSetBy = Automatic
+
+	column givenName
+		dataType: string
+		lineageTag: a9010004-0000-0000-0000-000000000009
+		summarizeBy: none
+		sourceColumn: givenName
+
+		annotation SummarizationSetBy = Automatic
+
+	column surname
+		dataType: string
+		lineageTag: a9010005-0000-0000-0000-000000000009
+		summarizeBy: none
+		sourceColumn: surname
+
+		annotation SummarizationSetBy = Automatic
+
+	column mail
+		dataType: string
+		lineageTag: a9010006-0000-0000-0000-000000000009
+		summarizeBy: none
+		sourceColumn: mail
+
+		annotation SummarizationSetBy = Automatic
+
+	column department
+		dataType: string
+		lineageTag: a9010007-0000-0000-0000-000000000009
+		summarizeBy: none
+		sourceColumn: department
+
+		annotation SummarizationSetBy = Automatic
+
+	column companyName
+		dataType: string
+		lineageTag: a9010008-0000-0000-0000-000000000009
+		summarizeBy: none
+		sourceColumn: companyName
+
+		annotation SummarizationSetBy = Automatic
+
+	column city
+		dataType: string
+		lineageTag: a9010009-0000-0000-0000-000000000009
+		summarizeBy: none
+		sourceColumn: city
+
+		annotation SummarizationSetBy = Automatic
+
+	column country
+		dataType: string
+		lineageTag: a9010010-0000-0000-0000-000000000009
+		summarizeBy: none
+		sourceColumn: country
+
+		annotation SummarizationSetBy = Automatic
+
+	column jobTitle
+		dataType: string
+		lineageTag: a9010011-0000-0000-0000-000000000009
+		summarizeBy: none
+		sourceColumn: jobTitle
+
+		annotation SummarizationSetBy = Automatic
+
+	column accountEnabled
+		dataType: boolean
+		lineageTag: a9010012-0000-0000-0000-000000000009
+		summarizeBy: none
+		sourceColumn: accountEnabled
+
+		annotation SummarizationSetBy = Automatic
+
+	partition users = m
+		mode: import
+		source =
+			let
+			    Source = AzureStorage.DataLake(StorageAccountUrl),
+			    Container = Source{[Name=ContainerName]}[Content],
+			    Filtered = Table.SelectRows(Container, each Text.StartsWith([Folder Path], ContainerName & "/users/")),
+			    Sorted = Table.Sort(Filtered, {{"Date modified", Order.Descending}}),
+			    Latest = Sorted{0}[Content],
+			    Result = Parquet.Document(Latest)
+			in
+			    Result
+
+	annotation PBI_ResultType = Table

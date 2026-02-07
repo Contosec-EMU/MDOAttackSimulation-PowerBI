@@ -1,0 +1,84 @@
+table simulationUserCoverage
+	lineageTag: a2000001-0000-0000-0000-000000000002
+
+	column snapshotDateUtc
+		dataType: dateTime
+		lineageTag: a2010001-0000-0000-0000-000000000002
+		summarizeBy: none
+		sourceColumn: snapshotDateUtc
+
+		annotation SummarizationSetBy = Automatic
+
+	column userId
+		dataType: string
+		lineageTag: a2010002-0000-0000-0000-000000000002
+		summarizeBy: none
+		sourceColumn: userId
+
+		annotation SummarizationSetBy = Automatic
+
+	column displayName
+		dataType: string
+		lineageTag: a2010003-0000-0000-0000-000000000002
+		summarizeBy: none
+		sourceColumn: displayName
+
+		annotation SummarizationSetBy = Automatic
+
+	column email
+		dataType: string
+		lineageTag: a2010004-0000-0000-0000-000000000002
+		summarizeBy: none
+		sourceColumn: email
+
+		annotation SummarizationSetBy = Automatic
+
+	column simulationCount
+		dataType: int64
+		formatString: 0
+		lineageTag: a2010005-0000-0000-0000-000000000002
+		summarizeBy: sum
+		sourceColumn: simulationCount
+
+		annotation SummarizationSetBy = Automatic
+
+	column latestSimulationDateTime
+		dataType: dateTime
+		lineageTag: a2010006-0000-0000-0000-000000000002
+		summarizeBy: none
+		sourceColumn: latestSimulationDateTime
+
+		annotation SummarizationSetBy = Automatic
+
+	column clickCount
+		dataType: int64
+		formatString: 0
+		lineageTag: a2010007-0000-0000-0000-000000000002
+		summarizeBy: sum
+		sourceColumn: clickCount
+
+		annotation SummarizationSetBy = Automatic
+
+	column compromisedCount
+		dataType: int64
+		formatString: 0
+		lineageTag: a2010008-0000-0000-0000-000000000002
+		summarizeBy: sum
+		sourceColumn: compromisedCount
+
+		annotation SummarizationSetBy = Automatic
+
+	partition simulationUserCoverage = m
+		mode: import
+		source =
+			let
+			    Source = AzureStorage.DataLake(StorageAccountUrl),
+			    Container = Source{[Name=ContainerName]}[Content],
+			    Filtered = Table.SelectRows(Container, each Text.StartsWith([Folder Path], ContainerName & "/simulationUserCoverage/")),
+			    Sorted = Table.Sort(Filtered, {{"Date modified", Order.Descending}}),
+			    Latest = Sorted{0}[Content],
+			    Result = Parquet.Document(Latest)
+			in
+			    Result
+
+	annotation PBI_ResultType = Table

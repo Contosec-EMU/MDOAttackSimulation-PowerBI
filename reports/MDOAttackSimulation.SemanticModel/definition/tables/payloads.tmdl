@@ -1,0 +1,201 @@
+table payloads
+	lineageTag: a8000001-0000-0000-0000-000000000008
+
+	column snapshotDateUtc
+		dataType: dateTime
+		lineageTag: a8010001-0000-0000-0000-000000000008
+		summarizeBy: none
+		sourceColumn: snapshotDateUtc
+
+		annotation SummarizationSetBy = Automatic
+
+	column payloadId
+		dataType: string
+		lineageTag: a8010002-0000-0000-0000-000000000008
+		summarizeBy: none
+		sourceColumn: payloadId
+
+		annotation SummarizationSetBy = Automatic
+
+	column displayName
+		dataType: string
+		lineageTag: a8010003-0000-0000-0000-000000000008
+		summarizeBy: none
+		sourceColumn: displayName
+
+		annotation SummarizationSetBy = Automatic
+
+	column description
+		dataType: string
+		lineageTag: a8010004-0000-0000-0000-000000000008
+		summarizeBy: none
+		sourceColumn: description
+
+		annotation SummarizationSetBy = Automatic
+
+	column simulationAttackType
+		dataType: string
+		lineageTag: a8010005-0000-0000-0000-000000000008
+		summarizeBy: none
+		sourceColumn: simulationAttackType
+
+		annotation SummarizationSetBy = Automatic
+
+	column platform
+		dataType: string
+		lineageTag: a8010006-0000-0000-0000-000000000008
+		summarizeBy: none
+		sourceColumn: platform
+
+		annotation SummarizationSetBy = Automatic
+
+	column status
+		dataType: string
+		lineageTag: a8010007-0000-0000-0000-000000000008
+		summarizeBy: none
+		sourceColumn: status
+
+		annotation SummarizationSetBy = Automatic
+
+	column source
+		dataType: string
+		lineageTag: a8010008-0000-0000-0000-000000000008
+		summarizeBy: none
+		sourceColumn: source
+
+		annotation SummarizationSetBy = Automatic
+
+	column predictedCompromiseRate
+		dataType: double
+		lineageTag: a8010009-0000-0000-0000-000000000008
+		summarizeBy: sum
+		sourceColumn: predictedCompromiseRate
+
+		annotation SummarizationSetBy = Automatic
+
+	column complexity
+		dataType: string
+		lineageTag: a8010010-0000-0000-0000-000000000008
+		summarizeBy: none
+		sourceColumn: complexity
+
+		annotation SummarizationSetBy = Automatic
+
+	column technique
+		dataType: string
+		lineageTag: a8010011-0000-0000-0000-000000000008
+		summarizeBy: none
+		sourceColumn: technique
+
+		annotation SummarizationSetBy = Automatic
+
+	column theme
+		dataType: string
+		lineageTag: a8010012-0000-0000-0000-000000000008
+		summarizeBy: none
+		sourceColumn: theme
+
+		annotation SummarizationSetBy = Automatic
+
+	column brand
+		dataType: string
+		lineageTag: a8010013-0000-0000-0000-000000000008
+		summarizeBy: none
+		sourceColumn: brand
+
+		annotation SummarizationSetBy = Automatic
+
+	column industry
+		dataType: string
+		lineageTag: a8010014-0000-0000-0000-000000000008
+		summarizeBy: none
+		sourceColumn: industry
+
+		annotation SummarizationSetBy = Automatic
+
+	column isCurrentEvent
+		dataType: boolean
+		lineageTag: a8010015-0000-0000-0000-000000000008
+		summarizeBy: none
+		sourceColumn: isCurrentEvent
+
+		annotation SummarizationSetBy = Automatic
+
+	column isControversial
+		dataType: boolean
+		lineageTag: a8010016-0000-0000-0000-000000000008
+		summarizeBy: none
+		sourceColumn: isControversial
+
+		annotation SummarizationSetBy = Automatic
+
+	column lastModifiedDateTime
+		dataType: dateTime
+		lineageTag: a8010017-0000-0000-0000-000000000008
+		summarizeBy: none
+		sourceColumn: lastModifiedDateTime
+
+		annotation SummarizationSetBy = Automatic
+
+	column createdById
+		dataType: string
+		lineageTag: a8010018-0000-0000-0000-000000000008
+		summarizeBy: none
+		sourceColumn: createdById
+
+		annotation SummarizationSetBy = Automatic
+
+	column createdByDisplayName
+		dataType: string
+		lineageTag: a8010019-0000-0000-0000-000000000008
+		summarizeBy: none
+		sourceColumn: createdByDisplayName
+
+		annotation SummarizationSetBy = Automatic
+
+	column createdByEmail
+		dataType: string
+		lineageTag: a8010020-0000-0000-0000-000000000008
+		summarizeBy: none
+		sourceColumn: createdByEmail
+
+		annotation SummarizationSetBy = Automatic
+
+	column lastModifiedById
+		dataType: string
+		lineageTag: a8010021-0000-0000-0000-000000000008
+		summarizeBy: none
+		sourceColumn: lastModifiedById
+
+		annotation SummarizationSetBy = Automatic
+
+	column lastModifiedByDisplayName
+		dataType: string
+		lineageTag: a8010022-0000-0000-0000-000000000008
+		summarizeBy: none
+		sourceColumn: lastModifiedByDisplayName
+
+		annotation SummarizationSetBy = Automatic
+
+	column lastModifiedByEmail
+		dataType: string
+		lineageTag: a8010023-0000-0000-0000-000000000008
+		summarizeBy: none
+		sourceColumn: lastModifiedByEmail
+
+		annotation SummarizationSetBy = Automatic
+
+	partition payloads = m
+		mode: import
+		source =
+			let
+			    Source = AzureStorage.DataLake(StorageAccountUrl),
+			    Container = Source{[Name=ContainerName]}[Content],
+			    Filtered = Table.SelectRows(Container, each Text.StartsWith([Folder Path], ContainerName & "/payloads/")),
+			    Sorted = Table.Sort(Filtered, {{"Date modified", Order.Descending}}),
+			    Latest = Sorted{0}[Content],
+			    Result = Parquet.Document(Latest)
+			in
+			    Result
+
+	annotation PBI_ResultType = Table

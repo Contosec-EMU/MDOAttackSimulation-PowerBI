@@ -1,0 +1,115 @@
+table simulationUsers
+	lineageTag: a5000001-0000-0000-0000-000000000005
+
+	column snapshotDateUtc
+		dataType: dateTime
+		lineageTag: a5010001-0000-0000-0000-000000000005
+		summarizeBy: none
+		sourceColumn: snapshotDateUtc
+
+		annotation SummarizationSetBy = Automatic
+
+	column simulationId
+		dataType: string
+		lineageTag: a5010002-0000-0000-0000-000000000005
+		summarizeBy: none
+		sourceColumn: simulationId
+
+		annotation SummarizationSetBy = Automatic
+
+	column userId
+		dataType: string
+		lineageTag: a5010003-0000-0000-0000-000000000005
+		summarizeBy: none
+		sourceColumn: userId
+
+		annotation SummarizationSetBy = Automatic
+
+	column email
+		dataType: string
+		lineageTag: a5010004-0000-0000-0000-000000000005
+		summarizeBy: none
+		sourceColumn: email
+
+		annotation SummarizationSetBy = Automatic
+
+	column displayName
+		dataType: string
+		lineageTag: a5010005-0000-0000-0000-000000000005
+		summarizeBy: none
+		sourceColumn: displayName
+
+		annotation SummarizationSetBy = Automatic
+
+	column compromisedDateTime
+		dataType: dateTime
+		lineageTag: a5010006-0000-0000-0000-000000000005
+		summarizeBy: none
+		sourceColumn: compromisedDateTime
+
+		annotation SummarizationSetBy = Automatic
+
+	column reportedPhishDateTime
+		dataType: dateTime
+		lineageTag: a5010007-0000-0000-0000-000000000005
+		summarizeBy: none
+		sourceColumn: reportedPhishDateTime
+
+		annotation SummarizationSetBy = Automatic
+
+	column assignedTrainingsCount
+		dataType: int64
+		formatString: 0
+		lineageTag: a5010008-0000-0000-0000-000000000005
+		summarizeBy: sum
+		sourceColumn: assignedTrainingsCount
+
+		annotation SummarizationSetBy = Automatic
+
+	column completedTrainingsCount
+		dataType: int64
+		formatString: 0
+		lineageTag: a5010009-0000-0000-0000-000000000005
+		summarizeBy: sum
+		sourceColumn: completedTrainingsCount
+
+		annotation SummarizationSetBy = Automatic
+
+	column inProgressTrainingsCount
+		dataType: int64
+		formatString: 0
+		lineageTag: a5010010-0000-0000-0000-000000000005
+		summarizeBy: sum
+		sourceColumn: inProgressTrainingsCount
+
+		annotation SummarizationSetBy = Automatic
+
+	column isCompromised
+		dataType: boolean
+		lineageTag: a5010011-0000-0000-0000-000000000005
+		summarizeBy: none
+		sourceColumn: isCompromised
+
+		annotation SummarizationSetBy = Automatic
+
+	column SimUserKey = simulationUsers[simulationId] & "|" & simulationUsers[userId]
+		dataType: string
+		lineageTag: a5010012-0000-0000-0000-000000000005
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	partition simulationUsers = m
+		mode: import
+		source =
+			let
+			    Source = AzureStorage.DataLake(StorageAccountUrl),
+			    Container = Source{[Name=ContainerName]}[Content],
+			    Filtered = Table.SelectRows(Container, each Text.StartsWith([Folder Path], ContainerName & "/simulationUsers/")),
+			    Sorted = Table.Sort(Filtered, {{"Date modified", Order.Descending}}),
+			    Latest = Sorted{0}[Content],
+			    Result = Parquet.Document(Latest)
+			in
+			    Result
+
+	annotation PBI_ResultType = Table

@@ -1,0 +1,27 @@
+relationship rel_simUsers_to_sims
+	fromColumn: simulationUsers.simulationId
+	toColumn: simulations.simulationId
+
+relationship rel_simUsers_to_users
+	fromColumn: simulationUsers.userId
+	toColumn: users.userId
+
+relationship rel_simEvents_to_simUsers
+	fromColumn: simulationUserEvents.SimUserKey
+	toColumn: simulationUsers.SimUserKey
+
+relationship rel_sims_to_payloads
+	fromColumn: simulations.payloadId
+	toColumn: payloads.payloadId
+
+relationship rel_simCoverage_to_users
+	fromColumn: simulationUserCoverage.userId
+	toColumn: users.userId
+
+relationship rel_trainingCoverage_to_users
+	fromColumn: trainingUserCoverage.userId
+	toColumn: users.userId
+
+relationship rel_repeatOffenders_to_users
+	fromColumn: repeatOffenders.userId
+	toColumn: users.userId

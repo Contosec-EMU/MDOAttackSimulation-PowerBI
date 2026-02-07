@@ -1,0 +1,46 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/1.5.0/schema.json",
+  "name": "v4a005",
+  "position": { "x": 16, "y": 480, "z": 5000, "height": 224, "width": 1248, "tabOrder": 5000 },
+  "visual": {
+    "visualType": "scatterChart",
+    "query": {
+      "queryState": {
+        "X": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": { "SourceRef": { "Entity": "simulationUserCoverage" } },
+                  "Property": "compromisedCount"
+                }
+              },
+              "queryRef": "simulationUserCoverage.compromisedCount",
+              "nativeQueryRef": "compromisedCount"
+            }
+          ]
+        },
+        "Y": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": { "SourceRef": { "Entity": "trainingUserCoverage" } },
+                  "Property": "completedTrainingsCount"
+                }
+              },
+              "queryRef": "trainingUserCoverage.completedTrainingsCount",
+              "nativeQueryRef": "completedTrainingsCount"
+            }
+          ]
+        }
+      }
+    },
+    "visualContainerObjects": {
+      "background": [{ "properties": { "show": { "expr": { "Literal": { "Value": "true" } } }, "transparency": { "expr": { "Literal": { "Value": "0D" } } } } }],
+      "border": [{ "properties": { "show": { "expr": { "Literal": { "Value": "true" } } }, "radius": { "expr": { "Literal": { "Value": "8D" } } } } }],
+      "padding": [{ "properties": { "top": { "expr": { "Literal": { "Value": "8D" } } }, "bottom": { "expr": { "Literal": { "Value": "8D" } } }, "left": { "expr": { "Literal": { "Value": "8D" } } }, "right": { "expr": { "Literal": { "Value": "8D" } } } } }]
+    },
+    "drillFilterOtherVisuals": true
+  }
+}

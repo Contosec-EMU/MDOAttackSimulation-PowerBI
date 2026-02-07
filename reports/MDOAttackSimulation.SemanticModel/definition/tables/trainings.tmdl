@@ -1,0 +1,146 @@
+table trainings
+	lineageTag: a7000001-0000-0000-0000-000000000007
+
+	column snapshotDateUtc
+		dataType: dateTime
+		lineageTag: a7010001-0000-0000-0000-000000000007
+		summarizeBy: none
+		sourceColumn: snapshotDateUtc
+
+		annotation SummarizationSetBy = Automatic
+
+	column trainingId
+		dataType: string
+		lineageTag: a7010002-0000-0000-0000-000000000007
+		summarizeBy: none
+		sourceColumn: trainingId
+
+		annotation SummarizationSetBy = Automatic
+
+	column displayName
+		dataType: string
+		lineageTag: a7010003-0000-0000-0000-000000000007
+		summarizeBy: none
+		sourceColumn: displayName
+
+		annotation SummarizationSetBy = Automatic
+
+	column description
+		dataType: string
+		lineageTag: a7010004-0000-0000-0000-000000000007
+		summarizeBy: none
+		sourceColumn: description
+
+		annotation SummarizationSetBy = Automatic
+
+	column durationInMinutes
+		dataType: int64
+		formatString: 0
+		lineageTag: a7010005-0000-0000-0000-000000000007
+		summarizeBy: sum
+		sourceColumn: durationInMinutes
+
+		annotation SummarizationSetBy = Automatic
+
+	column source
+		dataType: string
+		lineageTag: a7010006-0000-0000-0000-000000000007
+		summarizeBy: none
+		sourceColumn: source
+
+		annotation SummarizationSetBy = Automatic
+
+	column type
+		dataType: string
+		lineageTag: a7010007-0000-0000-0000-000000000007
+		summarizeBy: none
+		sourceColumn: type
+
+		annotation SummarizationSetBy = Automatic
+
+	column availabilityStatus
+		dataType: string
+		lineageTag: a7010008-0000-0000-0000-000000000007
+		summarizeBy: none
+		sourceColumn: availabilityStatus
+
+		annotation SummarizationSetBy = Automatic
+
+	column hasEvaluation
+		dataType: boolean
+		lineageTag: a7010009-0000-0000-0000-000000000007
+		summarizeBy: none
+		sourceColumn: hasEvaluation
+
+		annotation SummarizationSetBy = Automatic
+
+	column lastModifiedDateTime
+		dataType: dateTime
+		lineageTag: a7010010-0000-0000-0000-000000000007
+		summarizeBy: none
+		sourceColumn: lastModifiedDateTime
+
+		annotation SummarizationSetBy = Automatic
+
+	column createdById
+		dataType: string
+		lineageTag: a7010011-0000-0000-0000-000000000007
+		summarizeBy: none
+		sourceColumn: createdById
+
+		annotation SummarizationSetBy = Automatic
+
+	column createdByDisplayName
+		dataType: string
+		lineageTag: a7010012-0000-0000-0000-000000000007
+		summarizeBy: none
+		sourceColumn: createdByDisplayName
+
+		annotation SummarizationSetBy = Automatic
+
+	column createdByEmail
+		dataType: string
+		lineageTag: a7010013-0000-0000-0000-000000000007
+		summarizeBy: none
+		sourceColumn: createdByEmail
+
+		annotation SummarizationSetBy = Automatic
+
+	column lastModifiedById
+		dataType: string
+		lineageTag: a7010014-0000-0000-0000-000000000007
+		summarizeBy: none
+		sourceColumn: lastModifiedById
+
+		annotation SummarizationSetBy = Automatic
+
+	column lastModifiedByDisplayName
+		dataType: string
+		lineageTag: a7010015-0000-0000-0000-000000000007
+		summarizeBy: none
+		sourceColumn: lastModifiedByDisplayName
+
+		annotation SummarizationSetBy = Automatic
+
+	column lastModifiedByEmail
+		dataType: string
+		lineageTag: a7010016-0000-0000-0000-000000000007
+		summarizeBy: none
+		sourceColumn: lastModifiedByEmail
+
+		annotation SummarizationSetBy = Automatic
+
+	partition trainings = m
+		mode: import
+		source =
+			let
+			    Source = AzureStorage.DataLake(StorageAccountUrl),
+			    Container = Source{[Name=ContainerName]}[Content],
+			    Filtered = Table.SelectRows(Container, each Text.StartsWith([Folder Path], ContainerName & "/trainings/")),
+			    Sorted = Table.Sort(Filtered, {{"Date modified", Order.Descending}}),
+			    Latest = Sorted{0}[Content],
+			    Result = Parquet.Document(Latest)
+			in
+			    Result
+
+	annotation PBI_ResultType = Table

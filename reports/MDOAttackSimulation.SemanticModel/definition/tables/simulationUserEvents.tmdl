@@ -1,0 +1,88 @@
+table simulationUserEvents
+	lineageTag: a6000001-0000-0000-0000-000000000006
+
+	column snapshotDateUtc
+		dataType: dateTime
+		lineageTag: a6010001-0000-0000-0000-000000000006
+		summarizeBy: none
+		sourceColumn: snapshotDateUtc
+
+		annotation SummarizationSetBy = Automatic
+
+	column simulationId
+		dataType: string
+		lineageTag: a6010002-0000-0000-0000-000000000006
+		summarizeBy: none
+		sourceColumn: simulationId
+
+		annotation SummarizationSetBy = Automatic
+
+	column userId
+		dataType: string
+		lineageTag: a6010003-0000-0000-0000-000000000006
+		summarizeBy: none
+		sourceColumn: userId
+
+		annotation SummarizationSetBy = Automatic
+
+	column eventName
+		dataType: string
+		lineageTag: a6010004-0000-0000-0000-000000000006
+		summarizeBy: none
+		sourceColumn: eventName
+
+		annotation SummarizationSetBy = Automatic
+
+	column eventDateTime
+		dataType: dateTime
+		lineageTag: a6010005-0000-0000-0000-000000000006
+		summarizeBy: none
+		sourceColumn: eventDateTime
+
+		annotation SummarizationSetBy = Automatic
+
+	column browser
+		dataType: string
+		lineageTag: a6010006-0000-0000-0000-000000000006
+		summarizeBy: none
+		sourceColumn: browser
+
+		annotation SummarizationSetBy = Automatic
+
+	column ipAddress
+		dataType: string
+		lineageTag: a6010007-0000-0000-0000-000000000006
+		summarizeBy: none
+		sourceColumn: ipAddress
+
+		annotation SummarizationSetBy = Automatic
+
+	column osPlatformDeviceDetails
+		dataType: string
+		lineageTag: a6010008-0000-0000-0000-000000000006
+		summarizeBy: none
+		sourceColumn: osPlatformDeviceDetails
+
+		annotation SummarizationSetBy = Automatic
+
+	column SimUserKey = simulationUserEvents[simulationId] & "|" & simulationUserEvents[userId]
+		dataType: string
+		lineageTag: a6010009-0000-0000-0000-000000000006
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	partition simulationUserEvents = m
+		mode: import
+		source =
+			let
+			    Source = AzureStorage.DataLake(StorageAccountUrl),
+			    Container = Source{[Name=ContainerName]}[Content],
+			    Filtered = Table.SelectRows(Container, each Text.StartsWith([Folder Path], ContainerName & "/simulationUserEvents/")),
+			    Sorted = Table.Sort(Filtered, {{"Date modified", Order.Descending}}),
+			    Latest = Sorted{0}[Content],
+			    Result = Parquet.Document(Latest)
+			in
+			    Result
+
+	annotation PBI_ResultType = Table

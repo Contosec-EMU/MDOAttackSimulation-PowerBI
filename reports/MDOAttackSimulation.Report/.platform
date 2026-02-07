@@ -1,0 +1,11 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
+  "metadata": {
+    "type": "Report",
+    "displayName": "MDO Attack Simulation"
+  },
+  "config": {
+    "version": "2.0",
+    "logicalId": "a1234567-b890-cdef-1234-567890abcdef"
+  }
+}

@@ -137,10 +137,11 @@ Write-Host "`n5. Publishing Streamlit app..." -ForegroundColor Yellow
 Push-Location src/dashboard
 $zipFile = [System.IO.Path]::GetTempFileName() + ".zip"
 Compress-Archive -Path * -DestinationPath $zipFile -Force
-az webapp deployment source config-zip `
+az webapp deploy `
     --resource-group $ResourceGroup `
     --name $DASHBOARD_NAME `
-    --src $zipFile
+    --src-path $zipFile `
+    --type zip
 Remove-Item $zipFile
 Pop-Location
 

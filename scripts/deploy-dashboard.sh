@@ -126,10 +126,11 @@ echo -e "\n5. Publishing Streamlit app..."
 cd src/dashboard
 ZIP_FILE=$(mktemp).zip
 zip -r "$ZIP_FILE" . -x '__pycache__/*' '*.pyc' '.venv/*'
-az webapp deployment source config-zip \
+az webapp deploy \
     --resource-group "$RESOURCE_GROUP" \
     --name "$DASHBOARD_NAME" \
-    --src "$ZIP_FILE"
+    --src-path "$ZIP_FILE" \
+    --type zip
 rm -f "$ZIP_FILE"
 cd ../..
 

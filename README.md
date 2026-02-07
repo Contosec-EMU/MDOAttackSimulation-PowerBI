@@ -283,6 +283,17 @@ az storage fs file list `
 
 > You can also use the included helper scripts: `scripts/deploy.ps1` (PowerShell) or `scripts/deploy.sh` (Bash).
 
+#### Next Steps: Set Up Reporting
+
+Your data pipeline is running. Choose how to visualize the data:
+
+| Option | Best for | Guide |
+|--------|----------|-------|
+| **Power BI Desktop** | Rich dashboards, scheduled refresh, sharing via Power BI Service | [Power BI Setup Guide](docs/POWERBI_SETUP.md) |
+| **Streamlit Dashboard** | Browser-based, no Power BI license needed, lightweight executive view | [Dashboard Setup Guide](docs/DASHBOARD_SETUP.md) |
+
+You can set up both — they read the same data from ADLS Gen2.
+
 ### Option 3: Azure Portal (Manual)
 
 1. **Create a Resource Group** in the Azure Portal

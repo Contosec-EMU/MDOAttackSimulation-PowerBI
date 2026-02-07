@@ -204,11 +204,9 @@ The Key Vault uses RBAC authorization. You need `Key Vault Secrets Officer` to w
 
 ```powershell
 # Grant yourself Key Vault Secrets Officer on the vault
-$CURRENT_USER_ID = az ad signed-in-user show --query id -o tsv
-az role assignment create `
-  --role "Key Vault Secrets Officer" `
-  --assignee $CURRENT_USER_ID `
-  --scope $(az keyvault show --name $KEYVAULT_NAME --resource-group $RESOURCE_GROUP --query id -o tsv)
+$CURRENT_USER_ID = (az ad signed-in-user show --query id -o tsv)
+$KV_SCOPE = (az keyvault show --name $KEYVAULT_NAME --resource-group $RESOURCE_GROUP --query id -o tsv)
+az role assignment create --role "Key Vault Secrets Officer" --assignee $CURRENT_USER_ID --scope $KV_SCOPE
 
 # Wait for RBAC propagation
 Start-Sleep -Seconds 60
@@ -247,11 +245,9 @@ Before browsing data, grant yourself `Storage Blob Data Reader` on the ADLS Gen2
 
 ```powershell
 # Grant yourself Storage Blob Data Reader on the data lake
-$CURRENT_USER_ID = az ad signed-in-user show --query id -o tsv
-az role assignment create `
-  --role "Storage Blob Data Reader" `
-  --assignee $CURRENT_USER_ID `
-  --scope $(az storage account show --name $STORAGE_ACCOUNT_NAME --resource-group $RESOURCE_GROUP --query id -o tsv)
+$CURRENT_USER_ID = (az ad signed-in-user show --query id -o tsv)
+$STORAGE_SCOPE = (az storage account show --name $STORAGE_ACCOUNT_NAME --resource-group $RESOURCE_GROUP --query id -o tsv)
+az role assignment create --role "Storage Blob Data Reader" --assignee $CURRENT_USER_ID --scope $STORAGE_SCOPE
 
 # Wait for RBAC propagation
 Start-Sleep -Seconds 60

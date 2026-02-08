@@ -142,47 +142,15 @@ $REDIRECT_URI = "$DASHBOARD_URL/.auth/login/aad/callback"
 az ad app update --id $DashboardClientId --web-redirect-uris $REDIRECT_URI
 Write-Host "  Redirect URI: $REDIRECT_URI"
 
-# Deploy code — local build to avoid Kudu timeouts on B1 plans
+# Deploy code — source only, startup.sh installs deps on first boot
 Write-Host "`n5. Publishing Streamlit app..." -ForegroundColor Yellow
-Write-Host "  Installing dependencies locally (avoids remote build timeouts)..." -ForegroundColor Gray
-
-# Disable remote build — we bundle dependencies in the zip
-az webapp config appsettings set `
-    --resource-group $ResourceGroup `
-    --name $DASHBOARD_NAME `
-    --settings SCM_DO_BUILD_DURING_DEPLOYMENT=false | Out-Null
+Write-Host "  Packaging source code (dependencies install on first app boot via startup.sh)..." -ForegroundColor Gray
 
 Push-Location src/dashboard
-$buildDir = Join-Path ([System.IO.Path]::GetTempPath()) "dashboard-build-$(Get-Random)"
-New-Item -ItemType Directory -Path $buildDir -Force | Out-Null
-
-# Copy app code
-Copy-Item -Path * -Destination $buildDir -Recurse -Force
-
-# Install dependencies for Linux x86_64 (App Service runtime)
-Write-Host "  Downloading packages for Linux..." -ForegroundColor Gray
-pip install -r requirements.txt `
-    --target "$buildDir/.python_packages/lib/site-packages" `
-    --platform manylinux2014_x86_64 `
-    --implementation cp `
-    --python-version 3.11 `
-    --only-binary=:all: `
-    --quiet
-
-if ($LASTEXITCODE -ne 0) {
-    Write-Host "ERROR: Failed to install Python dependencies." -ForegroundColor Red
-    Remove-Item -Recurse -Force $buildDir
-    Pop-Location
-    exit 1
-}
-
-# Create zip
 $zipFile = [System.IO.Path]::GetTempFileName() + ".zip"
-Push-Location $buildDir
 Compress-Archive -Path * -DestinationPath $zipFile -Force
-Pop-Location
 
-Write-Host "  Deploying to Azure (no remote build needed)..." -ForegroundColor Gray
+Write-Host "  Deploying to Azure..." -ForegroundColor Gray
 az webapp deploy `
     --resource-group $ResourceGroup `
     --name $DASHBOARD_NAME `
@@ -192,7 +160,6 @@ az webapp deploy `
 $deployExitCode = $LASTEXITCODE
 
 Remove-Item $zipFile
-Remove-Item -Recurse -Force $buildDir
 Pop-Location
 
 if ($deployExitCode -ne 0) {
@@ -207,4 +174,6 @@ if ($deployExitCode -ne 0) {
 Write-Host "`n=== Deployment Complete ===" -ForegroundColor Green
 Write-Host "Dashboard URL: $DASHBOARD_URL"
 Write-Host "Client ID:     $DashboardClientId"
-Write-Host "`nNote: It may take 1-2 minutes for the app to start after deployment."
+Write-Host ""
+Write-Host "Note: The first load takes 3-5 minutes while dependencies install."
+Write-Host "      Subsequent restarts are fast (packages persist in /home storage)."

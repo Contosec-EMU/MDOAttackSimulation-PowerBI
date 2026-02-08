@@ -132,45 +132,15 @@ REDIRECT_URI="$DASHBOARD_URL/.auth/login/aad/callback"
 az ad app update --id "$DASHBOARD_CLIENT_ID" --web-redirect-uris "$REDIRECT_URI"
 echo "  Redirect URI: $REDIRECT_URI"
 
-# Deploy code — local build to avoid Kudu timeouts on B1 plans
+# Deploy code — source only, startup.sh installs deps on first boot
 echo -e "\n5. Publishing Streamlit app..."
-echo "  Installing dependencies locally (avoids remote build timeouts)..."
-
-# Disable remote build — we bundle dependencies in the zip
-az webapp config appsettings set \
-    --resource-group "$RESOURCE_GROUP" \
-    --name "$DASHBOARD_NAME" \
-    --settings SCM_DO_BUILD_DURING_DEPLOYMENT=false > /dev/null
+echo "  Packaging source code (dependencies install on first app boot via startup.sh)..."
 
 cd src/dashboard
-BUILD_DIR=$(mktemp -d)
-
-# Copy app code
-cp -r . "$BUILD_DIR/"
-
-# Install dependencies for Linux x86_64 (App Service runtime)
-echo "  Downloading packages for Linux..."
-pip install -r requirements.txt \
-    --target "$BUILD_DIR/.python_packages/lib/site-packages" \
-    --platform manylinux2014_x86_64 \
-    --implementation cp \
-    --python-version 3.11 \
-    --only-binary=:all: \
-    --quiet
-
-if [ $? -ne 0 ]; then
-    echo "ERROR: Failed to install Python dependencies." >&2
-    rm -rf "$BUILD_DIR"
-    exit 1
-fi
-
-# Create zip
 ZIP_FILE=$(mktemp).zip
-cd "$BUILD_DIR"
 zip -r "$ZIP_FILE" . -x '__pycache__/*' '*.pyc' '.venv/*' > /dev/null
-cd - > /dev/null
 
-echo "  Deploying to Azure (no remote build needed)..."
+echo "  Deploying to Azure..."
 az webapp deploy \
     --resource-group "$RESOURCE_GROUP" \
     --name "$DASHBOARD_NAME" \
@@ -179,7 +149,6 @@ az webapp deploy \
 DEPLOY_EXIT=$?
 
 rm -f "$ZIP_FILE"
-rm -rf "$BUILD_DIR"
 cd ../..
 
 if [ $DEPLOY_EXIT -ne 0 ]; then
@@ -195,4 +164,5 @@ echo -e "\n=== Deployment Complete ==="
 echo "Dashboard URL: $DASHBOARD_URL"
 echo "Client ID:     $DASHBOARD_CLIENT_ID"
 echo ""
-echo "Note: It may take 1-2 minutes for the app to start after deployment."
+echo "Note: The first load takes 3-5 minutes while dependencies install."
+echo "      Subsequent restarts are fast (packages persist in /home storage)."

@@ -132,50 +132,62 @@ REDIRECT_URI="$DASHBOARD_URL/.auth/login/aad/callback"
 az ad app update --id "$DASHBOARD_CLIENT_ID" --web-redirect-uris "$REDIRECT_URI"
 echo "  Redirect URI: $REDIRECT_URI"
 
-# Deploy code
+# Deploy code — local build to avoid Kudu timeouts on B1 plans
 echo -e "\n5. Publishing Streamlit app..."
-echo "  This may take 5-10 minutes (Kudu installs Python dependencies remotely)."
-cd src/dashboard
-ZIP_FILE=$(mktemp).zip
-zip -r "$ZIP_FILE" . -x '__pycache__/*' '*.pyc' '.venv/*'
+echo "  Installing dependencies locally (avoids remote build timeouts)..."
 
-MAX_ATTEMPTS=2
-DEPLOYED=false
-for ATTEMPT in $(seq 1 $MAX_ATTEMPTS); do
-    if [ "$ATTEMPT" -gt 1 ]; then
-        echo -e "\n  Retrying deployment (attempt $ATTEMPT of $MAX_ATTEMPTS)..."
-    fi
-    if az webapp deploy \
-        --resource-group "$RESOURCE_GROUP" \
-        --name "$DASHBOARD_NAME" \
-        --src-path "$ZIP_FILE" \
-        --type zip; then
-        DEPLOYED=true
-        break
-    fi
-    if [ "$ATTEMPT" -lt "$MAX_ATTEMPTS" ]; then
-        echo "  Build failed — this is usually a transient network timeout on B1 plans."
-        echo "  Waiting 30 seconds before retry..."
-        sleep 30
-    fi
-done
+# Disable remote build — we bundle dependencies in the zip
+az webapp config appsettings set \
+    --resource-group "$RESOURCE_GROUP" \
+    --name "$DASHBOARD_NAME" \
+    --settings SCM_DO_BUILD_DURING_DEPLOYMENT=false > /dev/null
+
+cd src/dashboard
+BUILD_DIR=$(mktemp -d)
+
+# Copy app code
+cp -r . "$BUILD_DIR/"
+
+# Install dependencies for Linux x86_64 (App Service runtime)
+echo "  Downloading packages for Linux..."
+pip install -r requirements.txt \
+    --target "$BUILD_DIR/.python_packages/lib/site-packages" \
+    --platform manylinux2014_x86_64 \
+    --implementation cp \
+    --python-version 3.11 \
+    --only-binary=:all: \
+    --quiet
+
+if [ $? -ne 0 ]; then
+    echo "ERROR: Failed to install Python dependencies." >&2
+    rm -rf "$BUILD_DIR"
+    exit 1
+fi
+
+# Create zip
+ZIP_FILE=$(mktemp).zip
+cd "$BUILD_DIR"
+zip -r "$ZIP_FILE" . -x '__pycache__/*' '*.pyc' '.venv/*' > /dev/null
+cd - > /dev/null
+
+echo "  Deploying to Azure (no remote build needed)..."
+az webapp deploy \
+    --resource-group "$RESOURCE_GROUP" \
+    --name "$DASHBOARD_NAME" \
+    --src-path "$ZIP_FILE" \
+    --type zip
+DEPLOY_EXIT=$?
 
 rm -f "$ZIP_FILE"
+rm -rf "$BUILD_DIR"
 cd ../..
 
-if [ "$DEPLOYED" != "true" ]; then
+if [ $DEPLOY_EXIT -ne 0 ]; then
     echo -e "\n=== Deployment Failed ==="
-    echo "The code deployment failed after $MAX_ATTEMPTS attempts."
+    echo "The code deployment failed."
     echo ""
-    echo "This is typically caused by a network timeout downloading Python packages."
-    echo "The infrastructure and auth configuration were deployed successfully."
-    echo ""
-    echo "To retry just the code deployment:"
-    echo "  az webapp deploy --resource-group $RESOURCE_GROUP --name $DASHBOARD_NAME --src-path <zip-file> --type zip"
-    echo ""
-    echo "If it keeps failing, disable remote build and install dependencies locally:"
-    echo "  az webapp config appsettings set --resource-group $RESOURCE_GROUP --name $DASHBOARD_NAME --settings SCM_DO_BUILD_DURING_DEPLOYMENT=false"
-    echo "  Then redeploy with a zip that includes the installed packages."
+    echo "To retry just the code deployment, re-run this script."
+    echo "The infrastructure and auth configuration are already deployed."
     exit 1
 fi
 

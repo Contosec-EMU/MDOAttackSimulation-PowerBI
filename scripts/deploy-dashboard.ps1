@@ -142,51 +142,65 @@ $REDIRECT_URI = "$DASHBOARD_URL/.auth/login/aad/callback"
 az ad app update --id $DashboardClientId --web-redirect-uris $REDIRECT_URI
 Write-Host "  Redirect URI: $REDIRECT_URI"
 
-# Deploy code
+# Deploy code — local build to avoid Kudu timeouts on B1 plans
 Write-Host "`n5. Publishing Streamlit app..." -ForegroundColor Yellow
-Write-Host "  This may take 5-10 minutes (Kudu installs Python dependencies remotely)." -ForegroundColor Gray
-Push-Location src/dashboard
-$zipFile = [System.IO.Path]::GetTempFileName() + ".zip"
-Compress-Archive -Path * -DestinationPath $zipFile -Force
+Write-Host "  Installing dependencies locally (avoids remote build timeouts)..." -ForegroundColor Gray
 
-$maxAttempts = 2
-$deployed = $false
-for ($attempt = 1; $attempt -le $maxAttempts; $attempt++) {
-    if ($attempt -gt 1) {
-        Write-Host "`n  Retrying deployment (attempt $attempt of $maxAttempts)..." -ForegroundColor Yellow
-    }
-    az webapp deploy `
-        --resource-group $ResourceGroup `
-        --name $DASHBOARD_NAME `
-        --src-path $zipFile `
-        --type zip 2>&1
-    if ($LASTEXITCODE -eq 0) {
-        $deployed = $true
-        break
-    }
-    if ($attempt -lt $maxAttempts) {
-        Write-Host "  Build failed — this is usually a transient network timeout on B1 plans." -ForegroundColor Yellow
-        Write-Host "  Waiting 30 seconds before retry..." -ForegroundColor Gray
-        Start-Sleep -Seconds 30
-    }
+# Disable remote build — we bundle dependencies in the zip
+az webapp config appsettings set `
+    --resource-group $ResourceGroup `
+    --name $DASHBOARD_NAME `
+    --settings SCM_DO_BUILD_DURING_DEPLOYMENT=false | Out-Null
+
+Push-Location src/dashboard
+$buildDir = Join-Path ([System.IO.Path]::GetTempPath()) "dashboard-build-$(Get-Random)"
+New-Item -ItemType Directory -Path $buildDir -Force | Out-Null
+
+# Copy app code
+Copy-Item -Path * -Destination $buildDir -Recurse -Force
+
+# Install dependencies for Linux x86_64 (App Service runtime)
+Write-Host "  Downloading packages for Linux..." -ForegroundColor Gray
+pip install -r requirements.txt `
+    --target "$buildDir/.python_packages/lib/site-packages" `
+    --platform manylinux2014_x86_64 `
+    --implementation cp `
+    --python-version 3.11 `
+    --only-binary=:all: `
+    --quiet
+
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "ERROR: Failed to install Python dependencies." -ForegroundColor Red
+    Remove-Item -Recurse -Force $buildDir
+    Pop-Location
+    exit 1
 }
 
-Remove-Item $zipFile
+# Create zip
+$zipFile = [System.IO.Path]::GetTempFileName() + ".zip"
+Push-Location $buildDir
+Compress-Archive -Path * -DestinationPath $zipFile -Force
 Pop-Location
 
-if (-not $deployed) {
+Write-Host "  Deploying to Azure (no remote build needed)..." -ForegroundColor Gray
+az webapp deploy `
+    --resource-group $ResourceGroup `
+    --name $DASHBOARD_NAME `
+    --src-path $zipFile `
+    --type zip 2>&1
+
+$deployExitCode = $LASTEXITCODE
+
+Remove-Item $zipFile
+Remove-Item -Recurse -Force $buildDir
+Pop-Location
+
+if ($deployExitCode -ne 0) {
     Write-Host "`n=== Deployment Failed ===" -ForegroundColor Red
-    Write-Host "The code deployment failed after $maxAttempts attempts." -ForegroundColor Red
+    Write-Host "The code deployment failed." -ForegroundColor Red
     Write-Host ""
-    Write-Host "This is typically caused by a network timeout downloading Python packages." -ForegroundColor Yellow
-    Write-Host "The infrastructure and auth configuration were deployed successfully." -ForegroundColor Yellow
-    Write-Host ""
-    Write-Host "To retry just the code deployment:" -ForegroundColor Cyan
-    Write-Host "  az webapp deploy --resource-group $ResourceGroup --name $DASHBOARD_NAME --src-path <zip-file> --type zip"
-    Write-Host ""
-    Write-Host "If it keeps failing, disable remote build and install dependencies locally:" -ForegroundColor Cyan
-    Write-Host "  az webapp config appsettings set --resource-group $ResourceGroup --name $DASHBOARD_NAME --settings SCM_DO_BUILD_DURING_DEPLOYMENT=false"
-    Write-Host "  Then redeploy with a zip that includes the installed packages."
+    Write-Host "To retry just the code deployment, re-run this script." -ForegroundColor Cyan
+    Write-Host "The infrastructure and auth configuration are already deployed." -ForegroundColor Yellow
     exit 1
 }
 

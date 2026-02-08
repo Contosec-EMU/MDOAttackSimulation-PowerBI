@@ -9,9 +9,9 @@ from components.charts import bar_chart
 from components.filters import date_range_filter, multiselect_filter, apply_filters
 from data.loader import load_table
 
-st.set_page_config(page_title="Simulation Analysis", page_icon="🔬", layout="wide")
+st.set_page_config(page_title="Simulation Analysis", layout="wide")
 load_css()
-page_header("🔬 Simulation Analysis", "Drill into individual simulation performance and response metrics.")
+page_header("Simulation Analysis", "Drill into individual simulation performance and response metrics.")
 
 # ---------------------------------------------------------------------------
 # Data

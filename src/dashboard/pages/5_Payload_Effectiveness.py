@@ -9,9 +9,9 @@ from components.charts import bar_chart, treemap_chart, scatter_chart
 from components.filters import multiselect_filter, apply_filters
 from data.loader import load_table
 
-st.set_page_config(page_title="Payload Effectiveness", page_icon="📦", layout="wide")
+st.set_page_config(page_title="Payload Effectiveness", layout="wide")
 load_css()
-page_header("📦 Payload Effectiveness", "Compare predicted vs actual compromise rates and explore payload attributes.")
+page_header("Payload Effectiveness", "Compare predicted vs actual compromise rates and explore payload attributes.")
 
 # ---------------------------------------------------------------------------
 # Data

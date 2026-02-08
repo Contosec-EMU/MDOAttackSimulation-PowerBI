@@ -9,9 +9,9 @@ from components.charts import bar_chart, scatter_chart, line_chart
 from components.filters import multiselect_filter, apply_filters
 from data.loader import load_table
 
-st.set_page_config(page_title="User Risk Profile", page_icon="👤", layout="wide")
+st.set_page_config(page_title="User Risk Profile", layout="wide")
 load_css()
-page_header("👤 User Risk Profile", "Analyse user and department-level risk from simulation results.")
+page_header("User Risk Profile", "Analyse user and department-level risk from simulation results.")
 
 # ---------------------------------------------------------------------------
 # Data

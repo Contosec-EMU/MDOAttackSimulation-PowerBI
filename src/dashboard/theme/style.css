@@ -1,6 +1,8 @@
 /* MDO Attack Simulation Dashboard — Fluent Design-inspired theme */
 
-/* Typography */
+/* ========================================================================
+   Typography
+   ======================================================================== */
 @import url('https://static2.sharepointonline.com/files/fabric/assets/fonts/segoeui-westeuropean/segoeui-regular.woff2');
 
 html, body, [class*="css"] {
@@ -8,16 +10,31 @@ html, body, [class*="css"] {
     color: #323130;
 }
 
-/* Header */
+/* ========================================================================
+   Top accent bar — brand identity strip
+   ======================================================================== */
 header[data-testid="stHeader"] {
-    background-color: #ffffff;
-    border-bottom: 1px solid #edebe9;
+    background: linear-gradient(90deg, #0078d4 0%, #005a9e 100%);
+    height: 4px;
+    min-height: 4px;
+    border-bottom: none;
 }
 
-/* Sidebar */
+/* Push page content below the accent bar */
+section.main > div.block-container {
+    padding-top: 2rem;
+}
+
+/* ========================================================================
+   Sidebar
+   ======================================================================== */
 section[data-testid="stSidebar"] {
-    background-color: #faf9f8;
-    border-right: 1px solid #edebe9;
+    background-color: #f3f2f1;
+    border-right: 1px solid #e1dfdd;
+}
+
+section[data-testid="stSidebar"] > div:first-child {
+    padding-top: 1.5rem;
 }
 
 section[data-testid="stSidebar"] .stMarkdown h1 {
@@ -26,41 +43,237 @@ section[data-testid="stSidebar"] .stMarkdown h1 {
     color: #323130;
 }
 
-/* Metric cards */
+/* Sidebar nav links */
+section[data-testid="stSidebar"] a {
+    color: #323130;
+    font-weight: 500;
+    text-decoration: none;
+    transition: color 0.15s;
+}
+
+section[data-testid="stSidebar"] a:hover {
+    color: #0078d4;
+}
+
+/* Sidebar brand block */
+.sidebar-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 4px 0 2px;
+}
+
+.sidebar-brand-icon {
+    font-size: 1.6rem;
+    line-height: 1;
+    color: #0078d4;
+}
+
+.sidebar-brand-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #201f1e;
+    letter-spacing: -0.01em;
+}
+
+.sidebar-subtitle {
+    font-size: 0.78rem;
+    color: #605e5c;
+    margin: 0;
+    padding: 0 0 0 2px;
+}
+
+/* ========================================================================
+   Hero header (landing page)
+   ======================================================================== */
+.hero-header {
+    background: linear-gradient(135deg, #0078d4 0%, #005a9e 60%, #003f72 100%);
+    color: #ffffff;
+    padding: 2.5rem 2.5rem 2rem;
+    border-radius: 10px;
+    margin-bottom: 2rem;
+}
+
+.hero-header h1 {
+    color: #ffffff;
+    font-size: 1.75rem;
+    font-weight: 700;
+    margin: 0 0 0.5rem;
+    letter-spacing: -0.02em;
+}
+
+.hero-header p {
+    color: rgba(255,255,255,0.88);
+    font-size: 1rem;
+    line-height: 1.55;
+    margin: 0;
+    max-width: 720px;
+}
+
+/* ========================================================================
+   Navigation cards (landing page)
+   ======================================================================== */
+.nav-card {
+    background: #ffffff;
+    border: 1px solid #e1dfdd;
+    border-radius: 8px;
+    padding: 1.4rem 1.4rem 1.1rem;
+    min-height: 170px;
+    transition: box-shadow 0.2s, border-color 0.2s, transform 0.15s;
+    cursor: default;
+}
+
+.nav-card:hover {
+    border-color: #0078d4;
+    box-shadow: 0 4px 12px rgba(0,120,212,0.13), 0 1.5px 4px rgba(0,0,0,0.06);
+    transform: translateY(-2px);
+}
+
+.nav-card-icon {
+    font-size: 1.5rem;
+    color: #0078d4;
+    margin-bottom: 0.6rem;
+    line-height: 1;
+}
+
+.nav-card-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #201f1e;
+    margin-bottom: 0.4rem;
+}
+
+.nav-card-desc {
+    font-size: 0.82rem;
+    color: #605e5c;
+    line-height: 1.5;
+}
+
+/* Getting started notice */
+.getting-started {
+    background: #f3f2f1;
+    border-left: 4px solid #0078d4;
+    border-radius: 4px;
+    padding: 0.9rem 1.2rem;
+    font-size: 0.85rem;
+    color: #323130;
+    line-height: 1.55;
+}
+
+/* ========================================================================
+   Page header component
+   ======================================================================== */
+.page-header {
+    border-bottom: 3px solid #0078d4;
+    padding-bottom: 0.75rem;
+    margin-bottom: 1.5rem;
+}
+
+.page-header h1 {
+    color: #201f1e;
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin: 0 0 0.25rem;
+    letter-spacing: -0.01em;
+}
+
+.page-header p {
+    color: #605e5c;
+    font-size: 0.88rem;
+    margin: 0;
+}
+
+/* ========================================================================
+   Page footer component
+   ======================================================================== */
+.page-footer {
+    margin-top: 3rem;
+    padding: 0.75rem 0;
+    border-top: 1px solid #edebe9;
+    text-align: center;
+}
+
+.page-footer p {
+    font-size: 0.75rem;
+    color: #a19f9d;
+    margin: 0;
+}
+
+/* ========================================================================
+   Metric cards
+   ======================================================================== */
 div[data-testid="stMetric"] {
     background-color: #ffffff;
-    border: 1px solid #edebe9;
+    border: 1px solid #e1dfdd;
     border-radius: 8px;
-    padding: 16px 20px;
+    padding: 18px 22px;
     box-shadow: 0 1.6px 3.6px rgba(0,0,0,0.06), 0 0.3px 0.9px rgba(0,0,0,0.04);
-    border-left: 4px solid #0078d4;
+    border-top: 3px solid #0078d4;
+    transition: box-shadow 0.2s, transform 0.15s;
+}
+
+div[data-testid="stMetric"]:hover {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1), 0 1px 3px rgba(0,0,0,0.06);
+    transform: translateY(-1px);
 }
 
 div[data-testid="stMetric"] label {
-    font-size: 0.8rem;
+    font-size: 0.72rem;
     font-weight: 600;
     color: #605e5c;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
+    letter-spacing: 0.6px;
 }
 
 div[data-testid="stMetric"] [data-testid="stMetricValue"] {
-    font-size: 1.8rem;
+    font-size: 1.9rem;
     font-weight: 700;
     color: #0078d4;
 }
 
-/* Data tables */
-div[data-testid="stDataFrame"] {
-    border: 1px solid #edebe9;
-    border-radius: 8px;
-    overflow: hidden;
+div[data-testid="stMetric"] [data-testid="stMetricDelta"] {
+    font-size: 0.78rem;
 }
 
-/* Tabs */
+/* ========================================================================
+   Data tables
+   ======================================================================== */
+div[data-testid="stDataFrame"] {
+    border: 1px solid #e1dfdd;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+}
+
+div[data-testid="stDataFrame"] table {
+    font-size: 0.85rem;
+}
+
+div[data-testid="stDataFrame"] th {
+    background-color: #f3f2f1;
+    font-weight: 600;
+    color: #323130;
+    text-transform: uppercase;
+    font-size: 0.72rem;
+    letter-spacing: 0.4px;
+}
+
+div[data-testid="stDataFrame"] td {
+    border-bottom: 1px solid #f3f2f1;
+}
+
+/* ========================================================================
+   Tabs
+   ======================================================================== */
 button[data-baseweb="tab"] {
     font-weight: 600;
     color: #605e5c;
+    padding-bottom: 10px;
+    transition: color 0.15s;
+}
+
+button[data-baseweb="tab"]:hover {
+    color: #0078d4;
 }
 
 button[data-baseweb="tab"][aria-selected="true"] {
@@ -68,43 +281,117 @@ button[data-baseweb="tab"][aria-selected="true"] {
     border-bottom-color: #0078d4;
 }
 
-/* Plotly chart containers */
+/* ========================================================================
+   Plotly chart containers
+   ======================================================================== */
 div.stPlotlyChart {
     background-color: #ffffff;
-    border: 1px solid #edebe9;
+    border: 1px solid #e1dfdd;
     border-radius: 8px;
-    padding: 8px;
+    padding: 12px;
     box-shadow: 0 1.6px 3.6px rgba(0,0,0,0.06), 0 0.3px 0.9px rgba(0,0,0,0.04);
 }
 
-/* Info/warning boxes */
+/* ========================================================================
+   Alerts / info boxes
+   ======================================================================== */
 div[data-testid="stAlert"] {
     border-radius: 8px;
+    font-size: 0.88rem;
 }
 
-/* Section dividers */
+/* ========================================================================
+   Dividers
+   ======================================================================== */
 hr {
     border: none;
     border-top: 1px solid #edebe9;
     margin: 1.5rem 0;
 }
 
-/* Page title */
+/* ========================================================================
+   Headings
+   ======================================================================== */
 h1 {
     font-weight: 700;
     color: #201f1e;
-    font-size: 1.6rem;
+    font-size: 1.5rem;
+    letter-spacing: -0.01em;
 }
 
 h2 {
     font-weight: 600;
     color: #323130;
-    font-size: 1.2rem;
+    font-size: 1.15rem;
     margin-top: 1.5rem;
 }
 
 h3 {
     font-weight: 600;
     color: #605e5c;
-    font-size: 1rem;
+    font-size: 0.95rem;
+}
+
+/* ========================================================================
+   Buttons & page links
+   ======================================================================== */
+.stPageLink > a,
+a[data-testid="stPageLink-NavLink"] {
+    font-weight: 600;
+    font-size: 0.82rem;
+    color: #0078d4;
+    border: 1px solid #0078d4;
+    border-radius: 4px;
+    padding: 0.35rem 1rem;
+    text-decoration: none;
+    transition: background-color 0.15s, color 0.15s;
+    display: inline-block;
+}
+
+.stPageLink > a:hover,
+a[data-testid="stPageLink-NavLink"]:hover {
+    background-color: #0078d4;
+    color: #ffffff;
+}
+
+/* ========================================================================
+   Expander styling
+   ======================================================================== */
+details[data-testid="stExpander"] {
+    border: 1px solid #e1dfdd;
+    border-radius: 8px;
+    background: #ffffff;
+}
+
+details[data-testid="stExpander"] summary {
+    font-weight: 600;
+    color: #323130;
+}
+
+/* ========================================================================
+   Selectbox / multiselect
+   ======================================================================== */
+div[data-baseweb="select"] {
+    border-radius: 4px;
+}
+
+/* ========================================================================
+   Scrollbar (Chromium browsers)
+   ======================================================================== */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f3f2f1;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #c8c6c4;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #a19f9d;
 }

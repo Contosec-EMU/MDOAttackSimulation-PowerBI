@@ -6,18 +6,25 @@ import streamlit as st
 
 
 def page_header(title: str, description: str) -> None:
-    """Render a consistent page header."""
-    st.title(title)
-    st.caption(description)
-    st.divider()
+    """Render a page header with an accent-bar underline."""
+    st.markdown(
+        '<div class="page-header">'
+        f"<h1>{title}</h1>"
+        f"<p>{description}</p>"
+        "</div>",
+        unsafe_allow_html=True,
+    )
 
 
 def page_footer() -> None:
-    """Render a consistent page footer."""
-    st.divider()
-    st.caption(
-        "💡 This is a starter dashboard — customize visuals and layout "
-        "to match your organization's reporting standards."
+    """Render a subtle page footer."""
+    st.markdown(
+        '<div class="page-footer">'
+        "<p>MDO Attack Simulation Training &mdash; "
+        "Customize visuals and layout to match your organization's "
+        "reporting standards.</p>"
+        "</div>",
+        unsafe_allow_html=True,
     )
 
 
@@ -26,7 +33,6 @@ def no_data_warning(table_name: str) -> None:
     st.warning(
         f"No data available for **{table_name}**. "
         "Make sure the Azure Function has run and produced data for this table.",
-        icon="⚠️",
     )
 
 

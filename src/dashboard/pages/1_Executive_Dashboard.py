@@ -9,9 +9,9 @@ from components.charts import line_chart, donut_chart
 from components.filters import date_range_filter, apply_filters
 from data.loader import load_table
 
-st.set_page_config(page_title="Executive Dashboard", page_icon="📊", layout="wide")
+st.set_page_config(page_title="Executive Dashboard", layout="wide")
 load_css()
-page_header("📊 Executive Dashboard", "Organization-wide attack simulation KPIs and trends.")
+page_header("Executive Dashboard", "Organization-wide attack simulation KPIs and trends.")
 
 # ---------------------------------------------------------------------------
 # Data

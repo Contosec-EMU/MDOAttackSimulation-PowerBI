@@ -8,9 +8,9 @@ from components.metrics import metric_row, section_header
 from components.charts import stacked_bar_chart, scatter_chart
 from data.loader import load_table
 
-st.set_page_config(page_title="Training Compliance", page_icon="🎓", layout="wide")
+st.set_page_config(page_title="Training Compliance", layout="wide")
 load_css()
-page_header("🎓 Training Compliance", "Track training completion rates and their relationship to simulation outcomes.")
+page_header("Training Compliance", "Track training completion rates and their relationship to simulation outcomes.")
 
 # ---------------------------------------------------------------------------
 # Data

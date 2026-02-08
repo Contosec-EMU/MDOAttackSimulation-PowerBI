@@ -93,14 +93,24 @@ Write-Host "  Storage URL: $STORAGE_URL"
 if (-not $DashboardClientId) {
     Write-Host "`n2. Creating Entra ID app registration..." -ForegroundColor Yellow
     $APP_DISPLAY_NAME = "MDOAttackSimulation-Dashboard"
-    # Create with a placeholder redirect URI (updated after deployment)
-    $APP_JSON = az ad app create `
-        --display-name $APP_DISPLAY_NAME `
-        --sign-in-audience AzureADMyOrg `
-        --query "{appId:appId, id:id}" -o json | ConvertFrom-Json
-    $DashboardClientId = $APP_JSON.appId
-    az ad sp create --id $DashboardClientId | Out-Null
-    Write-Host "  App Registration: $APP_DISPLAY_NAME ($DashboardClientId)"
+    # Check if app registration already exists
+    $existingAppId = az ad app list --display-name $APP_DISPLAY_NAME --query "[0].appId" -o tsv 2>$null
+    if ($existingAppId) {
+        $DashboardClientId = $existingAppId
+        Write-Host "  Found existing app registration: $APP_DISPLAY_NAME ($DashboardClientId)"
+    } else {
+        $APP_JSON = az ad app create `
+            --display-name $APP_DISPLAY_NAME `
+            --sign-in-audience AzureADMyOrg `
+            --query "{appId:appId, id:id}" -o json | ConvertFrom-Json
+        $DashboardClientId = $APP_JSON.appId
+        if (-not $DashboardClientId) {
+            Write-Host "ERROR: Failed to create app registration. Check your Entra ID permissions." -ForegroundColor Red
+            exit 1
+        }
+        az ad sp create --id $DashboardClientId | Out-Null
+        Write-Host "  Created app registration: $APP_DISPLAY_NAME ($DashboardClientId)"
+    }
 } else {
     Write-Host "`n2. Using existing app registration: $DashboardClientId" -ForegroundColor Yellow
 }

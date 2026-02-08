@@ -85,12 +85,23 @@ echo "  Storage URL: $STORAGE_URL"
 if [ -z "$DASHBOARD_CLIENT_ID" ]; then
     echo -e "\n2. Creating Entra ID app registration..."
     APP_DISPLAY_NAME="MDOAttackSimulation-Dashboard"
-    DASHBOARD_CLIENT_ID=$(az ad app create \
-        --display-name "$APP_DISPLAY_NAME" \
-        --sign-in-audience AzureADMyOrg \
-        --query "appId" -o tsv)
-    az ad sp create --id "$DASHBOARD_CLIENT_ID" > /dev/null
-    echo "  App Registration: $APP_DISPLAY_NAME ($DASHBOARD_CLIENT_ID)"
+    # Check if app registration already exists
+    EXISTING_APP_ID=$(az ad app list --display-name "$APP_DISPLAY_NAME" --query "[0].appId" -o tsv 2>/dev/null)
+    if [ -n "$EXISTING_APP_ID" ] && [ "$EXISTING_APP_ID" != "None" ]; then
+        DASHBOARD_CLIENT_ID="$EXISTING_APP_ID"
+        echo "  Found existing app registration: $APP_DISPLAY_NAME ($DASHBOARD_CLIENT_ID)"
+    else
+        DASHBOARD_CLIENT_ID=$(az ad app create \
+            --display-name "$APP_DISPLAY_NAME" \
+            --sign-in-audience AzureADMyOrg \
+            --query "appId" -o tsv)
+        if [ -z "$DASHBOARD_CLIENT_ID" ]; then
+            echo "ERROR: Failed to create app registration. Check your Entra ID permissions." >&2
+            exit 1
+        fi
+        az ad sp create --id "$DASHBOARD_CLIENT_ID" > /dev/null
+        echo "  Created app registration: $APP_DISPLAY_NAME ($DASHBOARD_CLIENT_ID)"
+    fi
 else
     echo -e "\n2. Using existing app registration: $DASHBOARD_CLIENT_ID"
 fi

@@ -147,8 +147,20 @@ Write-Host "`n5. Publishing Streamlit app..." -ForegroundColor Yellow
 Write-Host "  Packaging source code (dependencies install on first app boot via startup.sh)..." -ForegroundColor Gray
 
 Push-Location src/dashboard
+
+# Build zip in a temp directory with LF line endings for .sh files (Linux)
+$buildDir = Join-Path ([System.IO.Path]::GetTempPath()) "dashboard-build-$(Get-Random)"
+New-Item -ItemType Directory -Path $buildDir -Force | Out-Null
+Copy-Item -Path * -Destination $buildDir -Recurse -Force
+Get-ChildItem $buildDir -Filter "*.sh" -Recurse | ForEach-Object {
+    $content = [System.IO.File]::ReadAllText($_.FullName)
+    [System.IO.File]::WriteAllText($_.FullName, $content.Replace("`r`n", "`n"))
+}
+
 $zipFile = [System.IO.Path]::GetTempFileName() + ".zip"
+Push-Location $buildDir
 Compress-Archive -Path * -DestinationPath $zipFile -Force
+Pop-Location
 
 Write-Host "  Deploying to Azure..." -ForegroundColor Gray
 az webapp deploy `
@@ -160,6 +172,7 @@ az webapp deploy `
 $deployExitCode = $LASTEXITCODE
 
 Remove-Item $zipFile
+Remove-Item -Recurse -Force $buildDir
 Pop-Location
 
 if ($deployExitCode -ne 0) {

@@ -60,7 +60,7 @@ resource dashboardApp 'Microsoft.Web/sites@2023-01-01' = {
     virtualNetworkSubnetId: subnetId
     siteConfig: {
       linuxFxVersion: 'PYTHON|3.11'
-      appCommandLine: 'startup.sh'
+      appCommandLine: 'bash startup.sh'
       alwaysOn: true
       ftpsState: 'Disabled'
       minTlsVersion: '1.2'

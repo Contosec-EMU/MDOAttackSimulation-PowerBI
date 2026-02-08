@@ -85,6 +85,10 @@ resource dashboardApp 'Microsoft.Web/sites@2023-01-01' = {
           name: 'WEBSITE_RUN_FROM_PACKAGE'
           value: '0'
         }
+        {
+          name: 'WEBSITES_CONTAINER_START_TIME_LIMIT'
+          value: '600'
+        }
       ]
     }
   }

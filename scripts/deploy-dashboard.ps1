@@ -111,6 +111,9 @@ if (-not $DashboardClientId) {
         az ad sp create --id $DashboardClientId | Out-Null
         Write-Host "  Created app registration: $APP_DISPLAY_NAME ($DashboardClientId)"
     }
+    # Ensure identifier URI and ID token issuance are set (required by EasyAuth)
+    az ad app update --id $DashboardClientId --identifier-uris "api://$DashboardClientId" 2>$null
+    az ad app update --id $DashboardClientId --enable-id-token-issuance true 2>$null
 } else {
     Write-Host "`n2. Using existing app registration: $DashboardClientId" -ForegroundColor Yellow
 }

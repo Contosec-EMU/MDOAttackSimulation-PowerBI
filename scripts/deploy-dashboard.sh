@@ -102,6 +102,9 @@ if [ -z "$DASHBOARD_CLIENT_ID" ]; then
         az ad sp create --id "$DASHBOARD_CLIENT_ID" > /dev/null
         echo "  Created app registration: $APP_DISPLAY_NAME ($DASHBOARD_CLIENT_ID)"
     fi
+    # Ensure identifier URI and ID token issuance are set (required by EasyAuth)
+    az ad app update --id "$DASHBOARD_CLIENT_ID" --identifier-uris "api://$DASHBOARD_CLIENT_ID" 2>/dev/null
+    az ad app update --id "$DASHBOARD_CLIENT_ID" --enable-id-token-issuance true 2>/dev/null
 else
     echo -e "\n2. Using existing app registration: $DASHBOARD_CLIENT_ID"
 fi

@@ -13,21 +13,39 @@
     "visualType": "scatterChart",
     "query": {
       "queryState": {
-        "X": {
+        "Details": {
           "projections": [
             {
               "field": {
                 "Column": {
                   "Expression": {
                     "SourceRef": {
-                      "Entity": "simulationUserCoverage"
+                      "Entity": "users"
                     }
                   },
-                  "Property": "compromisedCount"
+                  "Property": "displayName"
                 }
               },
-              "queryRef": "simulationUserCoverage.compromisedCount",
-              "nativeQueryRef": "compromisedCount",
+              "queryRef": "users.displayName",
+              "nativeQueryRef": "displayName"
+            }
+          ]
+        },
+        "X": {
+          "projections": [
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "_Measures"
+                    }
+                  },
+                  "Property": "User Compromised Count"
+                }
+              },
+              "queryRef": "_Measures.User Compromised Count",
+              "nativeQueryRef": "User Compromised Count",
               "active": true
             }
           ]
@@ -36,17 +54,17 @@
           "projections": [
             {
               "field": {
-                "Column": {
+                "Measure": {
                   "Expression": {
                     "SourceRef": {
-                      "Entity": "trainingUserCoverage"
+                      "Entity": "_Measures"
                     }
                   },
-                  "Property": "completedTrainingsCount"
+                  "Property": "User Training Completed"
                 }
               },
-              "queryRef": "trainingUserCoverage.completedTrainingsCount",
-              "nativeQueryRef": "completedTrainingsCount"
+              "queryRef": "_Measures.User Training Completed",
+              "nativeQueryRef": "User Training Completed"
             }
           ]
         }

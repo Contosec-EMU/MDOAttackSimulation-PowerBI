@@ -13,6 +13,24 @@
     "visualType": "scatterChart",
     "query": {
       "queryState": {
+        "Details": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "simulationUserCoverage"
+                    }
+                  },
+                  "Property": "displayName"
+                }
+              },
+              "queryRef": "simulationUserCoverage.displayName",
+              "nativeQueryRef": "displayName"
+            }
+          ]
+        },
         "Size": {
           "projections": [
             {
@@ -20,14 +38,14 @@
                 "Column": {
                   "Expression": {
                     "SourceRef": {
-                      "Entity": "repeatOffenders"
+                      "Entity": "simulationUserCoverage"
                     }
                   },
-                  "Property": "repeatOffenceCount"
+                  "Property": "clickCount"
                 }
               },
-              "queryRef": "repeatOffenders.repeatOffenceCount",
-              "nativeQueryRef": "repeatOffenceCount"
+              "queryRef": "simulationUserCoverage.clickCount",
+              "nativeQueryRef": "clickCount"
             }
           ]
         },

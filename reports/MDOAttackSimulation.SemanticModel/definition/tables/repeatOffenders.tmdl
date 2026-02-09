@@ -34,9 +34,9 @@ table repeatOffenders
 		annotation SummarizationSetBy = Automatic
 
 	column repeatOffenceCount
-		dataType: string
+		dataType: int64
 		lineageTag: a1010005-0000-0000-0000-000000000001
-		summarizeBy: none
+		summarizeBy: sum
 		sourceColumn: repeatOffenceCount
 
 		annotation SummarizationSetBy = Automatic

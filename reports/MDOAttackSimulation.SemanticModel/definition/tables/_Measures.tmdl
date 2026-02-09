@@ -104,6 +104,14 @@ table _Measures
 		formatString: #,0
 		lineageTag: m0000012-0000-0000-0000-000000000012
 
+	measure 'User Compromised Count' = SUM(simulationUserCoverage[compromisedCount])
+		formatString: #,0
+		lineageTag: m0000013-0000-0000-0000-000000000013
+
+	measure 'User Training Completed' = SUM(trainingUserCoverage[completedTrainingsCount])
+		formatString: #,0
+		lineageTag: m0000014-0000-0000-0000-000000000014
+
 	column Value
 		isHidden
 		formatString: 0

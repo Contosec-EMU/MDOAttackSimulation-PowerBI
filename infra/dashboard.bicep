@@ -78,6 +78,8 @@ resource dashboardApp 'Microsoft.Web/sites@2023-01-01' = {
           value: appInsightsConnectionString
         }
         {
+          // Must be 'false' — Kudu builds timeout on B1 plans with heavy deps
+          // (plotly 15MB, pyarrow 18MB). Dependencies install via startup.sh instead.
           name: 'SCM_DO_BUILD_DURING_DEPLOYMENT'
           value: 'false'
         }

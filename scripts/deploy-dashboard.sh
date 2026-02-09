@@ -140,6 +140,8 @@ echo -e "\n5. Publishing Streamlit app..."
 echo "  Packaging source code (dependencies install on first app boot via startup.sh)..."
 
 cd src/dashboard
+# Convert CRLF to LF in shell scripts (Windows checkout may add \r)
+find . -name "*.sh" -exec sed -i 's/\r$//' {} +
 ZIP_FILE=$(mktemp).zip
 zip -r "$ZIP_FILE" . -x '__pycache__/*' '*.pyc' '.venv/*' > /dev/null
 

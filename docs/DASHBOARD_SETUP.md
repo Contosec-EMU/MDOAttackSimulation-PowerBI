@@ -69,5 +69,6 @@ Or, after deploying the web app without auth:
 | "Application not found" on login | Verify the app registration exists and the redirect URI matches the dashboard URL |
 | Empty tables / no data | Ensure the Azure Function has run at least once |
 | 403 on storage access | Check that the dashboard's managed identity has Storage Blob Data Reader |
-| App takes a long time to start | First cold start can take 30-60 seconds on B1; subsequent loads are faster |
+| App takes a long time to start | First cold start installs deps and can take 2-3 minutes on B1; subsequent loads use cached packages |
 | CSS not loading | Ensure `startup.sh` has execute permissions and the working directory is `src/dashboard` |
+| pip timeout during deployment | **Do not** set `SCM_DO_BUILD_DURING_DEPLOYMENT=true` — Kudu builds timeout on B1 plans with large wheels (plotly, pyarrow). The Bicep template sets this to `false`; dependencies install via `startup.sh` instead |

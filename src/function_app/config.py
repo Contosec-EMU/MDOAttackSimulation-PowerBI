@@ -134,7 +134,7 @@ class FunctionConfig:
     graph_client_id: str
     key_vault_url: str
     storage_account_url: str
-    timer_schedule: str = "0 0 2 * * *"
+    timer_schedule: str = "0 0 * * * *"
     sync_mode: str = "full"
     sync_simulations: bool = True
     incremental_lookback_days: int = INCREMENTAL_LOOKBACK_DAYS
@@ -173,7 +173,7 @@ class FunctionConfig:
             graph_client_id=os.environ["GRAPH_CLIENT_ID"],
             key_vault_url=kv_url,
             storage_account_url=storage_url,
-            timer_schedule=os.environ.get("TIMER_SCHEDULE", "0 0 2 * * *"),
+            timer_schedule=os.environ.get("TIMER_SCHEDULE", "0 0 * * * *"),
             sync_mode=sync_mode,
             sync_simulations=(
                 os.environ.get("SYNC_SIMULATIONS", "true").lower() == "true"

@@ -46,7 +46,7 @@ class TestFunctionConfigFromEnvironment:
         monkeypatch.delenv("SYNC_SIMULATIONS", raising=False)
 
         cfg = FunctionConfig.from_environment()
-        assert cfg.timer_schedule == "0 0 2 * * *"
+        assert cfg.timer_schedule == "0 0 * * * *"
         assert cfg.sync_mode == "full"
         assert cfg.sync_simulations is True
 

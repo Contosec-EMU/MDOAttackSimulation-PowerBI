@@ -2,12 +2,11 @@
 
 ## Architecture
 
-This is an Azure Functions v4 (Python 3.11) data pipeline that ingests Microsoft Defender for Office 365 Attack Simulation Training data from Microsoft Graph API → ADLS Gen2 (Parquet) → Power BI / Streamlit.
+This is an Azure Functions v4 (Python 3.11) data pipeline that ingests Microsoft Defender for Office 365 Attack Simulation Training data from Microsoft Graph API → ADLS Gen2 (Parquet) → Power BI.
 
-**Two application components:**
+**Application component:**
 
 - **`src/function_app/`** — Azure Function with timer + HTTP triggers. Async throughout (`aiohttp` for Graph API, Azure SDK async for storage). Produces 9 Parquet tables from Graph API data.
-- **`src/dashboard/`** — Streamlit executive dashboard (Plotly charts, Fluent Design CSS). Reads the same Parquet data from ADLS Gen2. Deployed to its own App Service.
 
 **Data flow:** Timer trigger → OAuth2 via Key Vault → paginate 9 Graph API endpoints → transform to flat dicts → write Parquet (curated/) + JSON (raw/) to ADLS Gen2, date-partitioned.
 

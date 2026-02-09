@@ -533,9 +533,8 @@ Your data pipeline is running and writing Parquet files to ADLS Gen2. Choose how
 | Option | Best for | Guide |
 |--------|----------|-------|
 | **Power BI Desktop** | Rich interactive dashboards, scheduled refresh, sharing via Power BI Service | [Power BI Setup Guide](POWERBI_SETUP.md) |
-| **Streamlit Dashboard** | Browser-based, no Power BI license needed, lightweight executive view | [Dashboard Setup Guide](DASHBOARD_SETUP.md) |
 
-You can set up both — they read the same data from ADLS Gen2.
+Power BI reads the same data from ADLS Gen2.
 
 ---
 

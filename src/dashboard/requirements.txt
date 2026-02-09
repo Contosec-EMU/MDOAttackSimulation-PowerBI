@@ -1,6 +1,0 @@
-streamlit==1.41.1
-plotly==6.0.0
-azure-identity==1.19.0
-azure-storage-file-datalake==12.18.0
-pyarrow==18.1.0
-pandas==2.2.3

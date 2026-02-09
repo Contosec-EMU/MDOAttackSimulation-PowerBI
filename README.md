@@ -26,7 +26,6 @@ This solution bridges that gap by automatically syncing simulation data into you
 - **Incremental Sync** — 7-day lookback reduces API calls by ~70–80% after initial sync
 - **Secure by Design** — Managed Identity, Key Vault, network isolation, RBAC least privilege
 - **Three Deployment Methods** — GitHub Actions CI/CD, Azure CLI, or Azure Portal manual setup
-- **Streamlit Dashboard** — Browser-based executive dashboard, no Power BI license required ([docs](docs/DASHBOARD_SETUP.md))
 
 ## Table of Contents
 
@@ -37,7 +36,6 @@ This solution bridges that gap by automatically syncing simulation data into you
 - [Deployment Methods](#deployment-methods)
 - [Configuration](#configuration)
 - [Power BI Setup](#power-bi-setup)
-- [Streamlit Dashboard](#streamlit-dashboard)
 - [Project Structure](#project-structure)
 - [Output Data Structure](#output-data-structure)
 - [Monitoring](#monitoring)
@@ -292,9 +290,8 @@ Your data pipeline is running. Choose how to visualize the data:
 | Option | Best for | Guide |
 |--------|----------|-------|
 | **Power BI Desktop** | Rich dashboards, scheduled refresh, sharing via Power BI Service | [Power BI Setup Guide](docs/POWERBI_SETUP.md) |
-| **Streamlit Dashboard** | Browser-based, no Power BI license needed, lightweight executive view | [Dashboard Setup Guide](docs/DASHBOARD_SETUP.md) |
 
-You can set up both — they read the same data from ADLS Gen2.
+Power BI reads the same data from ADLS Gen2.
 
 ### Option 3: Azure Portal (Manual)
 
@@ -377,21 +374,6 @@ in
 
 > **Tip**: For Power BI Pro without Premium, you may need an [On-Premises Data Gateway](https://learn.microsoft.com/en-us/power-bi/connect-data/service-gateway-onprem) to access ADLS Gen2.
 
-## Streamlit Dashboard
-
-A browser-based alternative to Power BI that requires **no desktop software or licenses**. Built with Streamlit and Plotly, it reads the same Parquet data from ADLS Gen2.
-
-**5 Dashboard Pages:** Executive Overview · Simulation Analysis · User Risk Profile · Training Compliance · Payload Effectiveness
-
-### Quick Deploy
-
-```powershell
-# PowerShell — creates app registration automatically
-.\scripts\deploy-dashboard.ps1 -ResourceGroup "rg-mdo-attack-simulation"
-```
-
-See [Dashboard Setup Guide](docs/DASHBOARD_SETUP.md) for full instructions, or [src/dashboard/README.md](src/dashboard/README.md) for local development.
-
 ## Project Structure
 
 ```
@@ -402,32 +384,22 @@ MDOAttackSimulation_PowerBI/
 │       ├── deploy.yml          # CI/CD deployment workflow
 │       └── test.yml            # Test workflow
 ├── docs/
-│   └── DASHBOARD_SETUP.md      # Streamlit dashboard setup guide
 ├── infra/
 │   ├── main.bicep              # Azure infrastructure (IaC)
 │   ├── main.bicepparam         # Deployment parameters
-│   ├── main.bicepparam.example # Example parameters (safe to commit)
-│   └── dashboard.bicep         # Streamlit dashboard infrastructure
+│   └── main.bicepparam.example # Example parameters (safe to commit)
 ├── reports/                    # Power BI report templates (PBIR format)
 │   ├── MDOAttackSimulation.pbip
-│   ├── MDOAttackSimulation.Report/    # 5 dashboard pages, 30 visuals
+│   ├── MDOAttackSimulation.Report/    # 5 report pages, 30 visuals
 │   └── MDOAttackSimulation.SemanticModel/  # 9 tables, 12 DAX measures
 ├── scripts/
 │   ├── create-app-registration.ps1
 │   ├── deploy.ps1              # PowerShell deployment script
 │   ├── deploy.sh               # Bash deployment script
-│   ├── deploy-dashboard.ps1    # Dashboard deployment (PowerShell)
-│   ├── deploy-dashboard.sh     # Dashboard deployment (Bash)
 │   ├── setup-github-oidc.ps1   # GitHub OIDC setup (PowerShell)
 │   ├── setup-github-oidc.sh    # GitHub OIDC setup (Bash)
 │   └── QUICK_START.md          # 10-minute quick start guide
 ├── src/
-│   ├── dashboard/              # Streamlit executive dashboard
-│   │   ├── app.py              # Dashboard entry point
-│   │   ├── pages/              # 5 dashboard pages
-│   │   ├── data/loader.py      # ADLS Gen2 Parquet reader
-│   │   ├── components/         # Charts, metrics, filters
-│   │   └── theme/style.css     # Fluent Design CSS
 │   └── function_app/
 │       ├── clients/
 │       │   ├── graph_api.py    # Async Graph API client (aiohttp)

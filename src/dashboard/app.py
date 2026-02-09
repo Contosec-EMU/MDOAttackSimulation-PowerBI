@@ -15,7 +15,6 @@ with open("theme/style.css") as f:
 # -- Sidebar branding --------------------------------------------------------
 st.sidebar.markdown(
     '<div class="sidebar-brand">'
-    '<span class="sidebar-brand-icon">&#x1F6E1;&#xFE0E;</span>'
     '<span class="sidebar-brand-title">MDO Attack Simulation</span>'
     "</div>",
     unsafe_allow_html=True,
@@ -43,35 +42,30 @@ NAV_SECTIONS = [
         "desc": "Organization-wide KPIs, compromise trends, and simulation "
                 "success rates at a glance.",
         "page": "pages/1_Executive_Dashboard.py",
-        "icon": "&#x2261;",
     },
     {
         "title": "Simulation Analysis",
         "desc": "Drill into individual simulation campaigns, techniques used, "
                 "and comparative results.",
         "page": "pages/2_Simulation_Analysis.py",
-        "icon": "&#x25C8;",
     },
     {
         "title": "User Risk Profile",
         "desc": "Identify high-risk users, repeat offenders, and departments "
                 "that need additional training.",
         "page": "pages/3_User_Risk_Profile.py",
-        "icon": "&#x2666;&#xFE0E;",
     },
     {
         "title": "Training Compliance",
         "desc": "Track assignment completion rates, overdue trainings, and "
                 "compliance by department.",
         "page": "pages/4_Training_Compliance.py",
-        "icon": "&#x2713;",
     },
     {
         "title": "Payload Effectiveness",
         "desc": "Compare social-engineering payload types, click-through rates, "
                 "and credential harvesting success.",
         "page": "pages/5_Payload_Effectiveness.py",
-        "icon": "&#x29BF;",
     },
 ]
 
@@ -80,7 +74,6 @@ for idx, section in enumerate(NAV_SECTIONS):
     with cols[idx % 3]:
         st.markdown(
             '<div class="nav-card">'
-            f'<div class="nav-card-icon">{section["icon"]}</div>'
             f'<div class="nav-card-title">{section["title"]}</div>'
             f'<div class="nav-card-desc">{section["desc"]}</div>'
             "</div>",

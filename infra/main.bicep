@@ -145,6 +145,11 @@ resource funcStorageAccount 'Microsoft.Storage/storageAccounts@2023-01-01' = {
     allowBlobPublicAccess: false
     allowSharedKeyAccess: false  // Use identity-based auth instead of account keys
     accessTier: 'Hot'
+    publicNetworkAccess: 'Enabled'
+    networkAcls: {
+      defaultAction: 'Allow'
+      bypass: 'AzureServices'
+    }
   }
 }
 
@@ -358,14 +363,14 @@ resource functionApp 'Microsoft.Web/sites@2023-01-01' = {
 // RBAC roles for Function App on Function Storage Account (for AzureWebJobsStorage)
 // These roles are required for identity-based connections to work
 
-// Storage Blob Data Contributor - allows Function to read/write blobs in function storage
-resource funcStorageBlobDataContributorRole 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  name: guid(funcStorageAccount.id, functionApp.id, 'Storage Blob Data Contributor')
+// Storage Blob Data Owner - required for identity-based AzureWebJobsStorage (blob lease management)
+resource funcStorageBlobDataOwnerRole 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(funcStorageAccount.id, functionApp.id, 'Storage Blob Data Owner')
   scope: funcStorageAccount
   properties: {
     principalId: functionApp.identity.principalId
     principalType: 'ServicePrincipal'
-    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'ba92f5b4-2d11-453d-a403-e96b0029c9fe')
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'b7e6dc6d-f1e8-4753-8033-0f276bb0955b')
   }
 }
 

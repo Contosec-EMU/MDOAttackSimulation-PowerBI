@@ -3,12 +3,15 @@
 from __future__ import annotations
 
 import io
+import logging
 import os
 
 import pandas as pd
 import streamlit as st
 from azure.identity import DefaultAzureCredential
 from azure.storage.filedatalake import DataLakeServiceClient
+
+logger = logging.getLogger(__name__)
 
 STORAGE_ACCOUNT_URL: str = os.environ.get(
     "STORAGE_ACCOUNT_URL", "https://YOURSTORAGEACCOUNT.dfs.core.windows.net"
@@ -162,6 +165,20 @@ def _empty_df(table_name: str) -> pd.DataFrame:
     return df
 
 
+# Track load errors so pages can display actionable messages
+_load_errors: dict[str, str] = {}
+
+
+def _record_load_error(table_name: str, exc: Exception) -> None:
+    """Store a human-readable error for a table so pages can show it."""
+    _load_errors[table_name] = f"{type(exc).__name__}: {exc}"
+
+
+def get_load_error(table_name: str) -> str | None:
+    """Return the last load error for a table, or None if it loaded OK."""
+    return _load_errors.get(table_name)
+
+
 def _get_service_client() -> DataLakeServiceClient:
     """Create an ADLS Gen2 service client using DefaultAzureCredential."""
     credential = DefaultAzureCredential()
@@ -186,6 +203,7 @@ def load_table(table_name: str) -> pd.DataFrame:
         ]
 
         if not parquet_files:
+            logger.info("No parquet files found for table '%s'", table_name)
             return _empty_df(table_name)
 
         # Pick the most recently modified file
@@ -198,7 +216,9 @@ def load_table(table_name: str) -> pd.DataFrame:
 
         return pd.read_parquet(io.BytesIO(data))
 
-    except Exception:
+    except Exception as exc:
+        logger.error("Failed to load table '%s': %s: %s", table_name, type(exc).__name__, exc)
+        _record_load_error(table_name, exc)
         return _empty_df(table_name)
 
 

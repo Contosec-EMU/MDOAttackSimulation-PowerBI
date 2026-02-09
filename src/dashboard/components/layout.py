@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import streamlit as st
 
+from data.loader import get_load_error
+
 
 def page_header(title: str, description: str) -> None:
     """Render a page header with an accent-bar underline."""
@@ -29,11 +31,21 @@ def page_footer() -> None:
 
 
 def no_data_warning(table_name: str) -> None:
-    """Show a warning when a table has no data."""
-    st.warning(
-        f"No data available for **{table_name}**. "
-        "Make sure the Azure Function has run and produced data for this table.",
-    )
+    """Show a warning when a table has no data, with actual error if available."""
+    error = get_load_error(table_name)
+    if error:
+        st.error(
+            f"**Failed to load {table_name}:** {error}\n\n"
+            "Check that the dashboard's managed identity has "
+            "Storage Blob Data Reader on the storage account, "
+            "and that the Azure Function has run at least once.",
+        )
+    else:
+        st.warning(
+            f"No data available for **{table_name}**. "
+            "Make sure the Azure Function has run at least once "
+            "to populate data in ADLS Gen2.",
+        )
 
 
 def load_css() -> None:

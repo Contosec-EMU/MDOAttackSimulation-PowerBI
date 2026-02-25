@@ -1,9 +1,6 @@
 name: Deploy MDO Attack Simulation
 
 on:
-  push:
-    branches:
-      - main
   workflow_dispatch:
 
 permissions:

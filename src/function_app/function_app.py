@@ -30,7 +30,7 @@ import logging
 import time
 import uuid
 from datetime import datetime, timezone
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Tuple
 
 import azure.functions as func
 from azure.identity import DefaultAzureCredential
@@ -92,11 +92,11 @@ async def _process_and_write(
     use_beta: bool = False,
     lookback_date: datetime = None,
     sync_mode: str = "full",
-) -> int:
+) -> Tuple[int, List[Dict[str, Any]]]:
     """Fetch, process, and write data for a single API endpoint.
 
     Returns:
-        Number of records processed
+        Tuple of (number of records processed, raw data from API)
     """
     api_name = ep_config.name
     endpoint = ep_config.endpoint
@@ -120,13 +120,14 @@ async def _process_and_write(
     logger.info(f"Fetched {len(raw_data)} records from {api_name}")
 
     if not raw_data:
-        return 0
+        return 0, []
 
     # Process data
     processor = PROCESSOR_MAP.get(processor_name)
     if not processor:
         logger.error(f"Unknown processor: {processor_name}")
-        return 0
+        return 0, raw_data
+
     processed_data = processor(raw_data, snapshot_date)
 
     # Write to curated (Parquet) and raw (JSON) containers
@@ -136,7 +137,7 @@ async def _process_and_write(
     raw_path = f"{api_name}/{snapshot_date}/{api_name}_raw.json"
     await adls_writer.write_json("raw", raw_path, raw_data)
 
-    return len(processed_data)
+    return len(processed_data), raw_data
 
 
 async def _process_simulation_details(
@@ -261,7 +262,7 @@ async def run_ingestion_async(is_past_due: bool = False) -> Dict[str, Any]:
             # Process core API endpoints (v1.0, always run)
             for ep_config in API_CONFIGS:
                 try:
-                    count = await _process_and_write(
+                    count, _ = await _process_and_write(
                         graph_client, adls_writer, ep_config,
                         snapshot_date, use_beta=False,
                         lookback_date=lookback_date, sync_mode=config.sync_mode,
@@ -275,18 +276,16 @@ async def run_ingestion_async(is_past_due: bool = False) -> Dict[str, Any]:
             if config.sync_simulations:
                 for ep_config in EXTENDED_API_CONFIGS:
                     try:
-                        count = await _process_and_write(
+                        count, raw_data = await _process_and_write(
                             graph_client, adls_writer, ep_config,
                             snapshot_date, use_beta=True,
                             lookback_date=lookback_date, sync_mode=config.sync_mode,
                         )
                         total_records += count
 
-                        # Track simulation IDs for detail fetching
-                        if ep_config.name == "simulations" and count > 0:
-                            async for item in graph_client.get_paginated_data(
-                                ep_config.endpoint, use_beta=True
-                            ):
+                        # Extract simulation IDs from already-fetched data
+                        if ep_config.name == "simulations" and raw_data:
+                            for item in raw_data:
                                 sim_id = item.get("id")
                                 if sim_id:
                                     processed_sim_ids.append(sim_id)

@@ -4,7 +4,7 @@ import asyncio
 import logging
 import random
 import time
-from typing import Any, AsyncGenerator, Dict, Optional
+from typing import Any, AsyncGenerator, Dict, List, Optional
 
 import aiohttp
 
@@ -245,7 +245,8 @@ class AsyncGraphAPIClient:
                 await asyncio.sleep(PAGINATION_DELAY_SECONDS)
 
     async def get_single_resource(
-        self, endpoint: str, use_beta: bool = False
+        self, endpoint: str, use_beta: bool = False,
+        select: Optional[List[str]] = None,
     ) -> Dict[str, Any]:
         """Fetch a single resource from Graph API (no pagination).
 
@@ -255,10 +256,15 @@ class AsyncGraphAPIClient:
         Args:
             endpoint: The Graph API endpoint path (without base URL).
             use_beta: If True, use the beta API base URL instead of v1.0.
+            select: Optional list of fields to include via $select query param.
 
         Returns:
             Parsed JSON response as a dictionary.
         """
         base_url = GRAPH_BASE_URL_BETA if use_beta else GRAPH_BASE_URL_V1
         url = f"{base_url}/{endpoint}"
+        if select:
+            fields = ",".join(select)
+            separator = "&" if "?" in url else "?"
+            url = f"{url}{separator}$select={fields}"
         return await self._make_request(url)

@@ -211,9 +211,19 @@ async def _enrich_users(
     logger.info(f"Enriching {len(user_ids)} users from Entra ID...")
     raw_users: List[Dict[str, Any]] = []
 
+    # Explicit $select required — Graph API default response omits
+    # department, city, country, companyName and other profile fields.
+    user_select_fields = [
+        "id", "displayName", "givenName", "surname", "mail",
+        "department", "companyName", "city", "country",
+        "jobTitle", "accountEnabled",
+    ]
+
     for uid in user_ids:
         try:
-            user_data = await graph_client.get_single_resource(f"users/{uid}", use_beta=False)
+            user_data = await graph_client.get_single_resource(
+                f"users/{uid}", use_beta=False, select=user_select_fields,
+            )
             raw_users.append(user_data)
         except Exception as e:
             logger.warning(f"Failed to fetch user {uid}: {e}")

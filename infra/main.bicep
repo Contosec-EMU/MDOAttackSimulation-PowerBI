@@ -15,6 +15,10 @@ param tenantId string
 @description('Entra ID App Registration Client ID')
 param graphClientId string
 
+@secure()
+@description('Entra ID App Registration Client Secret (stored in Key Vault)')
+param graphClientSecret string
+
 @description('Timer schedule (CRON) - default every hour at :00')
 param timerSchedule string = '0 0 * * * *'
 
@@ -37,6 +41,15 @@ param tags object = {
   environment: 'production'
 }
 
+@description('Network isolation mode: none (public access) or private (private endpoints)')
+@allowed([
+  'none'
+  'private'
+])
+param networkIsolation string = 'none'
+
+var usePrivateEndpoints = networkIsolation == 'private'
+
 // Generate unique suffix for globally unique names
 var uniqueSuffix = uniqueString(resourceGroup().id)
 var funcStorageAccountName = '${prefix}fn${uniqueSuffix}'
@@ -48,6 +61,7 @@ var appInsightsName = '${prefix}-appi-${uniqueSuffix}'
 var logAnalyticsName = '${prefix}-law-${uniqueSuffix}'
 var vnetName = '${prefix}-vnet-${uniqueSuffix}'
 var functionSubnetName = 'snet-functions'
+var privateEndpointSubnetName = 'snet-private-endpoints'
 
 // ============================================================================
 // Log Analytics Workspace (for App Insights)
@@ -67,6 +81,27 @@ resource logAnalytics 'Microsoft.OperationalInsights/workspaces@2022-10-01' = {
 // ============================================================================
 // Virtual Network (for Function App to access firewall-protected storage)
 // ============================================================================
+
+var baseSubnets = [
+  {
+    name: functionSubnetName
+    properties: {
+      addressPrefix: '10.0.1.0/24'
+      delegations: [{ name: 'delegation', properties: { serviceName: 'Microsoft.Web/serverFarms' } }]
+      serviceEndpoints: [{ service: 'Microsoft.Storage' }, { service: 'Microsoft.KeyVault' }]
+    }
+  }
+]
+
+var peSubnet = usePrivateEndpoints ? [
+  {
+    name: privateEndpointSubnetName
+    properties: {
+      addressPrefix: '10.0.2.0/24'
+    }
+  }
+] : []
+
 resource vnet 'Microsoft.Network/virtualNetworks@2023-05-01' = {
   name: vnetName
   location: location
@@ -77,32 +112,7 @@ resource vnet 'Microsoft.Network/virtualNetworks@2023-05-01' = {
         '10.0.0.0/16'
       ]
     }
-    subnets: [
-      {
-        name: functionSubnetName
-        properties: {
-          addressPrefix: '10.0.1.0/24'
-          // Delegate subnet to Azure Functions
-          delegations: [
-            {
-              name: 'delegation'
-              properties: {
-                serviceName: 'Microsoft.Web/serverFarms'
-              }
-            }
-          ]
-          // Service endpoint allows subnet to access storage directly
-          serviceEndpoints: [
-            {
-              service: 'Microsoft.Storage'
-            }
-            {
-              service: 'Microsoft.KeyVault'
-            }
-          ]
-        }
-      }
-    ]
+    subnets: concat(baseSubnets, peSubnet)
   }
 }
 
@@ -110,6 +120,12 @@ resource vnet 'Microsoft.Network/virtualNetworks@2023-05-01' = {
 resource functionSubnet 'Microsoft.Network/virtualNetworks/subnets@2023-05-01' existing = {
   parent: vnet
   name: functionSubnetName
+}
+
+// Reference to the private endpoint subnet
+resource privateEndpointSubnet 'Microsoft.Network/virtualNetworks/subnets@2023-05-01' existing = if (usePrivateEndpoints) {
+  parent: vnet
+  name: privateEndpointSubnetName
 }
 
 // ============================================================================
@@ -123,8 +139,10 @@ resource appInsights 'Microsoft.Insights/components@2020-02-02' = {
   properties: {
     Application_Type: 'web'
     WorkspaceResourceId: logAnalytics.id
+    // App Insights PE requires Azure Monitor Private Link Scope (AMPLS) — out of scope.
+    // Telemetry is TLS-encrypted; restrict query access in private mode.
     publicNetworkAccessForIngestion: 'Enabled'
-    publicNetworkAccessForQuery: 'Enabled'
+    publicNetworkAccessForQuery: usePrivateEndpoints ? 'Disabled' : 'Enabled'
   }
 }
 
@@ -145,9 +163,9 @@ resource funcStorageAccount 'Microsoft.Storage/storageAccounts@2023-01-01' = {
     allowBlobPublicAccess: false
     allowSharedKeyAccess: false  // Use identity-based auth instead of account keys
     accessTier: 'Hot'
-    publicNetworkAccess: 'Enabled'
+    publicNetworkAccess: usePrivateEndpoints ? 'Disabled' : 'Enabled'
     networkAcls: {
-      defaultAction: 'Allow'
+      defaultAction: usePrivateEndpoints ? 'Deny' : 'Allow'
       bypass: 'AzureServices'
     }
   }
@@ -170,6 +188,7 @@ resource dataLakeAccount 'Microsoft.Storage/storageAccounts@2023-01-01' = {
     minimumTlsVersion: 'TLS1_2'
     allowBlobPublicAccess: false
     accessTier: 'Hot'
+    publicNetworkAccess: usePrivateEndpoints ? 'Disabled' : 'Enabled'
     networkAcls: {
       defaultAction: 'Deny'
       bypass: 'AzureServices,Logging,Metrics'
@@ -233,7 +252,7 @@ resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {
     enableRbacAuthorization: true
     enableSoftDelete: true
     softDeleteRetentionInDays: 90
-    publicNetworkAccess: 'Enabled'
+    publicNetworkAccess: usePrivateEndpoints ? 'Disabled' : 'Enabled'
     networkAcls: {
       defaultAction: 'Deny'
       bypass: 'AzureServices'
@@ -248,7 +267,18 @@ resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {
 }
 
 // ============================================================================
-// App Service Plan (Basic B1 - more reliable than Consumption for this region)
+// Key Vault Secret for Graph Client
+// ============================================================================
+resource graphClientSecretResource 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
+  parent: keyVault
+  name: 'graph-client-secret'
+  properties: {
+    value: graphClientSecret
+  }
+}
+
+// ============================================================================
+// App Service Plan(Basic B1 - more reliable than Consumption for this region)
 // ============================================================================
 resource appServicePlan 'Microsoft.Web/serverfarms@2023-01-01' = {
   name: appServicePlanName
@@ -277,6 +307,9 @@ resource functionApp 'Microsoft.Web/sites@2023-01-01' = {
   properties: {
     serverFarmId: appServicePlan.id
     httpsOnly: true
+    // Function App keeps public access for: code deployment (func CLI), HTTP triggers,
+    // and SCM/Kudu endpoint. Auth is enforced via function keys (AuthLevel.FUNCTION).
+    // To fully close: deploy from a VNet-connected CI/CD agent and use access restrictions.
     publicNetworkAccess: 'Enabled'
     // VNet integration allows Function to access firewall-protected resources
     virtualNetworkSubnetId: functionSubnet.id
@@ -346,6 +379,10 @@ resource functionApp 'Microsoft.Web/sites@2023-01-01' = {
         {
           name: 'SYNC_SIMULATIONS'
           value: syncSimulations ? 'true' : 'false'
+        }
+        {
+          name: 'WEBSITE_DNS_SERVER'
+          value: '168.63.129.16'
         }
       ]
       ftpsState: 'Disabled'
@@ -419,6 +456,80 @@ resource keyVaultSecretsUserRole 'Microsoft.Authorization/roleAssignments@2022-0
 }
 
 // ============================================================================
+// Private DNS Zones & VNet Links (conditional on networkIsolation == 'private')
+// ============================================================================
+
+var privateDnsZoneNames = [
+  'privatelink.blob.${environment().suffixes.storage}'
+  'privatelink.queue.${environment().suffixes.storage}'
+  'privatelink.table.${environment().suffixes.storage}'
+  'privatelink.dfs.${environment().suffixes.storage}'
+  'privatelink.vaultcore.azure.net'
+]
+
+resource privateDnsZones 'Microsoft.Network/privateDnsZones@2020-06-01' = [for name in privateDnsZoneNames: if (usePrivateEndpoints) {
+  name: name
+  location: 'global'
+  tags: tags
+}]
+
+resource privateDnsZoneLinks 'Microsoft.Network/privateDnsZones/virtualNetworkLinks@2020-06-01' = [for (name, i) in privateDnsZoneNames: if (usePrivateEndpoints) {
+  parent: privateDnsZones[i]
+  name: '${vnetName}-link'
+  location: 'global'
+  properties: {
+    virtualNetwork: { id: vnet.id }
+    registrationEnabled: false
+  }
+}]
+
+// ============================================================================
+// Private Endpoints & DNS Zone Groups (conditional on networkIsolation == 'private')
+// ============================================================================
+
+var privateEndpointConfigs = [
+  { name: '${prefix}-pe-funcstorage-blob', groupId: 'blob', resourceId: funcStorageAccount.id, dnsZoneIndex: 0 }
+  { name: '${prefix}-pe-funcstorage-queue', groupId: 'queue', resourceId: funcStorageAccount.id, dnsZoneIndex: 1 }
+  { name: '${prefix}-pe-funcstorage-table', groupId: 'table', resourceId: funcStorageAccount.id, dnsZoneIndex: 2 }
+  { name: '${prefix}-pe-adls-blob', groupId: 'blob', resourceId: dataLakeAccount.id, dnsZoneIndex: 0 }
+  { name: '${prefix}-pe-adls-dfs', groupId: 'dfs', resourceId: dataLakeAccount.id, dnsZoneIndex: 3 }
+  { name: '${prefix}-pe-kv', groupId: 'vault', resourceId: keyVault.id, dnsZoneIndex: 4 }
+]
+
+resource privateEndpoints 'Microsoft.Network/privateEndpoints@2023-05-01' = [for config in privateEndpointConfigs: if (usePrivateEndpoints) {
+  name: config.name
+  location: location
+  tags: tags
+  properties: {
+    subnet: { id: privateEndpointSubnet.id }
+    privateLinkServiceConnections: [
+      {
+        name: config.name
+        properties: {
+          privateLinkServiceId: config.resourceId
+          groupIds: [config.groupId]
+        }
+      }
+    ]
+  }
+}]
+
+resource privateDnsZoneGroups 'Microsoft.Network/privateEndpoints/privateDnsZoneGroups@2023-05-01' = [for (config, i) in privateEndpointConfigs: if (usePrivateEndpoints) {
+  parent: privateEndpoints[i]
+  name: 'default'
+  properties: {
+    privateDnsZoneConfigs: [
+      {
+        name: 'config'
+        properties: {
+          privateDnsZoneId: privateDnsZones[config.dnsZoneIndex].id
+        }
+      }
+    ]
+  }
+}]
+
+// ============================================================================
 // Outputs
 // ============================================================================
 output funcStorageAccountName string = funcStorageAccount.name
@@ -437,3 +548,7 @@ output curatedContainerPath string = 'https://${dataLakeAccount.name}.dfs.${envi
 output powerBiAccessEnabled bool = enablePowerBiAccess
 output vnetName string = vnet.name
 output functionSubnetId string = functionSubnet.id
+
+// Private endpoint info
+output networkIsolationMode string = networkIsolation
+output privateEndpointSubnetId string = usePrivateEndpoints ? privateEndpointSubnet.id : ''

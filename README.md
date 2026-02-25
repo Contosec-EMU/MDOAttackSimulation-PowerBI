@@ -314,6 +314,10 @@ All configuration is via environment variables (set in Bicep or Function App Set
 | `SYNC_MODE` | | `full` | `full` or `incremental` (7-day lookback) |
 | `SYNC_SIMULATIONS` | | `true` | Enable extended endpoints (simulations, users, trainings, payloads) |
 
+### Network Isolation
+
+The Bicep template accepts a `networkIsolation` parameter (`"none"` or `"private"`). Private mode creates private endpoints for all storage accounts and Key Vault, suitable for tenants with Azure Policy restricting public access. See the [Quick Start guide](scripts/QUICK_START.md#network-isolation-private-endpoints) for usage details.
+
 ### Timer Schedule (CRON)
 
 ```

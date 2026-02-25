@@ -27,6 +27,11 @@ param syncSimulations = true
 // Power BI Access (set to true after configuring in portal)
 param enablePowerBiAccess = false
 
+// Network Isolation: 'none' (public access, simple) or 'private' (private endpoints, secure)
+// Private mode adds ~$36/month for 6 private endpoints + DNS zones
+// Required when tenant Azure Policy disables public network access
+param networkIsolation = 'none'
+
 param tags = {
   project: 'MDOAttackSimulation'
   environment: 'production'

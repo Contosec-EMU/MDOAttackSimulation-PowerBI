@@ -14,7 +14,7 @@ echo -e "${CYAN}=== MDO Attack Simulation Pipeline Deployment ===${NC}"
 
 # Check required parameters
 if [ -z "$1" ] || [ -z "$2" ] || [ -z "$3" ] || [ -z "$4" ]; then
-    echo "Usage: ./deploy.sh <subscription-id> <tenant-id> <graph-client-id> <graph-client-secret>"
+    echo "Usage: ./deploy.sh <subscription-id> <tenant-id> <graph-client-id> <graph-client-secret> [--network-isolation none|private]"
     echo ""
     echo "Optional environment variables:"
     echo "  RESOURCE_GROUP  - Resource group name (default: rg-mdo-attack-simulation)"
@@ -28,23 +28,47 @@ GRAPH_CLIENT_ID=$3
 GRAPH_CLIENT_SECRET=$4
 RESOURCE_GROUP=${RESOURCE_GROUP:-"rg-mdo-attack-simulation"}
 LOCATION=${LOCATION:-"eastus"}
+NETWORK_ISOLATION="none"
+
+# Parse optional flags
+shift 4
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --network-isolation)
+            NETWORK_ISOLATION="$2"
+            shift 2
+            ;;
+        *)
+            echo -e "${RED}Unknown option: $1${NC}"
+            exit 1
+            ;;
+    esac
+done
+
+# Validate network isolation value
+if [[ "$NETWORK_ISOLATION" != "none" && "$NETWORK_ISOLATION" != "private" ]]; then
+    echo -e "${RED}NetworkIsolation must be 'none' or 'private', got: $NETWORK_ISOLATION${NC}"
+    exit 1
+fi
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
+echo -e "${CYAN}Network isolation: $NETWORK_ISOLATION${NC}"
+
 # Step 1: Set subscription
-echo -e "\n${YELLOW}[1/5] Setting Azure subscription...${NC}"
+echo -e "\n${YELLOW}[1/4] Setting Azure subscription...${NC}"
 az account set --subscription "$SUBSCRIPTION_ID"
 
 # Step 2: Create resource group
-echo -e "\n${YELLOW}[2/5] Creating resource group: $RESOURCE_GROUP...${NC}"
+echo -e "\n${YELLOW}[2/4] Creating resource group: $RESOURCE_GROUP...${NC}"
 az group create --name "$RESOURCE_GROUP" --location "$LOCATION" --output none
 
 # Step 3: Deploy Bicep
-echo -e "\n${YELLOW}[3/5] Deploying infrastructure (Bicep)...${NC}"
+echo -e "\n${YELLOW}[3/4] Deploying infrastructure (Bicep)...${NC}"
 DEPLOYMENT_OUTPUT=$(az deployment group create \
     --resource-group "$RESOURCE_GROUP" \
     --template-file "$SCRIPT_DIR/../infra/main.bicep" \
-    --parameters prefix=mdoast location="$LOCATION" tenantId="$TENANT_ID" graphClientId="$GRAPH_CLIENT_ID" \
+    --parameters prefix=mdoast location="$LOCATION" tenantId="$TENANT_ID" graphClientId="$GRAPH_CLIENT_ID" graphClientSecret="$GRAPH_CLIENT_SECRET" networkIsolation="$NETWORK_ISOLATION" \
     --query "properties.outputs" \
     --output json)
 
@@ -56,16 +80,11 @@ echo -e "  ${GREEN}Key Vault: $KEYVAULT_NAME${NC}"
 echo -e "  ${GREEN}Function App: $FUNCTION_APP_NAME${NC}"
 echo -e "  ${GREEN}Storage Account: $STORAGE_ACCOUNT_NAME${NC}"
 
-# Step 4: Store secret in Key Vault
-echo -e "\n${YELLOW}[4/5] Storing Graph client secret in Key Vault...${NC}"
-az keyvault secret set \
-    --vault-name "$KEYVAULT_NAME" \
-    --name "graph-client-secret" \
-    --value "$GRAPH_CLIENT_SECRET" \
-    --output none
+# Step 4: Graph client secret is now managed by Bicep deployment (graphClientSecret parameter)
+# No need for a separate az keyvault secret set step.
 
 # Step 5: Deploy Function code
-echo -e "\n${YELLOW}[5/5] Deploying Function App code...${NC}"
+echo -e "\n${YELLOW}[4/4] Deploying Function App code...${NC}"
 pushd "$SCRIPT_DIR/../src/function_app" > /dev/null
 func azure functionapp publish "$FUNCTION_APP_NAME" --python
 popd > /dev/null

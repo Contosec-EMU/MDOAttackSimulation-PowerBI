@@ -49,6 +49,30 @@ git push origin main
 
 ---
 
+## Network Isolation (Private Endpoints)
+
+If your tenant has Azure Policy that disables public network access on storage and Key Vault, use private endpoint mode:
+
+**PowerShell:**
+```powershell
+.\deploy.ps1 -NetworkIsolation "private" -GraphClientSecret "your-secret"
+```
+
+**Bash:**
+```bash
+./deploy.sh --network-isolation private
+```
+
+This creates private endpoints for all storage accounts and Key Vault (~$36/month additional cost). The Function App retains public access for deployment and HTTP triggers.
+
+### What private mode does:
+- Creates 6 private endpoints (function storage blob/queue/table, ADLS blob/dfs, Key Vault)
+- Creates 5 Private DNS Zones linked to the VNet
+- Disables public network access on storage accounts and Key Vault
+- All data plane traffic stays on the Azure backbone
+
+---
+
 ## Post-Deployment Checklist
 
 After GitHub Actions completes successfully:

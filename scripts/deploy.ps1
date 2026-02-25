@@ -26,8 +26,12 @@
 .PARAMETER GraphClientSecret
     App registration client secret (will be stored in Key Vault)
 
+.PARAMETER NetworkIsolation
+    Network isolation mode: 'none' (public access) or 'private' (private endpoints)
+
 .EXAMPLE
     .\deploy.ps1 -SubscriptionId "xxx" -TenantId "xxx" -GraphClientId "xxx" -GraphClientSecret "xxx"
+    .\deploy.ps1 -SubscriptionId "xxx" -TenantId "xxx" -GraphClientId "xxx" -GraphClientSecret "xxx" -NetworkIsolation "private"
 #>
 
 param(
@@ -47,12 +51,20 @@ param(
     [string]$GraphClientId,
 
     [Parameter(Mandatory=$false)]
-    [string]$GraphClientSecret
+    [string]$GraphClientSecret,
+
+    [Parameter(Mandatory=$false)]
+    [string]$NetworkIsolation = "none"
 )
 
 $ErrorActionPreference = "Stop"
 
+if ($NetworkIsolation -notin @("none", "private")) {
+    throw "NetworkIsolation must be 'none' or 'private', got: $NetworkIsolation"
+}
+
 Write-Host "=== MDO Attack Simulation Pipeline Deployment ===" -ForegroundColor Cyan
+Write-Host "Network isolation: $NetworkIsolation" -ForegroundColor Cyan
 
 # Prompt for secret if not provided
 if (-not $GraphClientSecret) {
@@ -133,21 +145,21 @@ Write-Host "  Location:     $Location"
 Write-Host "  RG Name:      $ResourceGroupName"
 
 # Step 1: Set subscription
-Write-Host "`n[1/5] Setting Azure subscription..." -ForegroundColor Yellow
+Write-Host "`n[1/4] Setting Azure subscription..." -ForegroundColor Yellow
 az account set --subscription $SubscriptionId
 if ($LASTEXITCODE -ne 0) { throw "Failed to set subscription" }
 
 # Step 2: Create resource group
-Write-Host "`n[2/5] Creating resource group: $ResourceGroupName..." -ForegroundColor Yellow
+Write-Host "`n[2/4] Creating resource group: $ResourceGroupName..." -ForegroundColor Yellow
 az group create --name $ResourceGroupName --location $Location --output none
 if ($LASTEXITCODE -ne 0) { throw "Failed to create resource group" }
 
 # Step 3: Deploy Bicep
-Write-Host "`n[3/5] Deploying infrastructure (Bicep)..." -ForegroundColor Yellow
+Write-Host "`n[3/4] Deploying infrastructure (Bicep)..." -ForegroundColor Yellow
 $deploymentOutput = az deployment group create `
     --resource-group $ResourceGroupName `
     --template-file "$PSScriptRoot\..\infra\main.bicep" `
-    --parameters prefix=mdoast location=$Location tenantId=$TenantId graphClientId=$GraphClientId `
+    --parameters prefix=mdoast location=$Location tenantId=$TenantId graphClientId=$GraphClientId graphClientSecret=$PlainSecret networkIsolation=$NetworkIsolation `
     --query "properties.outputs" `
     --output json | ConvertFrom-Json
 
@@ -161,17 +173,11 @@ Write-Host "  Key Vault: $keyVaultName" -ForegroundColor Green
 Write-Host "  Function App: $functionAppName" -ForegroundColor Green
 Write-Host "  Data Lake Storage: $dataLakeAccountName" -ForegroundColor Green
 
-# Step 4: Store secret in Key Vault
-Write-Host "`n[4/5] Storing Graph client secret in Key Vault..." -ForegroundColor Yellow
-az keyvault secret set `
-    --vault-name $keyVaultName `
-    --name "graph-client-secret" `
-    --value $PlainSecret `
-    --output none
-if ($LASTEXITCODE -ne 0) { throw "Failed to store secret in Key Vault" }
+# Step 4: Graph client secret is now managed by Bicep deployment (graphClientSecret parameter)
+# No need for a separate az keyvault secret set step.
 
 # Step 5: Deploy Function code
-Write-Host "`n[5/5] Deploying Function App code..." -ForegroundColor Yellow
+Write-Host "`n[4/4] Deploying Function App code..." -ForegroundColor Yellow
 Push-Location "$PSScriptRoot\..\src\function_app"
 try {
     func azure functionapp publish $functionAppName --python

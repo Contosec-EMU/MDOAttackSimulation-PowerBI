@@ -193,7 +193,7 @@ resource dataLakeAccount 'Microsoft.Storage/storageAccounts@2023-01-01' = {
       defaultAction: 'Deny'
       bypass: 'AzureServices,Logging,Metrics'
       // Allow Function App subnet to access storage via service endpoint
-      virtualNetworkRules: [
+      virtualNetworkRules: usePrivateEndpoints ? [] : [
         {
           id: functionSubnet.id
           action: 'Allow'
@@ -201,7 +201,8 @@ resource dataLakeAccount 'Microsoft.Storage/storageAccounts@2023-01-01' = {
       ]
       // Resource instance rules allow Power BI Service to access storage
       // even with defaultAction: Deny. Power BI connects as a trusted resource.
-      resourceAccessRules: enablePowerBiAccess ? [
+      // Not needed in private mode — Power BI uses trusted service bypass.
+      resourceAccessRules: (enablePowerBiAccess && !usePrivateEndpoints) ? [
         {
           // Allow Power BI workspaces in this tenant to access storage
           tenantId: tenantId

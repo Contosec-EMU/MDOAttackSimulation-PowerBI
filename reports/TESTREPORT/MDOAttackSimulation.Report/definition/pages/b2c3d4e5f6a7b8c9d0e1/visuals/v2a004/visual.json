@@ -73,59 +73,59 @@
             },
             {
               "field": {
-                "Column": {
+                "Measure": {
                   "Expression": {
                     "SourceRef": {
-                      "Entity": "simulations"
+                      "Entity": "_Measures"
                     }
                   },
-                  "Property": "reportTotalUserCount"
+                  "Property": "Total Users Targeted"
                 }
               },
-              "queryRef": "simulations.reportTotalUserCount",
-              "nativeQueryRef": "reportTotalUserCount"
+              "queryRef": "_Measures.Total Users Targeted",
+              "nativeQueryRef": "Total Users Targeted"
             },
             {
               "field": {
-                "Column": {
+                "Measure": {
                   "Expression": {
                     "SourceRef": {
-                      "Entity": "simulations"
+                      "Entity": "_Measures"
                     }
                   },
-                  "Property": "reportCompromisedCount"
+                  "Property": "User Compromised Count"
                 }
               },
-              "queryRef": "simulations.reportCompromisedCount",
-              "nativeQueryRef": "reportCompromisedCount"
+              "queryRef": "_Measures.User Compromised Count",
+              "nativeQueryRef": "User Compromised Count"
             },
             {
               "field": {
-                "Column": {
+                "Measure": {
                   "Expression": {
                     "SourceRef": {
-                      "Entity": "simulations"
+                      "Entity": "_Measures"
                     }
                   },
-                  "Property": "reportClickCount"
+                  "Property": "Click Count"
                 }
               },
-              "queryRef": "simulations.reportClickCount",
-              "nativeQueryRef": "reportClickCount"
+              "queryRef": "_Measures.Click Count",
+              "nativeQueryRef": "Click Count"
             },
             {
               "field": {
-                "Column": {
+                "Measure": {
                   "Expression": {
                     "SourceRef": {
-                      "Entity": "simulations"
+                      "Entity": "_Measures"
                     }
                   },
-                  "Property": "reportReportedCount"
+                  "Property": "Reported User Count"
                 }
               },
-              "queryRef": "simulations.reportReportedCount",
-              "nativeQueryRef": "reportReportedCount"
+              "queryRef": "_Measures.Reported User Count",
+              "nativeQueryRef": "Reported User Count"
             }
           ]
         }

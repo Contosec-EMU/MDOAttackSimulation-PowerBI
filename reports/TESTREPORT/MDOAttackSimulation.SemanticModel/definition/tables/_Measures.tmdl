@@ -101,18 +101,16 @@ table _Measures
 		lineageTag: a0000010-0000-0000-0000-000000000010
 
 	measure 'Click Rate' =
-			DIVIDE(
-			    SUM(simulations[reportClickCount]),
-			    SUM(simulations[reportTotalUserCount]),
-			    0
-			)
+			VAR _clicked =
+			    COUNTROWS(FILTER(simulationUserEvents, simulationUserEvents[eventName] = "CredentialSupplied" || simulationUserEvents[eventName] = "EmailLinkClicked"))
+			VAR _total = COUNTROWS(simulationUsers)
+			RETURN
+			    DIVIDE(_clicked, _total, 0)
 		formatString: 0.0%;-0.0%;0.0%
 		lineageTag: a0000011-0000-0000-0000-000000000011
 
 	measure 'Total Users Targeted' =
-			VAR _reportTotal = SUM(simulations[reportTotalUserCount])
-			RETURN
-			    IF(_reportTotal > 0, _reportTotal, COUNTROWS(simulationUsers))
+			COUNTROWS(simulationUsers)
 		formatString: #,0
 		lineageTag: a0000012-0000-0000-0000-000000000012
 
@@ -223,6 +221,17 @@ table _Measures
 			) + 0
 		formatString: #,0
 		lineageTag: a0000026-0000-0000-0000-000000000026
+
+	measure 'Click Count' =
+			COUNTROWS(
+			    FILTER(
+			        simulationUserEvents,
+			        simulationUserEvents[eventName] = "CredentialSupplied"
+			            || simulationUserEvents[eventName] = "EmailLinkClicked"
+			    )
+			) + 0
+		formatString: #,0
+		lineageTag: a0000027-0000-0000-0000-000000000027
 
 	column Value
 		isHidden

@@ -180,6 +180,22 @@ async def _process_simulation_details(
                 if uid:
                     all_user_ids.add(uid)
 
+    # Enrich with Entra user details (do this BEFORE writing sim data
+    # so we can filter out users that no longer exist in Entra)
+    valid_user_ids: set = set()
+    if all_user_ids:
+        valid_user_ids, user_count = await _enrich_users(
+            graph_client, adls_writer, list(all_user_ids), snapshot_date
+        )
+        total += user_count
+
+    # Filter simulation data to only include users that exist in Entra
+    if valid_user_ids and len(valid_user_ids) < len(all_user_ids):
+        removed = len(all_user_ids) - len(valid_user_ids)
+        logger.info(f"Filtering out {removed} simulation records for non-existent Entra users")
+        all_sim_users = [u for u in all_sim_users if u.get("userId") in valid_user_ids]
+        all_sim_events = [e for e in all_sim_events if e.get("userId") in valid_user_ids]
+
     # Write simulation users
     if all_sim_users:
         path = f"simulationUsers/{snapshot_date}/simulationUsers.parquet"
@@ -194,10 +210,6 @@ async def _process_simulation_details(
         await adls_writer.write_json("raw", f"simulationUserEvents/{snapshot_date}/simulationUserEvents_raw.json", all_sim_events)
         total += len(all_sim_events)
 
-    # Enrich with Entra user details
-    if all_user_ids:
-        total += await _enrich_users(graph_client, adls_writer, list(all_user_ids), snapshot_date)
-
     return total
 
 
@@ -206,10 +218,15 @@ async def _enrich_users(
     adls_writer: AsyncADLSWriter,
     user_ids: List[str],
     snapshot_date: str,
-) -> int:
-    """Fetch Entra ID user details for enrichment."""
+) -> Tuple[set, int]:
+    """Fetch Entra ID user details for enrichment.
+
+    Returns:
+        Tuple of (set of valid user IDs found in Entra, number of records written)
+    """
     logger.info(f"Enriching {len(user_ids)} users from Entra ID...")
     raw_users: List[Dict[str, Any]] = []
+    valid_ids: set = set()
 
     # Explicit $select required — Graph API default response omits
     # department, city, country, companyName and other profile fields.
@@ -225,17 +242,21 @@ async def _enrich_users(
                 f"users/{uid}", use_beta=False, select=user_select_fields,
             )
             raw_users.append(user_data)
+            valid_ids.add(uid)
         except Exception as e:
-            logger.warning(f"Failed to fetch user {uid}: {e}")
-            raw_users.append({"id": uid, "accountEnabled": None})
+            logger.warning(f"Skipping user {uid} — not found in Entra ID: {e}")
+
+    skipped = len(user_ids) - len(valid_ids)
+    if skipped:
+        logger.info(f"Excluded {skipped} users not found in Entra ID")
 
     if raw_users:
         processed = process_users(raw_users, snapshot_date)
         path = f"users/{snapshot_date}/users.parquet"
         await adls_writer.write_parquet("curated", path, processed, schema_name="users")
         await adls_writer.write_json("raw", f"users/{snapshot_date}/users_raw.json", raw_users)
-        return len(processed)
-    return 0
+        return valid_ids, len(processed)
+    return valid_ids, 0
 
 
 async def run_ingestion_async(is_past_due: bool = False) -> Dict[str, Any]:

@@ -82,3 +82,4 @@ coverage.xml
 **/.pbi/
 **/LocalDateTable_*.tmdl
 **/DateTableTemplate_*.tmdl
+infra/main.json

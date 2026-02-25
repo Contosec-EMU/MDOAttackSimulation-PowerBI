@@ -119,12 +119,23 @@ def process_training_user_coverage(records: List[Dict[str, Any]], snapshot_date:
     return processed
 
 
+def _get_simulation_event_count(events: List[Dict[str, Any]], event_name: str) -> Optional[int]:
+    """Extract a count from the simulationEventsContent events array by event name."""
+    for event in events:
+        if event.get("eventName") == event_name:
+            return event.get("count")
+    return None
+
+
 def process_simulations(records: List[Dict[str, Any]], snapshot_date: str) -> List[Dict[str, Any]]:
     """Process simulation data from Graph API."""
     processed: List[Dict[str, Any]] = []
     for record in records:
         created_by = flatten_created_by(record.get("createdBy"), "createdBy")
         last_modified_by = flatten_created_by(record.get("lastModifiedBy"), "lastModifiedBy")
+        overview = record.get("report", {}).get("overview", {}) or {}
+        sim_events = overview.get("simulationEventsContent", {}) or {}
+        events = sim_events.get("events", []) or []
         processed.append({
             "snapshotDateUtc": snapshot_date,
             "simulationId": sanitize_string(record.get("id")),
@@ -142,10 +153,10 @@ def process_simulations(records: List[Dict[str, Any]], snapshot_date: str) -> Li
             "durationInDays": record.get("durationInDays"),
             "payloadId": record.get("payload", {}).get("id") if record.get("payload") else None,
             "payloadDisplayName": sanitize_string(record.get("payload", {}).get("displayName")) if record.get("payload") else None,
-            "reportTotalUserCount": record.get("report", {}).get("simulationUsersCount"),
-            "reportCompromisedCount": record.get("report", {}).get("compromisedUsersCount"),
-            "reportClickCount": record.get("report", {}).get("clickedUsersCount"),
-            "reportReportedCount": record.get("report", {}).get("reportedPhishUsersCount"),
+            "reportTotalUserCount": overview.get("resolvedTargetsCount"),
+            "reportCompromisedCount": _get_simulation_event_count(events, "CredentialHarvested"),
+            "reportClickCount": _get_simulation_event_count(events, "EmailLinkClicked"),
+            "reportReportedCount": _get_simulation_event_count(events, "ReportedEmail"),
             **created_by,
             **last_modified_by,
         })

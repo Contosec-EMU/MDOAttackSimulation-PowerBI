@@ -161,10 +161,17 @@ def sample_simulation_record():
             "displayName": "Credential Harvest Payload",
         },
         "report": {
-            "simulationUsersCount": 100,
-            "compromisedUsersCount": 10,
-            "clickedUsersCount": 25,
-            "reportedPhishUsersCount": 5,
+            "overview": {
+                "resolvedTargetsCount": 100,
+                "simulationEventsContent": {
+                    "compromisedRate": 0.1,
+                    "events": [
+                        {"eventName": "CredentialHarvested", "count": 10},
+                        {"eventName": "EmailLinkClicked", "count": 25},
+                        {"eventName": "ReportedEmail", "count": 5},
+                    ],
+                },
+            },
         },
         "createdBy": {
             "id": "admin-001",

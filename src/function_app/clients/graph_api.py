@@ -169,6 +169,21 @@ class AsyncGraphAPIClient:
                     response.raise_for_status()
                     return await response.json()
 
+            except aiohttp.ClientResponseError as e:
+                # Don't retry non-retryable client errors (4xx except 401/429)
+                if 400 <= e.status < 500 and e.status not in (401, 429):
+                    raise
+                if attempt == retries - 1:
+                    raise
+                wait_time = (2**attempt) * BACKOFF_BASE_SECONDS + random.uniform(0, 2)
+                logger.warning(
+                    "Request failed (attempt %d/%d): %s. Retrying in %.2fs...",
+                    attempt + 1,
+                    retries,
+                    e,
+                    wait_time,
+                )
+                await asyncio.sleep(wait_time)
             except aiohttp.ClientError as e:
                 if attempt == retries - 1:
                     raise

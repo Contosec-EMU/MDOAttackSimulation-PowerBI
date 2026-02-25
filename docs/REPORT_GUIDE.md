@@ -62,6 +62,8 @@ Microsoft Graph API  →  Azure Function (Python)  →  ADLS Gen2 (Parquet)  →
 
 **Key insight**: Department data comes from Entra ID user enrichment (`users.department`). The Graph API call uses explicit `$select` to request department, city, country, and other profile fields. The `CROSSFILTER` on `Dept Training Completion` enables the department slicer to filter training data through the `users` dimension table, which is necessary because `trainingUserCoverage` has no direct relationship to `simulations`.
 
+**Blank department row**: Users with blank department are either (a) Entra system accounts without a department (e.g., BreakGlass, DirSync), or (b) user IDs referenced by simulation data that no longer exist in Entra ID (deleted users, synthetic accounts from the attack simulation platform). The function creates fallback records for 404 responses with null profile fields.
+
 ---
 
 ## Page 3: Improving Submissions

@@ -149,7 +149,7 @@ table _Measures
 			        simulationUserEvents,
 			        simulationUserEvents[eventName] = "EmailDeleted"
 			    )
-			)
+			) + 0
 		formatString: #,0
 		lineageTag: a0000017-0000-0000-0000-000000000017
 
@@ -220,7 +220,7 @@ table _Measures
 			        simulationUserEvents,
 			        simulationUserEvents[eventName] = "EmailRead"
 			    )
-			)
+			) + 0
 		formatString: #,0
 		lineageTag: a0000026-0000-0000-0000-000000000026
 

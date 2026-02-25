@@ -94,12 +94,13 @@ Microsoft Graph API  →  Azure Function (Python)  →  ADLS Gen2 (Parquet)  →
 |---|---|---|---|---|
 | Date slicer | Slicer | `simulations[launchDateTime]` | simulations | beta simulations |
 | Simulation Count | Card | `COUNTROWS(simulations)` | simulations | beta simulations |
-| Total Users Targeted | Card | Report-level or user-level count | simulations | beta simulations |
 | Compromise Rate | Card | % of users compromised | simulationUsers | beta simulationUsers |
 | Completed Simulations | Card | Simulations with `status = "succeeded"` and non-blank launch date | simulations | beta simulations |
 | Training Completion Rate | Card | `completedTrainingsCount / assignedTrainingsCount` with `CROSSFILTER(simulationUsers[userId], users[userId], Both)` | trainingUserCoverage | v1.0 trainingUserCoverage |
 | Repeat Offender Count | Card | `COUNTROWS(repeatOffenders)` with `CROSSFILTER(simulationUsers[userId], users[userId], Both)` | repeatOffenders | v1.0 repeatOffenders |
-| Monthly Compromised Users | Chart | Compromised user trend over time | simulationUsers | beta simulationUsers |
+| Compromised Users | Line Chart | Count of compromised users by `simulations[launchDateTime]` | simulationUsers + simulations | beta simulationUsers |
+| Simulation Count by Attack Technique | Donut | `Simulation Count` by `simulations[attackTechnique]` | simulations | beta simulations |
+| Top Repeat Offenders | Table | `displayName`, `email`, `repeatOffenceCount` | repeatOffenders | v1.0 repeatOffenders |
 
 **Key insight**: The date slicer filters `simulations` by `launchDateTime`. The `CROSSFILTER(simulationUsers[userId], users[userId], Both)` on Training Completion Rate and Repeat Offender Count enables the date filter to propagate: `simulations → simulationUsers → users (bidirectional) → trainingUserCoverage / repeatOffenders`. Without this, these measures would be unaffected by the date slicer since they have no direct relationship to `simulations`.
 

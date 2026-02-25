@@ -10,7 +10,7 @@
     "tabOrder": 3000
   },
   "visual": {
-    "visualType": "clusteredColumnChart",
+    "visualType": "clusteredBarChart",
     "query": {
       "queryState": {
         "Category": {
@@ -36,49 +36,43 @@
           "projections": [
             {
               "field": {
-                "Column": {
+                "Measure": {
                   "Expression": {
                     "SourceRef": {
-                      "Entity": "trainingUserCoverage"
+                      "Entity": "_Measures"
                     }
                   },
-                  "Property": "completedTrainingsCount"
+                  "Property": "Dept Training Completion"
                 }
               },
-              "queryRef": "trainingUserCoverage.completedTrainingsCount",
-              "nativeQueryRef": "completedTrainingsCount"
-            },
-            {
-              "field": {
-                "Column": {
-                  "Expression": {
-                    "SourceRef": {
-                      "Entity": "trainingUserCoverage"
-                    }
-                  },
-                  "Property": "inProgressTrainingsCount"
-                }
-              },
-              "queryRef": "trainingUserCoverage.inProgressTrainingsCount",
-              "nativeQueryRef": "inProgressTrainingsCount"
-            },
-            {
-              "field": {
-                "Column": {
-                  "Expression": {
-                    "SourceRef": {
-                      "Entity": "trainingUserCoverage"
-                    }
-                  },
-                  "Property": "notStartedTrainingsCount"
-                }
-              },
-              "queryRef": "trainingUserCoverage.notStartedTrainingsCount",
-              "nativeQueryRef": "notStartedTrainingsCount"
+              "queryRef": "_Measures.Dept Training Completion",
+              "nativeQueryRef": "Dept Training Completion"
             }
           ]
         }
       }
+    },
+    "objects": {
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "'Training Completion by Department'"
+                }
+              }
+            }
+          }
+        }
+      ]
     },
     "visualContainerObjects": {
       "background": [

@@ -15,8 +15,8 @@ param tenantId string
 @description('Entra ID App Registration Client ID')
 param graphClientId string
 
-@description('Timer schedule (CRON) - default daily at 2:00 AM UTC')
-param timerSchedule string = '0 0 2 * * *'
+@description('Timer schedule (CRON) - default every hour at :00')
+param timerSchedule string = '0 0 * * * *'
 
 @description('Sync mode: full (default) or incremental (7-day lookback)')
 @allowed([

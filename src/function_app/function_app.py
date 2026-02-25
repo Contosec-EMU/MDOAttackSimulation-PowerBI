@@ -6,7 +6,7 @@ Training data from Microsoft Graph API into ADLS Gen2 as Parquet files,
 optimized for Power BI consumption.
 
 Endpoints:
-    - Timer trigger: Scheduled ingestion (default: daily 2:00 AM UTC)
+    - Timer trigger: Scheduled ingestion (default: every hour at :00)
     - GET /api/health: Health check
     - POST /api/test-run: Manual trigger for testing
     - GET /api/sync-status: View sync configuration and state

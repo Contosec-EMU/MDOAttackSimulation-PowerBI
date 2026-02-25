@@ -13,8 +13,8 @@ param location = 'westus2'
 param tenantId = '<your-tenant-id>'
 param graphClientId = '<your-app-registration-client-id>'
 
-// Timer schedule: CRON expression (default: daily at 2:00 AM UTC)
-param timerSchedule = '0 0 2 * * *'
+// Timer schedule: CRON expression (default: every hour at :00)
+param timerSchedule = '0 0 * * * *'
 
 // Sync Mode Configuration
 // - "full": Fetches all data every run (default)

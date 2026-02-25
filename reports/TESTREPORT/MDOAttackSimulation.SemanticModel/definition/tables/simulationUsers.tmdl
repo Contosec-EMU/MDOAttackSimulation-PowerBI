@@ -1,0 +1,133 @@
+table simulationUsers
+	lineageTag: a5000001-0000-0000-0000-000000000005
+
+	column snapshotDateUtc
+		dataType: dateTime
+		lineageTag: a5010001-0000-0000-0000-000000000005
+		summarizeBy: none
+		sourceColumn: snapshotDateUtc
+
+		variation Variation
+			isDefault
+			relationship: b22fc56a-b9ff-4f52-98a6-e5066101b961
+			defaultHierarchy: LocalDateTable_5e9b2a58-ad5d-4b9a-9fd8-6be955a64bbc.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column simulationId
+		dataType: string
+		lineageTag: a5010002-0000-0000-0000-000000000005
+		summarizeBy: none
+		sourceColumn: simulationId
+
+		annotation SummarizationSetBy = Automatic
+
+	column userId
+		dataType: string
+		lineageTag: a5010003-0000-0000-0000-000000000005
+		summarizeBy: none
+		sourceColumn: userId
+
+		annotation SummarizationSetBy = Automatic
+
+	column email
+		dataType: string
+		lineageTag: a5010004-0000-0000-0000-000000000005
+		summarizeBy: none
+		sourceColumn: email
+
+		annotation SummarizationSetBy = Automatic
+
+	column displayName
+		dataType: string
+		lineageTag: a5010005-0000-0000-0000-000000000005
+		summarizeBy: none
+		sourceColumn: displayName
+
+		annotation SummarizationSetBy = Automatic
+
+	column compromisedDateTime
+		dataType: dateTime
+		lineageTag: a5010006-0000-0000-0000-000000000005
+		summarizeBy: none
+		sourceColumn: compromisedDateTime
+
+		variation Variation
+			isDefault
+			relationship: eb72756d-cced-4a2c-bb1f-78cc4e533ad3
+			defaultHierarchy: LocalDateTable_e2cf3045-c2d6-461c-b58c-78a03cf9a0dc.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column reportedPhishDateTime
+		dataType: dateTime
+		lineageTag: a5010007-0000-0000-0000-000000000005
+		summarizeBy: none
+		sourceColumn: reportedPhishDateTime
+
+		variation Variation
+			isDefault
+			relationship: 67d8c7ec-b45e-4524-ba13-a1e14957b933
+			defaultHierarchy: LocalDateTable_ad30ace9-85b4-410e-87b8-32aa3fb0178a.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column assignedTrainingsCount
+		dataType: int64
+		formatString: 0
+		lineageTag: a5010008-0000-0000-0000-000000000005
+		summarizeBy: sum
+		sourceColumn: assignedTrainingsCount
+
+		annotation SummarizationSetBy = Automatic
+
+	column completedTrainingsCount
+		dataType: int64
+		formatString: 0
+		lineageTag: a5010009-0000-0000-0000-000000000005
+		summarizeBy: sum
+		sourceColumn: completedTrainingsCount
+
+		annotation SummarizationSetBy = Automatic
+
+	column inProgressTrainingsCount
+		dataType: int64
+		formatString: 0
+		lineageTag: a5010010-0000-0000-0000-000000000005
+		summarizeBy: sum
+		sourceColumn: inProgressTrainingsCount
+
+		annotation SummarizationSetBy = Automatic
+
+	column isCompromised
+		dataType: boolean
+		lineageTag: a5010011-0000-0000-0000-000000000005
+		summarizeBy: none
+		sourceColumn: isCompromised
+
+		annotation SummarizationSetBy = Automatic
+
+	column SimUserKey = simulationUsers[simulationId] & "|" & simulationUsers[userId]
+		dataType: string
+		lineageTag: a5010012-0000-0000-0000-000000000005
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	partition simulationUsers = m
+		mode: import
+		source =
+				let
+				    Result = try
+				        let
+				            Source = AzureStorage.DataLake(StorageAccountUrl & "/" & ContainerName & "/simulationUsers"),
+				            Sorted = Table.Sort(Source, {{"Date modified", Order.Descending}})
+				        in
+				            Parquet.Document(Sorted{0}[Content])
+				    otherwise
+				        #table({"snapshotDateUtc", "simulationId", "userId", "email", "displayName", "compromisedDateTime", "reportedPhishDateTime", "assignedTrainingsCount", "completedTrainingsCount", "inProgressTrainingsCount", "isCompromised"}, {})
+				in
+				    Result
+
+	annotation PBI_ResultType = Table
+

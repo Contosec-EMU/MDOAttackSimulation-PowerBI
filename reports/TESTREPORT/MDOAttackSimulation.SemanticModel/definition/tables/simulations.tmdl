@@ -1,0 +1,258 @@
+table simulations
+	lineageTag: a4000001-0000-0000-0000-000000000004
+
+	column snapshotDateUtc
+		dataType: dateTime
+		lineageTag: a4010001-0000-0000-0000-000000000004
+		summarizeBy: none
+		sourceColumn: snapshotDateUtc
+
+		variation Variation
+			isDefault
+			relationship: db893c4a-3cd9-4e47-a78b-730c4597d239
+			defaultHierarchy: LocalDateTable_c2b59ddd-5265-4afd-a845-14c00601ca6e.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column simulationId
+		dataType: string
+		lineageTag: a4010002-0000-0000-0000-000000000004
+		summarizeBy: none
+		sourceColumn: simulationId
+
+		annotation SummarizationSetBy = Automatic
+
+	column displayName
+		dataType: string
+		lineageTag: a4010003-0000-0000-0000-000000000004
+		summarizeBy: none
+		sourceColumn: displayName
+
+		annotation SummarizationSetBy = Automatic
+
+	column description
+		dataType: string
+		lineageTag: a4010004-0000-0000-0000-000000000004
+		summarizeBy: none
+		sourceColumn: description
+
+		annotation SummarizationSetBy = Automatic
+
+	column status
+		dataType: string
+		lineageTag: a4010005-0000-0000-0000-000000000004
+		summarizeBy: none
+		sourceColumn: status
+
+		annotation SummarizationSetBy = Automatic
+
+	column attackType
+		dataType: string
+		lineageTag: a4010006-0000-0000-0000-000000000004
+		summarizeBy: none
+		sourceColumn: attackType
+
+		annotation SummarizationSetBy = Automatic
+
+	column attackTechnique
+		dataType: string
+		lineageTag: a4010007-0000-0000-0000-000000000004
+		summarizeBy: none
+		sourceColumn: attackTechnique
+
+		annotation SummarizationSetBy = Automatic
+
+	column createdDateTime
+		dataType: dateTime
+		lineageTag: a4010008-0000-0000-0000-000000000004
+		summarizeBy: none
+		sourceColumn: createdDateTime
+
+		variation Variation
+			isDefault
+			relationship: e7f9ba5c-8758-48da-820b-f8b824f75709
+			defaultHierarchy: LocalDateTable_eeee0b8c-8277-4feb-a743-ae21ec1d31f8.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column launchDateTime
+		dataType: dateTime
+		lineageTag: a4010009-0000-0000-0000-000000000004
+		summarizeBy: none
+		sourceColumn: launchDateTime
+
+		variation Variation
+			isDefault
+			relationship: 0df10b77-0313-4c9f-9952-489810f185d4
+			defaultHierarchy: LocalDateTable_482911ee-c6aa-4a78-9f78-edb4da2dc4a5.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column completionDateTime
+		dataType: dateTime
+		lineageTag: a4010010-0000-0000-0000-000000000004
+		summarizeBy: none
+		sourceColumn: completionDateTime
+
+		variation Variation
+			isDefault
+			relationship: bb6d1597-db32-4434-9c18-125d5de53fe0
+			defaultHierarchy: LocalDateTable_e672f1b7-06f4-41a1-aa9c-7985b74f56dc.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column lastModifiedDateTime
+		dataType: dateTime
+		lineageTag: a4010011-0000-0000-0000-000000000004
+		summarizeBy: none
+		sourceColumn: lastModifiedDateTime
+
+		variation Variation
+			isDefault
+			relationship: fb6be9f7-34c5-4c18-8ced-936fc3114e96
+			defaultHierarchy: LocalDateTable_4f2554ee-98d1-4350-96f3-c7f30a90aae3.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column isAutomated
+		dataType: boolean
+		lineageTag: a4010012-0000-0000-0000-000000000004
+		summarizeBy: none
+		sourceColumn: isAutomated
+
+		annotation SummarizationSetBy = Automatic
+
+	column automationId
+		dataType: string
+		lineageTag: a4010013-0000-0000-0000-000000000004
+		summarizeBy: none
+		sourceColumn: automationId
+
+		annotation SummarizationSetBy = Automatic
+
+	column durationInDays
+		dataType: int64
+		formatString: 0
+		lineageTag: a4010014-0000-0000-0000-000000000004
+		summarizeBy: sum
+		sourceColumn: durationInDays
+
+		annotation SummarizationSetBy = Automatic
+
+	column payloadId
+		dataType: string
+		lineageTag: a4010015-0000-0000-0000-000000000004
+		summarizeBy: none
+		sourceColumn: payloadId
+
+		annotation SummarizationSetBy = Automatic
+
+	column payloadDisplayName
+		dataType: string
+		lineageTag: a4010016-0000-0000-0000-000000000004
+		summarizeBy: none
+		sourceColumn: payloadDisplayName
+
+		annotation SummarizationSetBy = Automatic
+
+	column reportTotalUserCount
+		dataType: int64
+		formatString: 0
+		lineageTag: a4010017-0000-0000-0000-000000000004
+		summarizeBy: sum
+		sourceColumn: reportTotalUserCount
+
+		annotation SummarizationSetBy = Automatic
+
+	column reportCompromisedCount
+		dataType: int64
+		formatString: 0
+		lineageTag: a4010018-0000-0000-0000-000000000004
+		summarizeBy: sum
+		sourceColumn: reportCompromisedCount
+
+		annotation SummarizationSetBy = Automatic
+
+	column reportClickCount
+		dataType: int64
+		formatString: 0
+		lineageTag: a4010019-0000-0000-0000-000000000004
+		summarizeBy: sum
+		sourceColumn: reportClickCount
+
+		annotation SummarizationSetBy = Automatic
+
+	column reportReportedCount
+		dataType: int64
+		formatString: 0
+		lineageTag: a4010020-0000-0000-0000-000000000004
+		summarizeBy: sum
+		sourceColumn: reportReportedCount
+
+		annotation SummarizationSetBy = Automatic
+
+	column createdById
+		dataType: string
+		lineageTag: a4010021-0000-0000-0000-000000000004
+		summarizeBy: none
+		sourceColumn: createdById
+
+		annotation SummarizationSetBy = Automatic
+
+	column createdByDisplayName
+		dataType: string
+		lineageTag: a4010022-0000-0000-0000-000000000004
+		summarizeBy: none
+		sourceColumn: createdByDisplayName
+
+		annotation SummarizationSetBy = Automatic
+
+	column createdByEmail
+		dataType: string
+		lineageTag: a4010023-0000-0000-0000-000000000004
+		summarizeBy: none
+		sourceColumn: createdByEmail
+
+		annotation SummarizationSetBy = Automatic
+
+	column lastModifiedById
+		dataType: string
+		lineageTag: a4010024-0000-0000-0000-000000000004
+		summarizeBy: none
+		sourceColumn: lastModifiedById
+
+		annotation SummarizationSetBy = Automatic
+
+	column lastModifiedByDisplayName
+		dataType: string
+		lineageTag: a4010025-0000-0000-0000-000000000004
+		summarizeBy: none
+		sourceColumn: lastModifiedByDisplayName
+
+		annotation SummarizationSetBy = Automatic
+
+	column lastModifiedByEmail
+		dataType: string
+		lineageTag: a4010026-0000-0000-0000-000000000004
+		summarizeBy: none
+		sourceColumn: lastModifiedByEmail
+
+		annotation SummarizationSetBy = Automatic
+
+	partition simulations = m
+		mode: import
+		source =
+				let
+				    Result = try
+				        let
+				            Source = AzureStorage.DataLake(StorageAccountUrl & "/" & ContainerName & "/simulations"),
+				            Sorted = Table.Sort(Source, {{"Date modified", Order.Descending}})
+				        in
+				            Parquet.Document(Sorted{0}[Content])
+				    otherwise
+				        #table({"snapshotDateUtc", "simulationId", "displayName", "description", "status", "attackType", "attackTechnique", "createdDateTime", "launchDateTime", "completionDateTime", "lastModifiedDateTime", "isAutomated", "automationId", "durationInDays", "payloadId", "payloadDisplayName", "reportTotalUserCount", "reportCompromisedCount", "reportClickCount", "reportReportedCount", "createdById", "createdByDisplayName", "createdByEmail", "lastModifiedById", "lastModifiedByDisplayName", "lastModifiedByEmail"}, {})
+				in
+				    Result
+
+	annotation PBI_ResultType = Table
+

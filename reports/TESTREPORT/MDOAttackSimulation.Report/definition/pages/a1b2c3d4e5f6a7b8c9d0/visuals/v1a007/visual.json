@@ -23,11 +23,11 @@
                       "Entity": "simulations"
                     }
                   },
-                  "Property": "attackType"
+                  "Property": "attackTechnique"
                 }
               },
-              "queryRef": "simulations.attackType",
-              "nativeQueryRef": "attackType",
+              "queryRef": "simulations.attackTechnique",
+              "nativeQueryRef": "attackTechnique",
               "active": true
             }
           ]

@@ -20,14 +20,14 @@
                 "Column": {
                   "Expression": {
                     "SourceRef": {
-                      "Entity": "simulationUsers"
+                      "Entity": "simulations"
                     }
                   },
-                  "Property": "compromisedDateTime"
+                  "Property": "launchDateTime"
                 }
               },
-              "queryRef": "simulationUsers.compromisedDateTime",
-              "nativeQueryRef": "compromisedDateTime",
+              "queryRef": "simulations.launchDateTime",
+              "nativeQueryRef": "launchDateTime",
               "active": true
             }
           ]
@@ -42,11 +42,11 @@
                       "Entity": "_Measures"
                     }
                   },
-                  "Property": "Monthly Compromised Users"
+                  "Property": "Compromised Users"
                 }
               },
-              "queryRef": "_Measures.Monthly Compromised Users",
-              "nativeQueryRef": "Monthly Compromised Users"
+              "queryRef": "_Measures.Compromised Users",
+              "nativeQueryRef": "Compromised Users"
             }
           ]
         }

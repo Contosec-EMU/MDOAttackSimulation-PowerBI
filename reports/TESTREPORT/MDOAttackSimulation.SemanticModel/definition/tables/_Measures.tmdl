@@ -49,7 +49,7 @@ table _Measures
 		formatString: #,0
 		lineageTag: a0000006-0000-0000-0000-000000000006
 
-	measure 'Monthly Compromised Users' =
+	measure 'Compromised Users' =
 			COUNTROWS(
 			    FILTER(simulationUsers, simulationUsers[isCompromised] = TRUE())
 			)

@@ -72,6 +72,7 @@ class APIEndpoint:
     processor_name: str
     supports_incremental: bool = False
     incremental_filter: Optional[str] = None
+    max_records: Optional[int] = None
 
 
 # Core endpoints – always executed regardless of sync mode.
@@ -116,9 +117,10 @@ EXTENDED_API_CONFIGS: List[APIEndpoint] = [
     ),
     APIEndpoint(
         name="payloads",
-        endpoint="security/attackSimulation/payloads?$filter=source eq 'tenant'",
+        endpoint="security/attackSimulation/payloads?$filter=source eq 'global'&$top=200",
         processor_name="process_payloads",
         supports_incremental=False,
+        max_records=500,
     ),
 ]
 

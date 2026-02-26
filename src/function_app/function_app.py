@@ -115,8 +115,12 @@ async def _process_and_write(
 
     # Fetch data
     raw_data: List[Dict[str, Any]] = []
+    max_records = ep_config.max_records
     async for item in graph_client.get_paginated_data(endpoint, use_beta=use_beta):
         raw_data.append(item)
+        if max_records and len(raw_data) >= max_records:
+            logger.info(f"Reached max_records limit ({max_records}) for {api_name}")
+            break
     logger.info(f"Fetched {len(raw_data)} records from {api_name}")
 
     if not raw_data:

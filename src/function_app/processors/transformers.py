@@ -248,9 +248,9 @@ def process_trainings(records: List[Dict[str, Any]], snapshot_date: str) -> List
 def process_payloads(records: List[Dict[str, Any]], snapshot_date: str) -> List[Dict[str, Any]]:
     """Process payload data from beta API.
 
-    Endpoint: /beta/security/attackSimulation/payloads?$filter=source eq 'tenant'
-    Graph API returns ``name`` (not ``displayName``), ``Brand`` (capital B),
-    and ``payloadIndustry`` (not ``industry``).
+    Endpoint: /beta/security/attackSimulation/payloads?$filter=source eq 'global'
+    Graph API returns ``displayName``, ``brand`` (lowercase), and ``industry``.
+    Fallbacks handle variant field names from older API versions.
     """
     processed: List[Dict[str, Any]] = []
     for record in records:

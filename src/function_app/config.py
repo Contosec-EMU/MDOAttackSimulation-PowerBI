@@ -116,7 +116,7 @@ EXTENDED_API_CONFIGS: List[APIEndpoint] = [
     ),
     APIEndpoint(
         name="payloads",
-        endpoint="security/attackSimulation/payloads",
+        endpoint="security/attackSimulation/payloads?$filter=source eq 'tenant'",
         processor_name="process_payloads",
         supports_incremental=False,
     ),

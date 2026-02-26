@@ -389,6 +389,28 @@ class TestProcessPayloads:
         result = process_payloads([sample_payload_record], "2099-12-31")
         assert result[0]["snapshotDateUtc"] == "2099-12-31"
 
+    def test_graph_api_field_names(self, snapshot_date):
+        """Graph API returns 'name' not 'displayName', 'Brand' not 'brand',
+        and 'payloadIndustry' not 'industry'."""
+        record = {
+            "id": "p2",
+            "name": "Phishing Test",
+            "Brand": "microsoft",
+            "payloadIndustry": "IT",
+            "predictedCompromiseRate": 20.0,
+            "complexity": "medium",
+            "technique": "credentialHarvesting",
+            "theme": "personalizedOffer",
+        }
+        result = process_payloads([record], snapshot_date)
+        row = result[0]
+        assert row["displayName"] == "Phishing Test"
+        assert row["brand"] == "microsoft"
+        assert row["industry"] == "IT"
+        assert row["complexity"] == "medium"
+        assert row["technique"] == "credentialHarvesting"
+        assert row["theme"] == "personalizedOffer"
+
 
 # ===================================================================
 # process_users

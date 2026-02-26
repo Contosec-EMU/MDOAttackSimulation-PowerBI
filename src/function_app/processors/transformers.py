@@ -248,17 +248,20 @@ def process_trainings(records: List[Dict[str, Any]], snapshot_date: str) -> List
 def process_payloads(records: List[Dict[str, Any]], snapshot_date: str) -> List[Dict[str, Any]]:
     """Process payload data from beta API.
 
-    Endpoint: /beta/security/attackSimulation/payloads
-    Fetches both tenant and global payloads.
+    Endpoint: /beta/security/attackSimulation/payloads?$filter=source eq 'tenant'
+    Graph API returns ``name`` (not ``displayName``), ``Brand`` (capital B),
+    and ``payloadIndustry`` (not ``industry``).
     """
     processed: List[Dict[str, Any]] = []
     for record in records:
         created_by = flatten_created_by(record.get("createdBy"), "createdBy")
         last_modified_by = flatten_created_by(record.get("lastModifiedBy"), "lastModifiedBy")
+        # Graph API uses "name" for payloads, not "displayName"
+        display_name = record.get("displayName") or record.get("name")
         processed.append({
             "snapshotDateUtc": snapshot_date,
             "payloadId": sanitize_string(record.get("id")),
-            "displayName": sanitize_string(record.get("displayName")),
+            "displayName": sanitize_string(display_name),
             "description": sanitize_string(record.get("description"), max_length=2000),
             "simulationAttackType": sanitize_string(str(record.get("simulationAttackType"))) if record.get("simulationAttackType") else None,
             "platform": sanitize_string(str(record.get("platform"))) if record.get("platform") else None,
@@ -268,8 +271,8 @@ def process_payloads(records: List[Dict[str, Any]], snapshot_date: str) -> List[
             "complexity": sanitize_string(str(record.get("complexity"))) if record.get("complexity") else None,
             "technique": sanitize_string(str(record.get("technique"))) if record.get("technique") else None,
             "theme": sanitize_string(str(record.get("theme"))) if record.get("theme") else None,
-            "brand": sanitize_string(str(record.get("brand"))) if record.get("brand") else None,
-            "industry": sanitize_string(str(record.get("industry"))) if record.get("industry") else None,
+            "brand": sanitize_string(str(record.get("Brand") or record.get("brand"))) if (record.get("Brand") or record.get("brand")) else None,
+            "industry": sanitize_string(str(record.get("payloadIndustry") or record.get("industry"))) if (record.get("payloadIndustry") or record.get("industry")) else None,
             "isCurrentEvent": record.get("isCurrentEvent"),
             "isControversial": record.get("isControversial"),
             "lastModifiedDateTime": record.get("lastModifiedDateTime"),

@@ -36,31 +36,41 @@
           "projections": [
             {
               "field": {
-                "Column": {
+                "Aggregation": {
                   "Expression": {
-                    "SourceRef": {
-                      "Entity": "trainingUserCoverage"
+                    "Column": {
+                      "Expression": {
+                        "SourceRef": {
+                          "Entity": "trainingUserCoverage"
+                        }
+                      },
+                      "Property": "completedTrainingsCount"
                     }
                   },
-                  "Property": "completedTrainingsCount"
+                  "Function": 0
                 }
               },
-              "queryRef": "trainingUserCoverage.completedTrainingsCount",
-              "nativeQueryRef": "completedTrainingsCount"
+              "queryRef": "Sum(trainingUserCoverage.completedTrainingsCount)",
+              "nativeQueryRef": "Sum of completedTrainingsCount"
             },
             {
               "field": {
-                "Column": {
+                "Aggregation": {
                   "Expression": {
-                    "SourceRef": {
-                      "Entity": "trainingUserCoverage"
+                    "Column": {
+                      "Expression": {
+                        "SourceRef": {
+                          "Entity": "trainingUserCoverage"
+                        }
+                      },
+                      "Property": "notStartedTrainingsCount"
                     }
                   },
-                  "Property": "notStartedTrainingsCount"
+                  "Function": 0
                 }
               },
-              "queryRef": "trainingUserCoverage.notStartedTrainingsCount",
-              "nativeQueryRef": "notStartedTrainingsCount"
+              "queryRef": "Sum(trainingUserCoverage.notStartedTrainingsCount)",
+              "nativeQueryRef": "Sum of notStartedTrainingsCount"
             }
           ]
         }

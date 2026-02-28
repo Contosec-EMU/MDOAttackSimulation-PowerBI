@@ -2,11 +2,11 @@
   "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.6.0/schema.json",
   "name": "v1a006",
   "position": {
-    "x": 16,
-    "y": 148,
+    "x": 15.896823501313589,
+    "y": 174.86505851444949,
     "z": 5000,
-    "height": 280,
-    "width": 720,
+    "height": 253.12634344399331,
+    "width": 787.50417960353479,
     "tabOrder": 5000
   },
   "visual": {
@@ -20,14 +20,14 @@
                 "Column": {
                   "Expression": {
                     "SourceRef": {
-                      "Entity": "simulationUsers"
+                      "Entity": "simulations"
                     }
                   },
-                  "Property": "compromisedDateTime"
+                  "Property": "launchDateTime"
                 }
               },
-              "queryRef": "simulationUsers.compromisedDateTime",
-              "nativeQueryRef": "compromisedDateTime",
+              "queryRef": "simulations.launchDateTime",
+              "nativeQueryRef": "launchDateTime",
               "active": true
             }
           ]
@@ -42,11 +42,11 @@
                       "Entity": "_Measures"
                     }
                   },
-                  "Property": "Monthly Compromised Users"
+                  "Property": "Compromised Users"
                 }
               },
-              "queryRef": "_Measures.Monthly Compromised Users",
-              "nativeQueryRef": "Monthly Compromised Users"
+              "queryRef": "_Measures.Compromised Users",
+              "nativeQueryRef": "Compromised Users"
             }
           ]
         }

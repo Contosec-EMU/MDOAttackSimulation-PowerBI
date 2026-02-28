@@ -10,42 +10,24 @@
     "tabOrder": 5000
   },
   "visual": {
-    "visualType": "scatterChart",
+    "visualType": "clusteredBarChart",
     "query": {
       "queryState": {
-        "Details": {
+        "Category": {
           "projections": [
             {
               "field": {
                 "Column": {
                   "Expression": {
                     "SourceRef": {
-                      "Entity": "users"
+                      "Entity": "trainingUserCoverage"
                     }
                   },
                   "Property": "displayName"
                 }
               },
-              "queryRef": "users.displayName",
-              "nativeQueryRef": "displayName"
-            }
-          ]
-        },
-        "X": {
-          "projections": [
-            {
-              "field": {
-                "Measure": {
-                  "Expression": {
-                    "SourceRef": {
-                      "Entity": "_Measures"
-                    }
-                  },
-                  "Property": "User Compromised Count"
-                }
-              },
-              "queryRef": "_Measures.User Compromised Count",
-              "nativeQueryRef": "User Compromised Count",
+              "queryRef": "trainingUserCoverage.displayName",
+              "nativeQueryRef": "displayName",
               "active": true
             }
           ]
@@ -54,17 +36,41 @@
           "projections": [
             {
               "field": {
-                "Measure": {
+                "Aggregation": {
                   "Expression": {
-                    "SourceRef": {
-                      "Entity": "_Measures"
+                    "Column": {
+                      "Expression": {
+                        "SourceRef": {
+                          "Entity": "trainingUserCoverage"
+                        }
+                      },
+                      "Property": "completedTrainingsCount"
                     }
                   },
-                  "Property": "User Training Completed"
+                  "Function": 0
                 }
               },
-              "queryRef": "_Measures.User Training Completed",
-              "nativeQueryRef": "User Training Completed"
+              "queryRef": "Sum(trainingUserCoverage.completedTrainingsCount)",
+              "nativeQueryRef": "Sum of completedTrainingsCount"
+            },
+            {
+              "field": {
+                "Aggregation": {
+                  "Expression": {
+                    "Column": {
+                      "Expression": {
+                        "SourceRef": {
+                          "Entity": "trainingUserCoverage"
+                        }
+                      },
+                      "Property": "notStartedTrainingsCount"
+                    }
+                  },
+                  "Function": 0
+                }
+              },
+              "queryRef": "Sum(trainingUserCoverage.notStartedTrainingsCount)",
+              "nativeQueryRef": "Sum of notStartedTrainingsCount"
             }
           ]
         }

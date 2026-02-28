@@ -2,18 +2,18 @@
   "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.6.0/schema.json",
   "name": "v8a005",
   "position": {
-    "x": 16,
-    "y": 150,
+    "x": 370,
+    "y": 60,
     "z": 5000,
-    "width": 340,
-    "height": 560,
+    "width": 894,
+    "height": 340,
     "tabOrder": 5000
   },
   "visual": {
-    "visualType": "clusteredBarChart",
+    "visualType": "tableEx",
     "query": {
       "queryState": {
-        "Category": {
+        "Values": {
           "projections": [
             {
               "field": {
@@ -27,13 +27,50 @@
                 }
               },
               "queryRef": "users.department",
-              "nativeQueryRef": "Department",
-              "active": true
-            }
-          ]
-        },
-        "Y": {
-          "projections": [
+              "nativeQueryRef": "Department"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "_Measures"
+                    }
+                  },
+                  "Property": "Dept Simulation Count"
+                }
+              },
+              "queryRef": "_Measures.Dept Simulation Count",
+              "nativeQueryRef": "Simulations"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "_Measures"
+                    }
+                  },
+                  "Property": "Dept Simulated User Count"
+                }
+              },
+              "queryRef": "_Measures.Dept Simulated User Count",
+              "nativeQueryRef": "Simulated User Count"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "_Measures"
+                    }
+                  },
+                  "Property": "Dept Training Completion"
+                }
+              },
+              "queryRef": "_Measures.Dept Training Completion",
+              "nativeQueryRef": "Training Completion"
+            },
             {
               "field": {
                 "Measure": {
@@ -64,22 +101,24 @@
             }
           ]
         }
-      }
-    },
-    "objects": {
-      "labels": [
-        {
-          "properties": {
-            "show": {
-              "expr": {
-                "Literal": {
-                  "Value": "true"
-                }
+      },
+      "sortDefinition": {
+        "sort": [
+          {
+            "field": {
+              "Measure": {
+                "Expression": {
+                  "SourceRef": {
+                    "Entity": "_Measures"
+                  }
+                },
+                "Property": "Dept Reported Rate"
               }
-            }
+            },
+            "direction": "Descending"
           }
-        }
-      ]
+        ]
+      }
     },
     "visualContainerObjects": {
       "title": [
@@ -95,7 +134,7 @@
             "text": {
               "expr": {
                 "Literal": {
-                  "Value": "'Reported % and Compromised % by Department'"
+                  "Value": "'Department performance summary'"
                 }
               }
             }

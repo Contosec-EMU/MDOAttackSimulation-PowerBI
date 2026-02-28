@@ -2,11 +2,11 @@
   "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.6.0/schema.json",
   "name": "v8a001",
   "position": {
-    "x": 16,
-    "y": 8,
+    "x": 15.896823501313589,
+    "y": 8.5598280391688562,
     "z": 1000,
-    "width": 800,
-    "height": 40,
+    "height": 39.130642464771917,
+    "width": 530.7093384284691,
     "tabOrder": 1000
   },
   "visual": {
@@ -15,13 +15,19 @@
       "general": [
         {
           "properties": {
-            "paragraphs": {
-              "expr": {
-                "Literal": {
-                  "Value": "[{\"paragraphs\":[{\"textRuns\":[{\"value\":\"Attack Simulation Training Program\",\"textStyle\":{\"fontFamily\":\"Segoe UI Semibold\",\"fontSize\":\"20px\"}}]}]}]"
-                }
+            "paragraphs": [
+              {
+                "textRuns": [
+                  {
+                    "value": "Department Overview",
+                    "textStyle": {
+                      "fontWeight": "bold",
+                      "fontSize": "20pt"
+                    }
+                  }
+                ]
               }
-            }
+            ]
           }
         }
       ]

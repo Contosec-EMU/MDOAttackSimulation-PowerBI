@@ -11,10 +11,13 @@ table _Measures
 		lineageTag: a0000001-0000-0000-0000-000000000001
 
 	measure 'Training Completion Rate' =
-			DIVIDE(
-			    SUM(trainingUserCoverage[completedTrainingsCount]),
-			    SUM(trainingUserCoverage[assignedTrainingsCount]),
-			    0
+			CALCULATE(
+			    DIVIDE(
+			        SUM(trainingUserCoverage[completedTrainingsCount]),
+			        SUM(trainingUserCoverage[assignedTrainingsCount]),
+			        0
+			    ),
+			    CROSSFILTER(simulationUsers[userId], users[userId], Both)
 			)
 		formatString: 0.0%;-0.0%;0.0%
 		lineageTag: a0000002-0000-0000-0000-000000000002
@@ -23,11 +26,15 @@ table _Measures
 		formatString: #,0.0
 		lineageTag: a0000003-0000-0000-0000-000000000003
 
-	measure 'Repeat Offender Count' = COUNTROWS(repeatOffenders)
+	measure 'Repeat Offender Count' =
+			CALCULATE(
+			    COUNTROWS(repeatOffenders),
+			    CROSSFILTER(simulationUsers[userId], users[userId], Both)
+			)
 		formatString: #,0
 		lineageTag: a0000004-0000-0000-0000-000000000004
 
-	measure 'Active Simulations' =
+	measure 'Completed Simulations' =
 			COUNTROWS(
 			    FILTER(
 			        simulations,
@@ -42,7 +49,7 @@ table _Measures
 		formatString: #,0
 		lineageTag: a0000006-0000-0000-0000-000000000006
 
-	measure 'Monthly Compromised Users' =
+	measure 'Compromised Users' =
 			COUNTROWS(
 			    FILTER(simulationUsers, simulationUsers[isCompromised] = TRUE())
 			)
@@ -50,11 +57,17 @@ table _Measures
 		lineageTag: a0000007-0000-0000-0000-000000000007
 
 	measure 'Phish Report Rate' =
-			DIVIDE(
-			    SUM(simulations[reportReportedCount]),
-			    SUM(simulations[reportTotalUserCount]),
-			    0
-			)
+			VAR _reportBased = SUM(simulations[reportReportedCount])
+			VAR _reportTotal = SUM(simulations[reportTotalUserCount])
+			VAR _userBased =
+			    COUNTROWS(FILTER(simulationUsers, NOT(ISBLANK(simulationUsers[reportedPhishDateTime]))))
+			VAR _userTotal = COUNTROWS(simulationUsers)
+			RETURN
+			    IF(
+			        _reportTotal > 0,
+			        DIVIDE(_reportBased, _reportTotal, 0),
+			        DIVIDE(_userBased, _userTotal, 0)
+			    )
 		formatString: 0.0%;-0.0%;0.0%
 		lineageTag: a0000008-0000-0000-0000-000000000008
 
@@ -88,19 +101,19 @@ table _Measures
 		lineageTag: a0000010-0000-0000-0000-000000000010
 
 	measure 'Click Rate' =
-			DIVIDE(
-			    SUM(simulations[reportClickCount]),
-			    SUM(simulations[reportTotalUserCount]),
-			    0
-			)
+			VAR _clicked =
+			    COUNTROWS(FILTER(simulationUserEvents, simulationUserEvents[eventName] = "CredentialSupplied" || simulationUserEvents[eventName] = "EmailLinkClicked"))
+			VAR _total = COUNTROWS(simulationUsers)
+			RETURN
+			    DIVIDE(_clicked, _total, 0)
 		formatString: 0.0%;-0.0%;0.0%
 		lineageTag: a0000011-0000-0000-0000-000000000011
 
-	measure 'Total Users Targeted' = SUM(simulations[reportTotalUserCount])
+	measure 'Total Users Targeted' = COUNTROWS(simulationUsers)
 		formatString: #,0
 		lineageTag: a0000012-0000-0000-0000-000000000012
 
-	measure 'User Compromised Count' = SUM(simulationUserCoverage[compromisedCount])
+	measure 'User Compromised Count' = COUNTROWS(FILTER(simulationUsers, simulationUsers[isCompromised] = TRUE()))
 		formatString: #,0
 		lineageTag: a0000013-0000-0000-0000-000000000013
 
@@ -126,17 +139,17 @@ table _Measures
 		formatString: #,0
 		lineageTag: a0000016-0000-0000-0000-000000000016
 
-	measure 'Deleted Not Reported' =
+	measure 'Email Deleted Count' =
 			COUNTROWS(
 			    FILTER(
 			        simulationUserEvents,
 			        simulationUserEvents[eventName] = "EmailDeleted"
 			    )
-			)
+			) + 0
 		formatString: #,0
 		lineageTag: a0000017-0000-0000-0000-000000000017
 
-	measure 'Deleted Not Reported %' =
+	measure 'Email Deleted %' =
 			VAR _deleted =
 			    COUNTROWS(FILTER(simulationUserEvents, simulationUserEvents[eventName] = "EmailDeleted"))
 			VAR _totalUsers = COUNTROWS(simulationUsers)
@@ -173,42 +186,49 @@ table _Measures
 		lineageTag: a0000021-0000-0000-0000-000000000021
 
 	measure 'Dept Training Completion' =
-			DIVIDE(
-			    SUM(trainingUserCoverage[completedTrainingsCount]),
-			    SUM(trainingUserCoverage[assignedTrainingsCount]),
-			    0
+			CALCULATE(
+			    DIVIDE(
+			        SUM(trainingUserCoverage[completedTrainingsCount]),
+			        SUM(trainingUserCoverage[assignedTrainingsCount]),
+			        0
+			    ),
+			    CROSSFILTER(trainingUserCoverage[userId], users[userId], Both)
 			)
 		formatString: 0.0%;-0.0%;0.0%
 		lineageTag: a0000022-0000-0000-0000-000000000022
 
-	measure 'Dept Simulated User Count' = COUNTROWS(simulationUsers)
+	measure 'Dept Simulated User Count' = DISTINCTCOUNT(simulationUsers[userId])
 		formatString: #,0
 		lineageTag: a0000023-0000-0000-0000-000000000023
 
-	measure 'Dept Simulation Count' =
-			DISTINCTCOUNT(simulationUsers[simulationId])
+	measure 'Dept Simulation Count' = DISTINCTCOUNT(simulationUsers[simulationId])
 		formatString: #,0
 		lineageTag: a0000024-0000-0000-0000-000000000024
 
-	measure 'User Sim Count' =
-			COUNTROWS(
-			    FILTER(
-			        simulationUsers,
-			        simulationUsers[userId] = SELECTEDVALUE(users[userId])
-			    )
-			)
+	measure 'User Sim Count' = COUNTROWS(simulationUsers)
 		formatString: #,0
 		lineageTag: a0000025-0000-0000-0000-000000000025
 
-	measure 'Read Not Reported' =
+	measure 'Email Read Count' =
 			COUNTROWS(
 			    FILTER(
 			        simulationUserEvents,
 			        simulationUserEvents[eventName] = "EmailRead"
 			    )
-			)
+			) + 0
 		formatString: #,0
 		lineageTag: a0000026-0000-0000-0000-000000000026
+
+	measure 'Click Count' =
+			COUNTROWS(
+			    FILTER(
+			        simulationUserEvents,
+			        simulationUserEvents[eventName] = "CredentialSupplied"
+			            || simulationUserEvents[eventName] = "EmailLinkClicked"
+			    )
+			) + 0
+		formatString: #,0
+		lineageTag: a0000027-0000-0000-0000-000000000027
 
 	column Value
 		isHidden

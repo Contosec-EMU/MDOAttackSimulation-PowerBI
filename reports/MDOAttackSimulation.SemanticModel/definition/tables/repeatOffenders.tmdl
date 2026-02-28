@@ -2,10 +2,16 @@ table repeatOffenders
 	lineageTag: a1000001-0000-0000-0000-000000000001
 
 	column snapshotDateUtc
-		dataType: string
+		dataType: dateTime
+		formatString: General Date
 		lineageTag: a1010001-0000-0000-0000-000000000001
 		summarizeBy: none
 		sourceColumn: snapshotDateUtc
+
+		variation Variation
+			isDefault
+			relationship: 8ee7e80b-be7e-4e70-90c9-5826635137e3
+			defaultHierarchy: LocalDateTable_5cc339cf-fd91-4421-8bcf-b3dfc7cca449.'Date Hierarchy'
 
 		annotation SummarizationSetBy = Automatic
 

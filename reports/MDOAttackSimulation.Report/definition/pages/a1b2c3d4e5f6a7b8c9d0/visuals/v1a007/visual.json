@@ -2,11 +2,11 @@
   "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.6.0/schema.json",
   "name": "v1a007",
   "position": {
-    "x": 744,
-    "y": 148,
+    "x": 15.896823501313589,
+    "y": 441.44256030570818,
     "z": 6000,
-    "height": 280,
-    "width": 520,
+    "height": 269.02316694530691,
+    "width": 1237.5065679484119,
     "tabOrder": 6000
   },
   "visual": {
@@ -23,11 +23,11 @@
                       "Entity": "simulations"
                     }
                   },
-                  "Property": "attackType"
+                  "Property": "attackTechnique"
                 }
               },
-              "queryRef": "simulations.attackType",
-              "nativeQueryRef": "attackType",
+              "queryRef": "simulations.attackTechnique",
+              "nativeQueryRef": "attackTechnique",
               "active": true
             }
           ]

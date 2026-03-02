@@ -67,13 +67,19 @@ This solution bridges that gap by automatically syncing simulation data into you
                           └───────────────┘
 ```
 
-**Data flow:**
+**ETL Pipeline:**
 
-1. Timer trigger fires on schedule (default: every hour at :00 UTC)
-2. Function authenticates via Managed Identity → Key Vault → OAuth2 client credentials
-3. Paginates through 9 Microsoft Graph API endpoints with retry + exponential backoff
-4. Writes Parquet (curated) and JSON (raw archive) to ADLS Gen2, date-partitioned
-5. Power BI connects directly to ADLS Gen2 for scheduled refresh
+```
+Graph API  ──Extract──▶  Raw JSON  ──Transform──▶  Flat Dicts  ──Load──▶  Parquet + JSON
+ (9 endpoints)           (paginated)               (sanitized)           (date-partitioned)
+                                                                               │
+                                                                      Power BI reads
+```
+
+1. **Extract** — Timer fires on schedule (default: every hour). Function authenticates via Managed Identity → Key Vault → OAuth2 client credentials. Paginates through 9 Graph API endpoints with retry + exponential backoff.
+2. **Transform** — Flattens nested JSON, sanitizes all strings, adds `snapshotDate` for partitioning, filters out non-Entra users.
+3. **Load** — Writes Parquet (curated/, with PyArrow schemas) and JSON (raw/, for audit) to ADLS Gen2, date-partitioned as `curated/{table}/YYYY-MM-DD/`.
+4. **Consume** — Power BI connects directly to ADLS Gen2 and reads Parquet files on scheduled refresh.
 
 ## Data Model (9 Tables)
 

@@ -54,7 +54,7 @@ Container:            curated
 
 ## 2. Connecting to Data
 
-> 💡 **Recommended: Use the Pre-Built Report Template**
+> **Tip:** **Recommended: Use the Pre-Built Report Template**
 >
 > The easiest way to connect is using the included `.pbip` project file, which has all 9 tables, relationships, and DAX measures pre-configured. See the [reports README](../reports/README.md) for quick start instructions.
 >
@@ -74,7 +74,7 @@ Container:            curated
    ```
    https://<storageAccountName>.dfs.core.windows.net/
    ```
-   > ⚠️ **Important:** Use `.dfs.core.windows.net` — the `.blob.core.windows.net` endpoint will return errors with ADLS Gen2.
+   > **Warning:** **Important:** Use `.dfs.core.windows.net` — the `.blob.core.windows.net` endpoint will return errors with ADLS Gen2.
 2. Click **OK**
 
 <!-- Screenshot: ADLS Gen2 connection dialog with URL field -->
@@ -558,13 +558,13 @@ In Power BI Desktop, go to **Model** view and create these relationships:
 | trainingUserCoverage | userId | users | userId | Many-to-One | Single |
 | repeatOffenders | userId | users | userId | Many-to-One | Single |
 
-> ⚠️ **Note on composite keys**: Power BI does not natively support multi-column relationships. For `simulationUserEvents → simulationUsers`, create a calculated column in both tables:
+> **Warning:** **Note on composite keys**: Power BI does not natively support multi-column relationships. For `simulationUserEvents → simulationUsers`, create a calculated column in both tables:
 > ```dax
 > SimUserKey = simulationUserEvents[simulationId] & "|" & simulationUserEvents[userId]
 > ```
 > Then create the relationship on the `SimUserKey` column.
 
-> ⚠️ **Note on `snapshotDateUtc`**: If loading multiple snapshots, filter all tables to the same `snapshotDateUtc` to ensure consistency. Alternatively, load only the latest snapshot (see [Step 6](#step-6-load-only-the-latest-snapshot-optional)).
+> **Warning:** **Note on `snapshotDateUtc`**: If loading multiple snapshots, filter all tables to the same `snapshotDateUtc` to ensure consistency. Alternatively, load only the latest snapshot (see [Step 6](#step-6-load-only-the-latest-snapshot-optional)).
 
 <!-- Screenshot: Power BI Model view showing all relationships configured -->
 
@@ -574,7 +574,7 @@ In Power BI Desktop, go to **Model** view and create these relationships:
 
 Create a dedicated measures table in Power BI for organization: **Modeling** → **New Table** → `_Measures = ROW("Value", 0)`.
 
-> ⚠️ **Note:** Do not use `Measures` as the table name — it is a reserved word in TMDL/PBIR format and will cause errors when saving as a `.pbip` project. Use `_Measures` instead.
+> **Warning:** **Note:** Do not use `Measures` as the table name — it is a reserved word in TMDL/PBIR format and will cause errors when saving as a `.pbip` project. Use `_Measures` instead.
 
 ### Compromise Rate
 

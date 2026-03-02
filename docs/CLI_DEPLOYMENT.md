@@ -154,7 +154,7 @@ Write-Host "Client Secret: $CLIENT_SECRET"
 Write-Host "Tenant ID: $(az account show --query tenantId -o tsv)"
 ```
 
-> ⚠️ **Save the Client Secret immediately** — it is only displayed once. You will need it in [Step 4](#step-4-store-secret-in-key-vault).
+> **Warning:** **Save the Client Secret immediately** — it is only displayed once. You will need it in [Step 4](#step-4-store-secret-in-key-vault).
 
 ---
 
@@ -327,7 +327,7 @@ az keyvault secret set `
 
 > **Note:** If your terminal session from Step 2 expired, replace `$CLIENT_SECRET` with the secret value you saved earlier.
 
-> ⚠️ **Firewall note:** The Key Vault is deployed with network rules that deny public access by default. If you are running this from outside the VNet (e.g., your local machine), you will get a `ForbiddenByFirewall` error. Temporarily add your IP:
+> **Warning:** **Firewall note:** The Key Vault is deployed with network rules that deny public access by default. If you are running this from outside the VNet (e.g., your local machine), you will get a `ForbiddenByFirewall` error. Temporarily add your IP:
 >
 > **Bash:**
 > ```bash
@@ -516,7 +516,7 @@ az monitor app-insights query `
 | Data Lake files | Parquet files under `curated/{apiName}/{YYYY-MM-DD}/` |
 | Logs | Trace messages showing ingestion progress |
 
-> ⚠️ **Storage firewall note:** The ADLS Gen2 storage account is deployed with network rules that deny public access by default. If you are listing or browsing files from outside the VNet, you will get an authorization error. To verify data from your local machine, temporarily add your IP:
+> **Warning:** **Storage firewall note:** The ADLS Gen2 storage account is deployed with network rules that deny public access by default. If you are listing or browsing files from outside the VNet, you will get an authorization error. To verify data from your local machine, temporarily add your IP:
 >
 > **Bash:**
 > ```bash

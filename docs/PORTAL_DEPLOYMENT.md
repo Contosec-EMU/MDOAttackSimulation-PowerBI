@@ -118,7 +118,7 @@ The Virtual Network (VNet) provides network isolation so the Function App can se
 4. Click **Next: Security** — leave defaults (no Bastion, no Firewall, no DDoS protection needed)
 5. Click **Next: IP addresses**
 6. Verify the address space is `10.0.0.0/16` (edit if needed)
-7. If a `default` subnet exists, click the **🗑 delete** icon to remove it
+7. If a `default` subnet exists, click the **delete** icon to remove it
 8. Click **➕ Add a subnet**:
    - **Subnet name:** `snet-functions`
    - **Starting address:** `10.0.1.0`
@@ -232,16 +232,16 @@ This is a **separate** storage account used internally by Azure Functions for tr
 | | Region | `West US 2` |
 | | Performance | `Standard` |
 | | Redundancy | `Locally-redundant storage (LRS)` |
-| **Advanced** | Require secure transfer | ✅ Enabled *(default)* |
-| | Allow enabling anonymous access on containers | ❌ Disabled |
-| | Enable storage account key access | ❌ **Disabled** |
+| **Advanced** | Require secure transfer | Yes Enabled *(default)* |
+| | Allow enabling anonymous access on containers | No Disabled |
+| | Enable storage account key access | No **Disabled** |
 | | Minimum TLS version | `Version 1.2` |
 | | Access tier | `Hot` |
-| | Enable hierarchical namespace | ❌ **Disabled** (this is NOT the data lake) |
+| | Enable hierarchical namespace | No **Disabled** (this is NOT the data lake) |
 | **Tags** | Name / Value | `project` = `MDOAttackSimulation` |
 | | Name / Value | `environment` = `production` |
 
-> ⚠️ **Important:** Storage account names must be globally unique, 3–24 characters, lowercase letters and numbers only. Pick a unique name like `mdoastfn2024prod` or `mdoastfnXXXXX` where `XXXXX` is a random string.
+> **Warning:** **Important:** Storage account names must be globally unique, 3–24 characters, lowercase letters and numbers only. Pick a unique name like `mdoastfn2024prod` or `mdoastfnXXXXX` where `XXXXX` is a random string.
 
 ### Steps
 
@@ -286,19 +286,19 @@ This is the primary data store. Parquet files (for Power BI) and raw JSON archiv
 | | Region | `West US 2` |
 | | Performance | `Standard` |
 | | Redundancy | `Locally-redundant storage (LRS)` |
-| **Advanced** | Require secure transfer | ✅ Enabled |
-| | Allow enabling anonymous access on containers | ❌ Disabled |
+| **Advanced** | Require secure transfer | Yes Enabled |
+| | Allow enabling anonymous access on containers | No Disabled |
 | | Minimum TLS version | `Version 1.2` |
 | | Access tier | `Hot` |
-| | **Enable hierarchical namespace** | ✅ **YES — REQUIRED** |
+| | **Enable hierarchical namespace** | Yes **YES — REQUIRED** |
 | **Networking** | Network access | `Disable public access and use private access` |
 | | | **OR** `Enable public access from selected virtual networks and IP addresses` |
 | | Virtual networks | ➕ Add existing virtual network: `mdoast-vnet` / `snet-functions` |
-| | Exceptions | ✅ Allow Azure services on the trusted services list to access this storage account |
+| | Exceptions | Yes Allow Azure services on the trusted services list to access this storage account |
 | **Tags** | Name / Value | `project` = `MDOAttackSimulation` |
 | | Name / Value | `environment` = `production` |
 
-> ⚠️ **CRITICAL:** Enabling hierarchical namespace is a **one-time, irreversible** setting. If you forget to enable it during creation, you must delete the storage account and start over.
+> **Warning:** **CRITICAL:** Enabling hierarchical namespace is a **one-time, irreversible** setting. If you forget to enable it during creation, you must delete the storage account and start over.
 
 ### Steps
 
@@ -309,7 +309,7 @@ This is the primary data store. Parquet files (for Power BI) and raw JSON archiv
 5. **Disable** "Allow enabling anonymous access on individual containers"
 6. Set minimum TLS version to **1.2**
 7. Set access tier to **Hot**
-8. ✅ **Check "Enable hierarchical namespace"** — this is the most critical setting
+8. Yes **Check "Enable hierarchical namespace"** — this is the most critical setting
 9. Click **Next: Networking**
 10. Select **Enable public access from selected virtual networks and IP addresses**
 11. Under **Virtual networks**, click **➕ Add existing virtual network**
@@ -317,7 +317,7 @@ This is the primary data store. Parquet files (for Power BI) and raw JSON archiv
     - **Virtual networks:** `mdoast-vnet`
     - **Subnets:** `snet-functions`
     - Click **Add**
-12. Under **Exceptions**, check ✅ **Allow Azure services on the trusted services list to access this storage account**
+12. Under **Exceptions**, check Yes **Allow Azure services on the trusted services list to access this storage account**
 13. Click **Next: Data protection** — leave defaults
 14. Click **Next: Encryption** — leave defaults
 15. Click **Next: Tags**, add the project/environment tags
@@ -373,14 +373,14 @@ Key Vault securely stores the Graph API client secret. The Function App retrieve
 | | Pricing tier | `Standard` |
 | | Days to retain deleted vaults | `90` |
 | | Purge protection | `Disable purge protection` *(can enable later if needed)* |
-| **Access configuration** | Permission model | ✅ **Azure role-based access control (recommended)** |
+| **Access configuration** | Permission model | Yes **Azure role-based access control (recommended)** |
 | **Networking** | Network access | `Allow public access from specific virtual networks and IP addresses` |
 | | Virtual networks | ➕ Add: `mdoast-vnet` / `snet-functions` |
-| | Exception | ✅ Allow trusted Microsoft services to bypass this firewall |
+| | Exception | Yes Allow trusted Microsoft services to bypass this firewall |
 | **Tags** | Name / Value | `project` = `MDOAttackSimulation` |
 | | Name / Value | `environment` = `production` |
 
-> ⚠️ **Key vault names** must be globally unique, 3–24 characters, and can contain only alphanumeric characters and hyphens.
+> **Warning:** **Key vault names** must be globally unique, 3–24 characters, and can contain only alphanumeric characters and hyphens.
 
 ### Steps
 
@@ -390,11 +390,11 @@ Key Vault securely stores the Graph API client secret. The Function App retrieve
 4. Set pricing tier to **Standard**
 5. Set soft-delete retention to **90 days**
 6. Click **Next: Access configuration**
-7. Select ✅ **Azure role-based access control** as the permission model
+7. Select Yes **Azure role-based access control** as the permission model
 8. Click **Next: Networking**
 9. Select **Allow public access from specific virtual networks and IP addresses**
 10. Click **➕ Add a virtual network** → select `mdoast-vnet` / `snet-functions` → **Add**
-11. Under **Exception**, check ✅ **Allow trusted Microsoft services to bypass this firewall**
+11. Under **Exception**, check Yes **Allow trusted Microsoft services to bypass this firewall**
 12. Click **Next: Tags**, add the project/environment tags
 13. Click **Review + create**, then **Create**
 
@@ -472,16 +472,16 @@ The Function App hosts the Python code that ingests data from Microsoft Graph.
 | | Plan | `mdoast-asp` *(created in Step 8)* |
 | **Storage** | Storage account | Select the **function** storage account (e.g., `mdoastfn2024prod`) — **NOT the data lake** |
 | **Networking** | Enable public access | **On** |
-| | Enable network injection | ✅ **On** |
+| | Enable network injection | Yes **On** |
 | | Virtual network | `mdoast-vnet` |
 | | Inbound access – Enable private endpoints | Off |
 | | Outbound access – VNet integration subnet | `snet-functions` |
-| **Monitoring** | Enable Application Insights | ✅ **Yes** |
+| **Monitoring** | Enable Application Insights | Yes **Yes** |
 | | Application Insights | `mdoast-appi` *(created in Step 4)* |
 | **Tags** | Name / Value | `project` = `MDOAttackSimulation` |
 | | Name / Value | `environment` = `production` |
 
-> ⚠️ **Function App names** must be globally unique and will become part of the URL: `https://mdoast-func-2024prod.azurewebsites.net`.
+> **Warning:** **Function App names** must be globally unique and will become part of the URL: `https://mdoast-func-2024prod.azurewebsites.net`.
 
 ### Steps
 
@@ -661,15 +661,15 @@ After creation, you'll be on the app's **Overview** page. Copy these values:
 3. Select **Microsoft Graph**
 4. Select **Application permissions** (not Delegated)
 5. Search for and check:
-   - ✅ `AttackSimulation.Read.All`
-   - ✅ `User.Read.All`
+   - Yes `AttackSimulation.Read.All`
+   - Yes `User.Read.All`
 6. Click **Add permissions**
-7. Back on the API permissions page, click **✅ Grant admin consent for [Your Organization]**
+7. Back on the API permissions page, click **Yes Grant admin consent for [Your Organization]**
 8. Confirm by clicking **Yes**
 
 <!-- Screenshot: API permissions page with AttackSimulation.Read.All and User.Read.All granted -->
 
-> ⚠️ **Admin consent** requires Global Administrator, Privileged Role Administrator, or Cloud Application Administrator. If you don't have this role, ask your admin to grant consent.
+> **Warning:** **Admin consent** requires Global Administrator, Privileged Role Administrator, or Cloud Application Administrator. If you don't have this role, ask your admin to grant consent.
 
 ### Verify Permissions
 
@@ -677,8 +677,8 @@ After granting consent, you should see:
 
 | Permission | Type | Status |
 |---|---|---|
-| AttackSimulation.Read.All | Application | ✅ Granted for [Your Organization] |
-| User.Read.All | Application | ✅ Granted for [Your Organization] |
+| AttackSimulation.Read.All | Application | Yes Granted for [Your Organization] |
+| User.Read.All | Application | Yes Granted for [Your Organization] |
 
 ### Create Client Secret
 
@@ -692,7 +692,7 @@ After granting consent, you should see:
 
 <!-- Screenshot: Client secrets page with newly created secret -->
 
-> ⚠️ **CRITICAL:** The secret value is only displayed **once**. If you navigate away without copying it, you must create a new one. The `Value` looks like: `aBc~dEf1G2h3I4j5K6l7M8n9...`
+> **Warning:** **CRITICAL:** The secret value is only displayed **once**. If you navigate away without copying it, you must create a new one. The `Value` looks like: `aBc~dEf1G2h3I4j5K6l7M8n9...`
 
 > **Save this value:**
 > - **Client Secret Value:** `aBc~dEf1G2h3...` (copy the full value)
@@ -745,11 +745,11 @@ Before you can create secrets, your own user account needs the **Key Vault Secre
 
 <!-- Screenshot: Key Vault secret creation page -->
 
-> ⚠️ **The secret name MUST be exactly `graph-client-secret`** — the function code looks for this specific name.
+> **Warning:** **The secret name MUST be exactly `graph-client-secret`** — the function code looks for this specific name.
 
 > **Checkpoint:** Navigate to Key Vault → Secrets. You should see `graph-client-secret` listed with status **Enabled**.
 
-> ⚠️ **ForbiddenByFirewall error?** If you receive a `ForbiddenByFirewall` error when creating the secret, your IP address is being blocked by the Key Vault firewall. To fix this temporarily:
+> **Warning:** **ForbiddenByFirewall error?** If you receive a `ForbiddenByFirewall` error when creating the secret, your IP address is being blocked by the Key Vault firewall. To fix this temporarily:
 > 1. Navigate to **Key vaults** → select your key vault → **Networking** (under Settings)
 > 2. Under **Firewall**, click **➕ Add your client IP address** (or manually enter your public IP)
 > 3. Click **Apply** and wait ~30 seconds
@@ -788,9 +788,9 @@ Add or verify each of the following settings. Click **➕ Add** for each new set
 | `AzureWebJobsStorage__queueServiceUri` | `https://mdoastfn2024prod.queue.core.windows.net` | Function storage queue endpoint |
 | `AzureWebJobsStorage__tableServiceUri` | `https://mdoastfn2024prod.table.core.windows.net` | Function storage table endpoint |
 
-> ⚠️ **Identity-based storage connection:** The `AzureWebJobsStorage__*` settings replace the traditional connection string approach. They tell Azure Functions to use the managed identity (configured in Step 10) instead of account keys.
+> **Warning:** **Identity-based storage connection:** The `AzureWebJobsStorage__*` settings replace the traditional connection string approach. They tell Azure Functions to use the managed identity (configured in Step 10) instead of account keys.
 
-> ⚠️ **If you see `AzureWebJobsStorage` (without suffix):** Delete the old `AzureWebJobsStorage` setting that contains a connection string, and replace it with the four `AzureWebJobsStorage__*` settings above.
+> **Warning:** **If you see `AzureWebJobsStorage` (without suffix):** Delete the old `AzureWebJobsStorage` setting that contains a connection string, and replace it with the four `AzureWebJobsStorage__*` settings above.
 
 ### Steps
 
@@ -887,7 +887,7 @@ function_app.zip
     └── security.py
 ```
 
-> ⚠️ **Important:** The ZIP must contain the files at the **root level** — do **not** include the `function_app/` directory itself. When you open the ZIP, you should see `function_app.py` directly, not a folder containing it.
+> **Warning:** **Important:** The ZIP must contain the files at the **root level** — do **not** include the `function_app/` directory itself. When you open the ZIP, you should see `function_app.py` directly, not a folder containing it.
 
 #### Deploy via Kudu
 
@@ -930,11 +930,11 @@ function_app.zip
 
 <!-- Screenshot: Function App Functions list showing all 5 functions -->
 
-> ⚠️ If no functions appear, wait 2–3 minutes for the deployment to complete. If they still don't appear, check the deployment logs (Deployment Center → Logs) for errors.
+> **Warning:** If no functions appear, wait 2–3 minutes for the deployment to complete. If they still don't appear, check the deployment logs (Deployment Center → Logs) for errors.
 
 ### 16b: Test the Health Endpoint
 
-> ⚠️ **Function key required:** All HTTP endpoints (`health`, `test_run`, `sync_status`, `reset_sync_state`) require a function key. To get the key:
+> **Warning:** **Function key required:** All HTTP endpoints (`health`, `test_run`, `sync_status`, `reset_sync_state`) require a function key. To get the key:
 > 1. Navigate to **Function App** → select your function app
 > 2. In the left menu, click **App Keys** (under Functions)
 > 3. Under **Function Keys**, copy the value of the `default` key
@@ -972,7 +972,7 @@ Alternatively:
 
 ### 16d: Verify Data in Storage
 
-> ⚠️ **Portal access requires Storage Blob Data Reader:** To browse container data in the Azure Portal (or connect from Power BI), your user account needs the **Storage Blob Data Reader** role:
+> **Warning:** **Portal access requires Storage Blob Data Reader:** To browse container data in the Azure Portal (or connect from Power BI), your user account needs the **Storage Blob Data Reader** role:
 > 1. Navigate to **Storage accounts** → select the **data lake** storage account (e.g., `mdoastdl2024prod`)
 > 2. In the left menu, click **Access Control (IAM)**
 > 3. Click **➕ Add** → **Add role assignment**
@@ -983,7 +983,7 @@ Alternatively:
 >
 > Repeat this for every user who will connect to the data lake from Power BI.
 
-> ⚠️ **Authorization errors browsing storage?** If you still get authorization errors after assigning the role, your IP address may be blocked by the storage firewall. To fix this temporarily:
+> **Warning:** **Authorization errors browsing storage?** If you still get authorization errors after assigning the role, your IP address may be blocked by the storage firewall. To fix this temporarily:
 > 1. Navigate to **Storage accounts** → select the data lake storage account → **Networking** (under Security + networking)
 > 2. Under **Firewall**, add your client IP address
 > 3. Click **Save** and wait ~30 seconds before retrying

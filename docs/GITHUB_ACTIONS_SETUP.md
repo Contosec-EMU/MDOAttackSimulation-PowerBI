@@ -136,8 +136,8 @@ git push
 2. Select **Deploy MDO Attack Simulation** workflow
 3. Click **Run workflow**
 4. Choose options:
-   - ✅ Force deploy infrastructure (deploys even without changes)
-   - ✅ Force deploy function code (deploys even without changes)
+   - Yes Force deploy infrastructure (deploys even without changes)
+   - Yes Force deploy function code (deploys even without changes)
 5. Click **Run workflow**
 
 ### Manual Trigger (via GitHub CLI)
@@ -190,7 +190,7 @@ KV_NAME="kv-mdoast-west"  # Update with actual name
 RESOURCE_GROUP="rg-mdo-attack-simulation"
 ```
 
-> 📝 **RBAC required:** You need `Key Vault Secrets Officer` on the vault before you can write secrets. If you get an "Access denied" or "Forbidden" error, grant yourself the role first:
+> **Note:** **RBAC required:** You need `Key Vault Secrets Officer` on the vault before you can write secrets. If you get an "Access denied" or "Forbidden" error, grant yourself the role first:
 >
 > ```bash
 > CURRENT_USER_ID=$(az ad signed-in-user show --query id -o tsv)
@@ -207,7 +207,7 @@ az keyvault secret set \
   --value "<your-graph-api-client-secret>"
 ```
 
-> ⚠️ **Firewall note:** The Key Vault is deployed with network rules that deny public access by default. If running from outside the VNet, temporarily add your IP: `az keyvault network-rule add --name "$KV_NAME" --ip-address "$(curl -s https://api.ipify.org)/32"`
+> **Warning:** **Firewall note:** The Key Vault is deployed with network rules that deny public access by default. If running from outside the VNet, temporarily add your IP: `az keyvault network-rule add --name "$KV_NAME" --ip-address "$(curl -s https://api.ipify.org)/32"`
 
 **Important**: This is the ONLY secret you need to manually store. The Function App retrieves it at runtime using its managed identity.
 
@@ -255,7 +255,7 @@ STORAGE_SCOPE=$(az storage account show --name "$DL_NAME" --resource-group "$RES
 az role assignment create --role "Storage Blob Data Reader" --assignee "$CURRENT_USER_ID" --scope "$STORAGE_SCOPE"
 ```
 
-> ⚠️ **Firewall note:** The storage account is deployed with network rules that deny public access by default. If running from outside the VNet, temporarily add your IP: `az storage account network-rule add --account-name "$DL_NAME" --ip-address "$(curl -s https://api.ipify.org)"`
+> **Warning:** **Firewall note:** The storage account is deployed with network rules that deny public access by default. If running from outside the VNet, temporarily add your IP: `az storage account network-rule add --account-name "$DL_NAME" --ip-address "$(curl -s https://api.ipify.org)"`
 
 ### View Logs in Azure
 
@@ -279,10 +279,10 @@ The workflow automatically detects which components changed:
 
 | Files Changed | Infrastructure Deploy | Code Deploy |
 |--------------|----------------------|-------------|
-| `infra/**` | ✅ Yes | ⏭️ No |
-| `src/**` | ⏭️ No | ✅ Yes |
-| `infra/**` + `src/**` | ✅ Yes | ✅ Yes (sequential) |
-| `README.md`, `docs/**` | ⏭️ No | ⏭️ No |
+| `infra/**` | Yes Yes | No |
+| `src/**` | No | Yes Yes |
+| `infra/**` + `src/**` | Yes Yes | Yes Yes (sequential) |
+| `README.md`, `docs/**` | No | No |
 
 ### Deployment Order
 
@@ -421,7 +421,7 @@ Add Slack/Teams notification step to workflow:
 - **Audit trail**: All deployments logged in Azure Activity Log and GitHub Actions
 - **Scoped credentials**: Federated credentials only work from specific GitHub repo/branch
 
-### ⚠️ Additional Recommendations
+### **Warning:** Additional Recommendations
 
 1. **Enable branch protection** on `main`:
    - Settings > Branches > Add rule

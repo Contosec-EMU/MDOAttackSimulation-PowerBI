@@ -166,7 +166,7 @@ Write-Host "Client Secret: $secret"
 Write-Host "Tenant ID: $(az account show --query tenantId -o tsv)"
 ```
 
-> ⚠️ **Save the Client Secret** — it is only shown once.
+> **Warning:** **Save the Client Secret** — it is only shown once.
 
 #### Step 2: Create a Resource Group
 
@@ -226,7 +226,7 @@ az keyvault secret set `
   --value "<YOUR_CLIENT_SECRET>"
 ```
 
-> ⚠️ **Firewall note:** The Key Vault is deployed with network rules that deny public access by default. If you are running this from outside the VNet (e.g., your local machine), you will get a `ForbiddenByFirewall` error. Temporarily add your IP to the Key Vault firewall:
+> **Warning:** **Firewall note:** The Key Vault is deployed with network rules that deny public access by default. If you are running this from outside the VNet (e.g., your local machine), you will get a `ForbiddenByFirewall` error. Temporarily add your IP to the Key Vault firewall:
 >
 > ```powershell
 > # Add your current public IP to the Key Vault firewall
@@ -276,7 +276,7 @@ az storage fs file list `
   --recursive --auth-mode login
 ```
 
-> ⚠️ **Storage firewall note:** The ADLS Gen2 storage account is deployed with network rules that deny public access by default. If you are listing or browsing files from outside the VNet, you will get an authorization error. To verify data from your local machine, temporarily add your IP:
+> **Warning:** **Storage firewall note:** The ADLS Gen2 storage account is deployed with network rules that deny public access by default. If you are listing or browsing files from outside the VNet, you will get an authorization error. To verify data from your local machine, temporarily add your IP:
 >
 > ```powershell
 > $MY_IP = (Invoke-RestMethod -Uri "https://api.ipify.org")
@@ -312,10 +312,10 @@ All configuration is via environment variables (set in Bicep or Function App Set
 
 | Variable | Required | Default | Description |
 |----------|----------|---------|-------------|
-| `TENANT_ID` | ✅ | — | Entra ID tenant ID |
-| `GRAPH_CLIENT_ID` | ✅ | — | App registration client ID |
-| `KEY_VAULT_URL` | ✅ | — | Key Vault URL (`https://<name>.vault.azure.net/`) |
-| `STORAGE_ACCOUNT_URL` | ✅ | — | ADLS Gen2 URL (`https://<name>.dfs.core.windows.net/`) |
+| `TENANT_ID` | Yes | — | Entra ID tenant ID |
+| `GRAPH_CLIENT_ID` | Yes | — | App registration client ID |
+| `KEY_VAULT_URL` | Yes | — | Key Vault URL (`https://<name>.vault.azure.net/`) |
+| `STORAGE_ACCOUNT_URL` | Yes | — | ADLS Gen2 URL (`https://<name>.dfs.core.windows.net/`) |
 | `TIMER_SCHEDULE` | | `0 0 * * * *` | CRON schedule (6-field Azure Functions format) |
 | `SYNC_MODE` | | `full` | `full` or `incremental` (7-day lookback) |
 | `SYNC_SIMULATIONS` | | `true` | Enable extended endpoints (simulations, users, trainings, payloads) |
@@ -571,16 +571,16 @@ exceptions
 
 This solution follows Azure security best practices:
 
-- ✅ **No secrets in code** — Graph API client secret stored securely in Key Vault
-- ✅ **Managed Identity** — Function authenticates to Key Vault and Storage without stored credentials; Key Vault is used to securely retrieve the Graph API client secret for OAuth2 authentication
-- ✅ **RBAC least privilege** — `Storage Blob Data Contributor` and `Key Vault Secrets User` only
-- ✅ **Network isolation** — Key Vault and Storage deny public access by default, allow Azure services only
-- ✅ **Input sanitization** — All API response strings are sanitized (max 1,000 chars, trimmed)
-- ✅ **Security headers** — All HTTP responses include `X-Content-Type-Options`, `X-Frame-Options`, `Content-Security-Policy`, `Strict-Transport-Security`
-- ✅ **Sanitized error messages** — HTTP responses expose correlation IDs, not internal error details
-- ✅ **HTTPS-only** — TLS 1.2 minimum enforced on all Azure resources
-- ✅ **90-day log retention** — Configured in Log Analytics for audit compliance
-- ✅ **Application permissions** — Uses app-only auth (not delegated) for unattended execution
+- Yes **No secrets in code** — Graph API client secret stored securely in Key Vault
+- Yes **Managed Identity** — Function authenticates to Key Vault and Storage without stored credentials; Key Vault is used to securely retrieve the Graph API client secret for OAuth2 authentication
+- Yes **RBAC least privilege** — `Storage Blob Data Contributor` and `Key Vault Secrets User` only
+- Yes **Network isolation** — Key Vault and Storage deny public access by default, allow Azure services only
+- Yes **Input sanitization** — All API response strings are sanitized (max 1,000 chars, trimmed)
+- Yes **Security headers** — All HTTP responses include `X-Content-Type-Options`, `X-Frame-Options`, `Content-Security-Policy`, `Strict-Transport-Security`
+- Yes **Sanitized error messages** — HTTP responses expose correlation IDs, not internal error details
+- Yes **HTTPS-only** — TLS 1.2 minimum enforced on all Azure resources
+- Yes **90-day log retention** — Configured in Log Analytics for audit compliance
+- Yes **Application permissions** — Uses app-only auth (not delegated) for unattended execution
 
 To report a security vulnerability, please open a private issue or contact the maintainers directly.
 

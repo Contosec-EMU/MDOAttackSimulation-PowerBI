@@ -35,7 +35,7 @@ When prompted (or via **Transform data > Edit parameters**):
 | **StorageAccountUrl** | Your ADLS Gen2 **DFS** endpoint URL | `https://mdoastdlxyz.dfs.core.windows.net` |
 | **ContainerName** | Container with curated Parquet files | `curated` |
 
-> ⚠️ **Important:** Use the **DFS** endpoint (`.dfs.core.windows.net`), **not** the Blob endpoint (`.blob.core.windows.net`). The Blob endpoint will return a 400 error.
+> **Warning:** **Important:** Use the **DFS** endpoint (`.dfs.core.windows.net`), **not** the Blob endpoint (`.blob.core.windows.net`). The Blob endpoint will return a 400 error.
 
 Click **OK**, then **Apply Changes**.
 

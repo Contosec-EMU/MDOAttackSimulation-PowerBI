@@ -58,11 +58,13 @@ Click **Home > Refresh** to load data from your storage account.
 
 | Page | Description | Key Visuals |
 |------|-------------|-------------|
-| **Executive Dashboard** | High-level KPIs for security leadership | Compromise Rate, Training Completion, Repeat Offenders, Monthly Trend |
-| **Simulation Analysis** | Per-simulation performance metrics | Simulation details table, compromise rates by campaign, user outcomes |
-| **User Risk Profile** | Identify high-risk users and departments | Department risk scores, user scatter plot, compromise timeline |
-| **Training Compliance** | Training assignment and completion tracking | Completion rate, status by department, overdue users |
-| **Payload Effectiveness** | Attack technique and payload analysis | Predicted vs actual rates, payload treemap, complexity scatter |
+| **Organization Overview** | High-level snapshot of overall phishing simulation performance | Simulation Count, Compromise Rate, Phish Report Rate, User Response Distribution |
+| **Department Overview** | Break down simulation performance by department | Department slicer, Department Performance Summary, Dept Trends |
+| **Improving Submissions** | Analyze email handling behavior — reads, deletes, and reporting | Email Read/Deleted Count, Submission behavior over time |
+| **Executive Dashboard** | C-level KPIs with date-filterable trends | Compromise Rate, Training Completion, Repeat Offenders, Attack Technique Donut |
+| **Simulation Analysis** | Per-simulation performance metrics | Simulation details table, Click Rate, compromise rates by campaign |
+| **User Risk Profile** | Identify high-risk users across simulations | User details table, event timeline, Compromise Rate, User Reported Rate |
+| **Training Compliance** | Training assignment and completion tracking | Completion rate, Avg Training Duration, Training list |
 
 ## Interactive Filters
 
@@ -148,7 +150,7 @@ reports/
 │   └── definition/
 │       ├── report.json                         # Theme and report settings
 │       ├── version.json                        # Format version
-│       └── pages/                              # 5 report pages with visuals
+│       └── pages/                              # 7 report pages with visuals
 │           ├── pages.json                      # Page order
 │           ├── {pageId}/page.json              # Page definition
 │           └── {pageId}/visuals/{id}/visual.json

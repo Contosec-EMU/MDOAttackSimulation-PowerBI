@@ -778,7 +778,7 @@ Add or verify each of the following settings. Click **➕ Add** for each new set
 | `GRAPH_CLIENT_ID` | `xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx` | App Registration Application (client) ID from Step 12 |
 | `KEY_VAULT_URL` | `https://mdoast-kv-2024prod.vault.azure.net/` | Key Vault URI from Step 7 (must start with `https://`) |
 | `STORAGE_ACCOUNT_URL` | `https://mdoastdl2024prod.dfs.core.windows.net` | Data Lake DFS endpoint from Step 6 (must start with `https://`, use `.dfs.` not `.blob.`) |
-| `TIMER_SCHEDULE` | `0 0 2 * * *` | CRON schedule: daily at 2:00 AM UTC |
+| `TIMER_SCHEDULE` | `0 0 * * * *` | CRON schedule: every hour at :00 UTC |
 | `SYNC_MODE` | `full` | `full` = fetch all data each run; `incremental` = 7-day lookback |
 | `SYNC_SIMULATIONS` | `true` | `true` = sync simulation details (extended endpoints); `false` = core only |
 | `FUNCTIONS_EXTENSION_VERSION` | `~4` | Should already exist; verify it's `~4` |
@@ -818,6 +818,7 @@ The `TIMER_SCHEDULE` uses Azure Functions CRON format: `{second} {minute} {hour}
 
 | Schedule | CRON Expression |
 |----------|----------------|
+| Every hour at :00 UTC (default) | `0 0 * * * *` |
 | Daily at 2:00 AM UTC | `0 0 2 * * *` |
 | Every 6 hours | `0 0 */6 * * *` |
 | Weekdays at 9:30 AM UTC | `0 30 9 * * 1-5` |

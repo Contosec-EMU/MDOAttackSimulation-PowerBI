@@ -160,23 +160,6 @@ Microsoft Graph API  →  Azure Function (Python)  →  ADLS Gen2 (Parquet)  →
 
 ---
 
-## Page 8: Payload Effectiveness
-
-**Purpose**: Analyze which phishing payload types and techniques are most effective at compromising users.
-
-### Visuals
-
-| Visual | Type | Measure / Data | Source Table | API |
-|---|---|---|---|---|
-| Payload table | Table | Payload names, types, predicted compromise rates | payloads | beta payloads |
-| Actual vs Predicted Variance | Card | Actual compromise rate − `predictedCompromiseRate` | simulations + payloads | beta |
-| Predicted Compromise Rate | Chart | Distribution of predicted rates across payloads | payloads | beta payloads |
-| Payload type breakdown | Chart | Performance by technique/theme | payloads + simulations | beta |
-
-**Key insight**: `payloads.predictedCompromiseRate` is a `double` (0.0–1.0) representing Microsoft's predicted compromise rate based on payload characteristics. Comparing actual vs. predicted reveals whether your organization is more or less susceptible than average. Payloads connect to simulations via `payloadId`.
-
----
-
 ## Data Model Relationships
 
 ```
@@ -213,4 +196,4 @@ When a date slicer on `simulations.launchDateTime` needs to affect measures from
 
 ## Refresh Cadence
 
-The Azure Function runs on an hourly timer trigger (`:00` each hour). Data is written to ADLS Gen2 in Parquet format with date-partitioned paths (`curated/{table}/YYYY/MM/DD/`). Power BI connects to the ADLS storage account to read the latest Parquet files.
+The Azure Function runs on an hourly timer trigger (`:00` each hour). Data is written to ADLS Gen2 in Parquet format with date-partitioned paths (`curated/{table}/YYYY-MM-DD/`). Power BI connects to the ADLS storage account to read the latest Parquet files.

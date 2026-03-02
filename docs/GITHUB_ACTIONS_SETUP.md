@@ -108,7 +108,7 @@ param graphClientId = 'your-graph-app-id'   // Your Graph API app registration I
 // Optional: Customize if needed
 param prefix = 'mdoast'                     // Resource name prefix
 param location = 'westus2'                  // Azure region
-param timerSchedule = '0 0 2 * * *'        // Daily at 2 AM UTC
+param timerSchedule = '0 0 * * * *'        // Every hour at :00 UTC
 ```
 
 Commit any changes:

@@ -2,7 +2,7 @@
 
 Connect Power BI to Azure Data Lake Storage Gen2 (ADLS Gen2) Parquet files ingested by the MDO Attack Simulation Training pipeline.
 
-> **Data Pipeline**: Azure Function (daily at 2:00 AM UTC) → Microsoft Graph API → ADLS Gen2 Parquet → **Power BI**
+> **Data Pipeline**: Azure Function (every hour at :00 UTC) → Microsoft Graph API → ADLS Gen2 Parquet → **Power BI**
 
 ---
 
@@ -809,15 +809,15 @@ RETURN
 
 1. Go to your **Semantic model** → **Settings** → **Refresh**
 2. Turn on **Keep your data up to date**
-3. Set **Refresh frequency**: Daily
-4. Set **Time**: **3:00 AM UTC** (1 hour after the Azure Function runs at 2:00 AM UTC)
+3. Set **Refresh frequency**: Daily (or more frequently to match your needs)
+4. Set **Time**: Choose a time that suits your reporting cadence (the Azure Function ingests fresh data every hour by default)
 5. Configure a secondary time slot if desired (e.g., 12:00 PM UTC for mid-day refresh)
 6. Add your email to **Send refresh failure notifications to**
 7. Click **Apply**
 
-<!-- Screenshot: Scheduled refresh configuration showing daily at 3:00 AM UTC -->
+<!-- Screenshot: Scheduled refresh configuration -->
 
-> **Why 3:00 AM?** The Azure Function ingests data at 2:00 AM UTC. Adding a 1-hour buffer ensures all Parquet files are fully written before Power BI reads them.
+> **Tip:** The Azure Function ingests data every hour at :00 by default. A daily Power BI refresh is sufficient for most organizations, but you can increase the frequency if needed.
 
 ### On-Premises Data Gateway
 

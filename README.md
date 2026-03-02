@@ -69,7 +69,7 @@ This solution bridges that gap by automatically syncing simulation data into you
 
 **Data flow:**
 
-1. Timer trigger fires on schedule (default: daily 2:00 AM UTC)
+1. Timer trigger fires on schedule (default: every hour at :00 UTC)
 2. Function authenticates via Managed Identity → Key Vault → OAuth2 client credentials
 3. Paginates through 9 Microsoft Graph API endpoints with retry + exponential backoff
 4. Writes Parquet (curated) and JSON (raw archive) to ADLS Gen2, date-partitioned
@@ -310,7 +310,7 @@ All configuration is via environment variables (set in Bicep or Function App Set
 | `GRAPH_CLIENT_ID` | ✅ | — | App registration client ID |
 | `KEY_VAULT_URL` | ✅ | — | Key Vault URL (`https://<name>.vault.azure.net/`) |
 | `STORAGE_ACCOUNT_URL` | ✅ | — | ADLS Gen2 URL (`https://<name>.dfs.core.windows.net/`) |
-| `TIMER_SCHEDULE` | | `0 0 2 * * *` | CRON schedule (6-field Azure Functions format) |
+| `TIMER_SCHEDULE` | | `0 0 * * * *` | CRON schedule (6-field Azure Functions format) |
 | `SYNC_MODE` | | `full` | `full` or `incremental` (7-day lookback) |
 | `SYNC_SIMULATIONS` | | `true` | Enable extended endpoints (simulations, users, trainings, payloads) |
 
@@ -324,7 +324,7 @@ The Bicep template accepts a `networkIsolation` parameter (`"none"` or `"private
 {second} {minute} {hour} {day} {month} {day-of-week}
 
 Examples:
-  0 0 2 * * *     = Daily at 2:00 AM UTC
+  0 0 * * * *     = Every hour at :00 (default)
   0 0 */6 * * *   = Every 6 hours
   0 30 9 * * 1-5  = Weekdays at 9:30 AM UTC
   0 0 0 1 * *     = First day of each month at midnight
@@ -334,7 +334,7 @@ Examples:
 
 ### Pre-Built Report Templates (Recommended)
 
-This repository includes ready-to-use Power BI report templates in the [`reports/`](reports/) folder with 5 dashboard pages, 12 DAX measures, and all table relationships pre-configured. These are **basic starter templates** — the authors are security engineers, not data visualization designers — so you are encouraged to customize them to fit your organization's needs.
+This repository includes ready-to-use Power BI report templates in the [`reports/`](reports/) folder with 7 dashboard pages, 28 DAX measures, and all table relationships pre-configured. These are **basic starter templates** — the authors are security engineers, not data visualization designers — so you are encouraged to customize them to fit your organization's needs.
 
 1. Open **Power BI Desktop** (March 2024+) with Developer Mode enabled
 2. In **File Explorer**, double-click `reports/MDOAttackSimulation.pbip` (or open from Power BI Desktop via **File > Open report**)
@@ -373,7 +373,7 @@ in
 1. **Publish** the report to Power BI Service
 2. Go to **Dataset Settings** → **Scheduled Refresh**
 3. Configure credentials using OAuth2 with your organizational account
-4. Set the refresh schedule to run **1 hour after** the Function timer (e.g., 3:00 AM if the Function runs at 2:00 AM)
+4. Set the refresh schedule (e.g., every 3 hours, or daily at a time that suits your reporting needs — the Function ingests fresh data every hour by default)
 5. Enable scheduled refresh
 
 > **Tip**: For Power BI Pro without Premium, you may need an [On-Premises Data Gateway](https://learn.microsoft.com/en-us/power-bi/connect-data/service-gateway-onprem) to access ADLS Gen2.
@@ -394,8 +394,8 @@ MDOAttackSimulation_PowerBI/
 │   └── main.bicepparam.example # Example parameters (safe to commit)
 ├── reports/                    # Power BI report templates (PBIR format)
 │   ├── MDOAttackSimulation.pbip
-│   ├── MDOAttackSimulation.Report/    # 5 report pages, 30 visuals
-│   └── MDOAttackSimulation.SemanticModel/  # 9 tables, 12 DAX measures
+│   ├── MDOAttackSimulation.Report/    # 7 report pages, 63 visuals
+│   └── MDOAttackSimulation.SemanticModel/  # 9 tables, 28 DAX measures
 ├── scripts/
 │   ├── create-app-registration.ps1
 │   ├── deploy.ps1              # PowerShell deployment script
@@ -505,7 +505,7 @@ exceptions
 
 | Endpoint | Method | Auth | Description |
 |----------|--------|------|-------------|
-| `/api/health` | GET | Anonymous | Health check |
+| `/api/health` | GET | Function key | Health check |
 | `/api/test-run` | POST | Function key | Manual trigger |
 | `/api/sync-status` | GET | Function key | View sync configuration and state |
 | `/api/reset-sync-state` | POST | Function key | Reset state to force full sync |

@@ -49,7 +49,7 @@ Edit `infra/main.bicepparam` and update the required parameters:
 ```bicep
 param tenantId = '<YOUR_ENTRA_ID_TENANT_ID>'
 param graphClientId = '<YOUR_APP_REGISTRATION_CLIENT_ID>'
-param timerSchedule = '0 0 2 * * *'   // Daily at 2:00 AM UTC
+param timerSchedule = '0 0 * * * *'   // Every hour at :00 UTC
 param syncMode = 'full'                // 'full' or 'incremental'
 param syncSimulations = true           // Set false to skip simulation details
 ```
@@ -85,6 +85,12 @@ az ad app permission add \
   --id "$APP_ID" \
   --api 00000003-0000-0000-c000-000000000000 \
   --api-permissions 93283d0a-6322-4fa8-966b-8c121624760d=Role
+
+#   User.Read.All = df021288-bdef-4463-88db-98f22de89214
+az ad app permission add \
+  --id "$APP_ID" \
+  --api 00000003-0000-0000-c000-000000000000 \
+  --api-permissions df021288-bdef-4463-88db-98f22de89214=Role
 
 # Grant admin consent (requires Global Admin or Privileged Role Admin)
 az ad app permission admin-consent --id "$APP_ID"
@@ -127,6 +133,12 @@ az ad app permission add `
   --id $APP_ID `
   --api 00000003-0000-0000-c000-000000000000 `
   --api-permissions 93283d0a-6322-4fa8-966b-8c121624760d=Role
+
+#   User.Read.All = df021288-bdef-4463-88db-98f22de89214
+az ad app permission add `
+  --id $APP_ID `
+  --api 00000003-0000-0000-c000-000000000000 `
+  --api-permissions df021288-bdef-4463-88db-98f22de89214=Role
 
 # Grant admin consent (requires Global Admin or Privileged Role Admin)
 az ad app permission admin-consent --id $APP_ID
@@ -769,7 +781,7 @@ az ad app delete --id $APP_ID
 | `location` | Resource group location | Azure region |
 | `tenantId` | *(required)* | Entra ID tenant ID |
 | `graphClientId` | *(required)* | App registration client ID |
-| `timerSchedule` | `0 0 2 * * *` | CRON schedule (daily 2 AM UTC) |
+| `timerSchedule` | `0 0 * * * *` | CRON schedule (every hour at :00 UTC) |
 | `syncMode` | `full` | `full` or `incremental` |
 | `syncSimulations` | `true` | Sync simulation details |
 | `enablePowerBiAccess` | `true` | Allow Power BI to access ADLS Gen2 |

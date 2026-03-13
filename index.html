@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bringing Microsoft Defender Attack Simulation Data to Power BI</title>
+    <meta name="description" content="An open-source Azure pipeline that brings Microsoft Defender for Office 365 attack simulation data into Power BI for custom reporting and analytics.">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif;
+            color: #1a1a1a;
+            line-height: 1.75;
+            -webkit-font-smoothing: antialiased;
+            background: #fff;
+            font-size: 16px;
+        }
+
+        /* Sticky top bar */
+        .topbar {
+            background: #000;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            padding: 8px 24px;
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+        }
+        .topbar-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 16px;
+            background: transparent;
+            color: #fff !important;
+            border: 1px solid #444;
+            border-radius: 4px;
+            font-size: 13px;
+            font-weight: 600;
+            text-decoration: none;
+        }
+        .topbar-link:hover { background: #222; border-color: #666; text-decoration: none; }
+        .topbar-link svg { fill: #fff; }
+
+        /* Hero banner */
+        .hero {
+            background: linear-gradient(135deg, #1e304f 0%, #263e65 50%, #2a446f 100%);
+            padding: 48px 24px 44px;
+            color: #fff;
+        }
+        .hero-inner {
+            max-width: 720px;
+            margin: 0 auto;
+            position: relative;
+        }
+        .hero-label {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: #8fabc8;
+            margin-bottom: 16px;
+            font-weight: 600;
+        }
+        .hero h1 {
+            font-size: 34px;
+            font-weight: 600;
+            line-height: 1.25;
+            color: #fff;
+            margin-bottom: 20px;
+        }
+        .hero .meta {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 14px;
+            color: #b0c4de;
+            margin-bottom: 2px;
+        }
+        .hero .meta-author {
+            font-weight: 600;
+            color: #fff;
+            text-decoration: none;
+        }
+        .hero .meta-author:hover { text-decoration: underline; color: #fff; }
+        .hero .meta-sep { color: #5a7a9e; }
+        .hero .meta-role {
+            font-size: 13px;
+            color: #8fabc8;
+            margin-top: 0;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .hero .meta-role .ms-logo {
+            width: 16px;
+            height: 16px;
+            vertical-align: middle;
+        }
+
+        /* Article container */
+        .article {
+            max-width: 720px;
+            margin: 0 auto;
+            padding: 32px 24px 60px;
+        }
+
+        /* Content */
+        .article h2 {
+            font-size: 24px;
+            font-weight: 600;
+            color: #1a1a1a;
+            margin: 36px 0 16px;
+        }
+        .article h3 {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1a1a1a;
+            margin: 28px 0 12px;
+        }
+        .article p {
+            margin-bottom: 16px;
+            color: #1a1a1a;
+        }
+        .article ul, .article ol {
+            margin: 0 0 16px 24px;
+        }
+        .article li {
+            margin-bottom: 8px;
+        }
+        .article a {
+            color: #2a446f;
+            text-decoration: none;
+        }
+        .article a:hover { text-decoration: underline; }
+        .article code {
+            background: #f5f5f5;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 14px;
+            font-family: 'Cascadia Code', 'Consolas', monospace;
+        }
+        .article strong { font-weight: 600; }
+
+        /* Note callout */
+        .note {
+            background: #eef2f7;
+            border-left: 3px solid #2a446f;
+            padding: 16px 20px;
+            margin: 20px 0;
+            font-size: 15px;
+        }
+        .note p { margin-bottom: 0; }
+
+        /* Diagram */
+        .diagram {
+            background: #f5f5f5;
+            border: none;
+            border-radius: 16px;
+            padding: 40px 24px;
+            margin: 28px 0;
+            overflow: hidden;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+        }
+        .flow {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0;
+            flex-wrap: nowrap;
+        }
+        .flow-node {
+            background: #fff;
+            border-radius: 6px;
+            padding: 14px 8px;
+            text-align: center;
+            width: 120px;
+            min-width: 100px;
+            height: 130px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border-top: 3px solid #d1d1d1;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+            flex-shrink: 1;
+            overflow: hidden;
+        }
+        .flow-node-graph { border-top-color: #76bc2d; }
+        .flow-node-func { border-top-color: #ffd70f; }
+        .flow-node-storage { border-top-color: #37c2b1; }
+        .flow-node-pbi { border-top-color: #e6ad10; }
+        .flow-node-icon {
+            width: 36px;
+            height: 36px;
+            margin-bottom: 8px;
+        }
+        .flow-node-icon svg {
+            width: 36px;
+            height: 36px;
+        }
+        .flow-node-label {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #767676;
+            margin-bottom: 2px;
+        }
+        .flow-node-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #1a1a1a;
+        }
+        .flow-node-detail {
+            font-size: 12px;
+            color: #767676;
+        }
+        .flow-arrow {
+            font-size: 18px;
+            padding: 0 10px;
+            flex-shrink: 0;
+        }
+        .flow-arrow svg {
+            width: 28px;
+            height: 28px;
+        }
+
+        /* Screenshot gallery */
+        .gallery {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin: 24px 0;
+        }
+        .gallery-item {
+            position: relative;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            cursor: pointer;
+            transition: box-shadow 0.2s ease, transform 0.2s ease;
+        }
+        .gallery-item:hover {
+            box-shadow: 0 4px 16px rgba(0,0,0,0.18);
+            transform: translateY(-2px);
+        }
+        .gallery-item img {
+            width: 100%;
+            display: block;
+        }
+        .gallery-caption {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(transparent, rgba(0,0,0,0.7));
+            color: #fff;
+            padding: 24px 12px 10px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+        .gallery-item-wide {
+            grid-column: 1 / -1;
+        }
+        .gallery-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.85);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+        .gallery-overlay.active { display: flex; }
+        .gallery-overlay img {
+            max-width: 92%;
+            max-height: 92vh;
+            border-radius: 8px;
+            box-shadow: 0 4px 32px rgba(0,0,0,0.5);
+        }
+
+        /* Table */
+        .table-wrap {
+            overflow-x: auto;
+            margin: 20px 0;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+        th {
+            text-align: left;
+            padding: 10px 12px;
+            background: #fafafa;
+            border-bottom: 2px solid #e5e5e5;
+            font-weight: 600;
+            color: #1a1a1a;
+        }
+        td {
+            padding: 10px 12px;
+            border-bottom: 1px solid #e5e5e5;
+            color: #1a1a1a;
+        }
+        .tag {
+            display: inline-block;
+            padding: 1px 8px;
+            border-radius: 3px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .tag-stable { background: #e6f4ea; color: #1e7e34; }
+        .tag-beta { background: #fff3cd; color: #856404; }
+
+        /* Steps */
+        .steps {
+            counter-reset: steps;
+            margin: 20px 0;
+        }
+        .step-item {
+            display: flex;
+            gap: 16px;
+            padding: 12px 0;
+            border-bottom: 1px solid #f0f0f0;
+            counter-increment: steps;
+        }
+        .step-item:last-child { border-bottom: none; }
+        .step-num::before {
+            content: counter(steps);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            background: #2a446f;
+            color: #fff;
+            font-size: 13px;
+            font-weight: 600;
+        }
+        .step-num { flex-shrink: 0; }
+        .step-text h4 {
+            font-size: 15px;
+            font-weight: 600;
+            margin-bottom: 2px;
+        }
+        .step-text p {
+            font-size: 14px;
+            color: #616161;
+            margin-bottom: 0;
+        }
+
+        /* Tags row */
+        .tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin: 16px 0;
+        }
+        .tech-tag {
+            padding: 4px 10px;
+            border-radius: 3px;
+            background: #f5f5f5;
+            font-size: 13px;
+            color: #424242;
+        }
+
+        /* CTA box */
+        .cta {
+            background: #fafafa;
+            border: 1px solid #e5e5e5;
+            border-radius: 4px;
+            padding: 28px;
+            text-align: center;
+            margin: 36px 0;
+        }
+        .cta h3 { margin: 0 0 8px; font-size: 18px; }
+        .cta p { font-size: 14px; color: #616161; margin-bottom: 16px; }
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            background: #2a446f;
+            color: #fff !important;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: 600;
+            text-decoration: none;
+        }
+        .btn:hover { background: #1e304f; color: #fff !important; text-decoration: none; }
+        .btn svg { fill: #fff; }
+
+        /* Disclaimer */
+        .disclaimer {
+            background: #fafafa;
+            border: 1px solid #e5e5e5;
+            border-radius: 4px;
+            padding: 16px 20px;
+            margin: 28px 0;
+            font-size: 13px;
+            color: #616161;
+            line-height: 1.6;
+        }
+
+        /* Footer */
+        .footer {
+            border-top: 1px solid #e5e5e5;
+            padding: 20px 24px;
+            text-align: center;
+            font-size: 13px;
+            color: #767676;
+        }
+        .footer a { color: #2a446f; text-decoration: none; }
+        .footer a:hover { text-decoration: underline; }
+
+        @media (max-width: 768px) {
+            .hero h1 { font-size: 24px; }
+            .article { padding: 24px 16px 40px; }
+            .flow { flex-direction: column; min-width: auto; }
+            .flow-arrow { transform: rotate(90deg); }
+            .flow-arrow svg { width: 24px; height: 24px; }
+            .gallery { grid-template-columns: 1fr; }
+            .gallery-item-wide { grid-column: auto; }
+        }
+
+        @media (prefers-color-scheme: dark) {
+            body { background: #1a1a1a; color: #e0e0e0; }
+            .article h2, .article h3 { color: #e0e0e0; }
+            .article p { color: #d0d0d0; }
+            .article a { color: #7eb8e0; }
+            .article strong { color: #e0e0e0; }
+            .article code { background: #2a2a2a; color: #d0d0d0; }
+            .disclaimer { background: #222; border-color: #333; color: #aaa; }
+            .disclaimer strong { color: #d0d0d0; }
+            .diagram { background: #222; border-color: #333; box-shadow: 0 2px 12px rgba(0,0,0,0.3); }
+            .flow-node { background: #2a2a2a; box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
+            .flow-node-label { color: #999; }
+            .flow-node-title { color: #e0e0e0; }
+            .flow-node-detail { color: #999; }
+            th { background: #222; border-bottom-color: #444; color: #e0e0e0; }
+            td { border-bottom-color: #333; color: #d0d0d0; }
+            .tag-stable { background: #1a3a24; color: #6fcf7f; }
+            .tag-beta { background: #3a3018; color: #e8c84a; }
+            .step-item { border-bottom-color: #333; }
+            .step-text h4 { color: #e0e0e0; }
+            .step-text p { color: #999; }
+            .tech-tag { background: #2a2a2a; color: #bbb; }
+            .note { background: #1a2233; border-left-color: #3a6a9f; }
+            .note p { color: #d0d0d0; }
+            .cta { background: #222; border-color: #333; }
+            .cta h3 { color: #e0e0e0; }
+            .cta p { color: #999; }
+            .gallery-item { box-shadow: 0 2px 8px rgba(0,0,0,0.3); }
+            .gallery-item:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.4); }
+            .btn { background: #3a5a8f; }
+            .btn:hover { background: #2a446f; }
+            .footer { border-top-color: #333; color: #777; }
+            .footer a { color: #7eb8e0; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="topbar">
+        <a href="https://github.com/Contosec-EMU/MDOAttackSimulation-PowerBI" class="topbar-link" target="_blank"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg> View on GitHub</a>
+    </div>
+
+    <div class="hero">
+        <div class="hero-inner">
+            <div class="hero-label">Community Project</div>
+            <h1>Bringing Microsoft Defender Attack Simulation Data to Power BI</h1>
+            <div class="meta">
+                <a href="https://github.com/carlossuarez-msft" class="meta-author" target="_blank">Carlos Suarez</a>
+                <span class="meta-sep">|</span>
+                <span>March 2026</span>
+            </div>
+            <div class="meta-role">Senior Security Solution Engineer at <svg class="ms-logo" viewBox="0 0 21 21" xmlns="http://www.w3.org/2000/svg"><rect x="1" y="1" width="9" height="9" fill="#f25022"/><rect x="11" y="1" width="9" height="9" fill="#7fba00"/><rect x="1" y="11" width="9" height="9" fill="#00a4ef"/><rect x="11" y="11" width="9" height="9" fill="#ffb900"/></svg> Microsoft</div>
+        </div>
+    </div>
+
+    <article class="article">
+
+        <div class="disclaimer">
+            <strong>Disclaimer:</strong> This is a personal open-source project. Not an official Microsoft product or supported by Microsoft. Use at your own risk.
+        </div>
+
+        <p>Microsoft Defender for Office 365 includes a solid set of built-in reports for Attack Simulation.The portal gives you simulation coverage, training completion rates, repeat offender tracking, and even a predicted compromise rate based on historical Microsoft 365 data. For day-to-day operations, these reports cover a lot of ground.</p>
+
+        <p>Where it gets harder is when you need to take that data somewhere else. Maybe you need to build a consolidated security dashboard that combines attack simulation metrics with other security signals. Maybe your CISO wants phishing resilience trends broken down by department, business unit, or geography over the last twelve months. Or your compliance team needs to correlate training completion with specific simulation campaigns in a format they can audit independently.</p>
+
+        <p>The built-in reports weren't designed for that level of customization. The data is there, but it's locked inside the Defender XDR portal. Exporting CSVs works for one-off analysis, but it breaks down when you're running monthly campaigns across thousands of users and need the data to stay current.</p>
+
+        <p>This project bridges that gap. It pulls the simulation data out through the Microsoft Graph API and lands it in Power BI, where you can build whatever reporting your organization needs.</p>
+
+        <h2>What it does</h2>
+
+        <p>It's an automated pipeline that pulls attack simulation data from the Microsoft Graph API, transforms it, and writes it as Parquet files to Azure Data Lake Storage Gen2. Power BI reads those files on a scheduled refresh. Once it's set up, the data flows without any manual steps.</p>
+
+        <div class="diagram">
+            <div class="flow">
+                <div class="flow-node flow-node-graph">
+                    <div class="flow-node-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 18 18"><defs><linearGradient id="def-gr" x1="9" y1="16.795" x2="9" y2="1.205" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#5e9624"/><stop offset=".321" stop-color="#639d26"/><stop offset=".794" stop-color="#6fb12a"/><stop offset="1" stop-color="#76bc2d"/></linearGradient></defs><path d="M16.083,8.438c0,4.571-5.626,8.25-6.85,9a.449.449,0,0,1-.466,0c-1.224-.747-6.85-4.426-6.85-9v-5.5A.44.44,0,0,1,2.351,2.5C6.728,2.386,5.72.5,9,.5s2.272,1.886,6.649,2a.44.44,0,0,1,.434.435Z" fill="#76bc2d"/><path d="M15.5,8.485c0,4.191-5.16,7.566-6.282,8.25a.412.412,0,0,1-.428,0C7.664,16.051,2.5,12.676,2.5,8.485V3.441a.4.4,0,0,1,.4-.4C6.916,2.935,5.992,1.205,9,1.205s2.084,1.73,6.1,1.837a.4.4,0,0,1,.4.4Z" fill="url(#def-gr)"/><path d="M11.853,7.66h-.408l0-1.417a2.652,2.652,0,0,0-.7-1.809,2.358,2.358,0,0,0-3.483,0,2.606,2.606,0,0,0-.7,1.808V7.66H6.147a.328.328,0,0,0-.326.32v3.682a.329.329,0,0,0,.326.32h5.706a.329.329,0,0,0,.326-.32V7.98A.328.328,0,0,0,11.853,7.66Zm-1.549,0H7.7V6.219a1.434,1.434,0,0,1,.41-.99,1.2,1.2,0,0,1,1.788,0,1.394,1.394,0,0,1,.153.2h0a1.445,1.445,0,0,1,.258.791Z" fill="#fff"/></svg>
+                    </div>
+                    <div class="flow-node-label">Source</div>
+                    <div class="flow-node-title">Defender</div>
+                    <div class="flow-node-detail">9 Graph endpoints</div>
+                </div>
+                <div class="flow-arrow">
+                    <svg viewBox="0 0 28 28" fill="none"><path d="M6 14h16m0 0l-5-5m5 5l-5 5" stroke="#2a446f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </div>
+                <div class="flow-node flow-node-func">
+                    <div class="flow-node-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 18 18"><defs><linearGradient id="fn-gr" x1="9" y1="16.97" x2="9" y2="1.03" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#fea11b"/><stop offset=".284" stop-color="#fea51a"/><stop offset=".547" stop-color="#feb018"/><stop offset=".8" stop-color="#ffc314"/><stop offset="1" stop-color="#ffd70f"/></linearGradient></defs><path d="M8.459,9.9H4.87a.193.193,0,0,1-.2-.181.166.166,0,0,1,.018-.075L8.991,1.13a.206.206,0,0,1,.186-.106h4.245a.193.193,0,0,1,.2.181.165.165,0,0,1-.035.1L8.534,7.966h4.928a.193.193,0,0,1,.2.181.176.176,0,0,1-.052.122L5.421,16.788c-.077.046-.624.5-.356-.189h0Z" fill="url(#fn-gr)"/></svg>
+                    </div>
+                    <div class="flow-node-label">Compute</div>
+                    <div class="flow-node-title">Azure Function</div>
+                    <div class="flow-node-detail">Python 3.11</div>
+                </div>
+                <div class="flow-arrow">
+                    <svg viewBox="0 0 28 28" fill="none"><path d="M6 14h16m0 0l-5-5m5 5l-5 5" stroke="#2a446f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </div>
+                <div class="flow-node flow-node-storage">
+                    <div class="flow-node-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 18 18"><defs><linearGradient id="st-gr" x1="9" y1="15.83" x2="9" y2="5.79" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#b3b3b3"/><stop offset=".26" stop-color="#c1c1c1"/><stop offset="1" stop-color="#e6e6e6"/></linearGradient></defs><path d="M.5,5.79h17v9.48a.57.57,0,0,1-.57.57H1.07a.57.57,0,0,1-.57-.57Z" fill="url(#st-gr)"/><path d="M1.07,2.17H16.93a.57.57,0,0,1,.57.57V5.79H.5V2.73A.57.57,0,0,1,1.07,2.17Z" fill="#37c2b1"/><rect x="2.55" y="6.89" width="12.9" height="1.94" rx=".27" fill="#fff"/><rect x="2.56" y="9.68" width="12.9" height="1.95" rx=".27" fill="#37c2b1"/><rect x="2.56" y="12.5" width="12.9" height="1.95" rx=".27" fill="#258277"/></svg>
+                    </div>
+                    <div class="flow-node-label">Storage</div>
+                    <div class="flow-node-title">ADLS Gen2</div>
+                    <div class="flow-node-detail">Parquet + JSON</div>
+                </div>
+                <div class="flow-arrow">
+                    <svg viewBox="0 0 28 28" fill="none"><path d="M6 14h16m0 0l-5-5m5 5l-5 5" stroke="#2a446f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </div>
+                <div class="flow-node flow-node-pbi">
+                    <div class="flow-node-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 18 18"><defs><clipPath id="pbi-cp"><path d="M9.71,1.185a.711.711,0,0,1,.711-.711h4.263a.71.71,0,0,1,.71.711v15.63a.71.71,0,0,1-.71.711H3.316a.71.71,0,0,1-.71-.711V9.71A.71.71,0,0,1,3.316,9H6.158V5.448a.711.711,0,0,1,.711-.711H9.71Z"/></clipPath><linearGradient id="pbi-g1" x1="12.552" y1=".474" x2="12.552" y2="17.526" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#e6ad10"/><stop offset="1" stop-color="#c87e0e"/></linearGradient><linearGradient id="pbi-g2" x1="9" y1="4.737" x2="9" y2="17.526" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#f6d751"/><stop offset="1" stop-color="#e6ad10"/></linearGradient><linearGradient id="pbi-g3" x1="5.448" y1="9" x2="5.448" y2="17.526" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#f9e589"/><stop offset="1" stop-color="#f6d751"/></linearGradient></defs><g clip-path="url(#pbi-cp)"><path d="M15.394.474V17.526H9.71V.474Z" fill="url(#pbi-g1)"/><path d="M11.842,5.448V17.526H6.158V4.737h4.973A.711.711,0,0,1,11.842,5.448Z" fill="url(#pbi-g2)"/><path d="M2.606,9v8.526H8.29V9.71A.711.711,0,0,0,7.579,9Z" fill="url(#pbi-g3)"/></g></svg>
+                    </div>
+                    <div class="flow-node-label">Consume</div>
+                    <div class="flow-node-title">Power BI</div>
+                    <div class="flow-node-detail">Dashboards</div>
+                </div>
+            </div>
+        </div>
+
+        <p>A timer-triggered Azure Function fires on a schedule (hourly by default). It authenticates through Managed Identity and Key Vault, then paginates through 9 Graph API endpoints with retry logic. The raw JSON gets flattened into tabular records, strings are sanitized, and everything is written as date-partitioned Parquet files. Power BI picks them up on the next refresh.</p>
+
+        <p>The whole pipeline runs in under two minutes.</p>
+
+        <h2>What you get</h2>
+
+        <p>The Power BI report template includes seven pre-built pages. These were designed by a security engineer, not a data analytics specialist, so treat them as a starting point. The real value is having all the data in Power BI where you can build whatever views, filters, and dashboards fit your organization's needs.</p>
+
+        <div class="gallery">
+            <div class="gallery-item gallery-item-wide" onclick="openGallery(this)">
+                <img src="images/overview.png" alt="MDO Attack Simulation Overview - Organization-wide phishing simulation performance and training metrics">
+                <div class="gallery-caption">MDO Attack Simulation Overview</div>
+            </div>
+            <div class="gallery-item" onclick="openGallery(this)">
+                <img src="images/executive-dashboard.png" alt="Executive Dashboard - High-level KPIs and trends across all attack simulations">
+                <div class="gallery-caption">Executive Dashboard</div>
+            </div>
+            <div class="gallery-item" onclick="openGallery(this)">
+                <img src="images/department-overview.png" alt="Department Overview - Phishing simulation metrics by department">
+                <div class="gallery-caption">Department Overview</div>
+            </div>
+            <div class="gallery-item" onclick="openGallery(this)">
+                <img src="images/simulation-analysis.png" alt="Simulation Analysis - Detailed breakdown of individual simulation campaigns">
+                <div class="gallery-caption">Simulation Analysis</div>
+            </div>
+            <div class="gallery-item" onclick="openGallery(this)">
+                <img src="images/training-compliance.png" alt="Training Compliance - Training assignment completion and compliance tracking">
+                <div class="gallery-caption">Training Compliance</div>
+            </div>
+            <div class="gallery-item" onclick="openGallery(this)">
+                <img src="images/user-risk-profile.png" alt="User Risk Profile - Individual user risk analysis based on simulation responses">
+                <div class="gallery-caption">User Risk Profile</div>
+            </div>
+            <div class="gallery-item" onclick="openGallery(this)">
+                <img src="images/improving-submissions.png" alt="Improving Submissions - Submission behavior analysis for simulated phishing emails">
+                <div class="gallery-caption">Improving Submissions</div>
+            </div>
+        </div>
+
+        <div class="gallery-overlay" id="galleryOverlay" onclick="closeGallery()">
+            <img id="galleryFullImg" src="" alt="">
+        </div>
+
+        <h2>The data</h2>
+
+        <p>The solution pulls nine tables that cover the full scope of an Attack Simulation Training program:</p>
+
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr><th>Table</th><th>API</th><th>Description</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td><strong>repeatOffenders</strong></td><td><span class="tag tag-stable">v1.0</span></td><td>Users who fell for multiple simulations</td></tr>
+                    <tr><td><strong>simulationUserCoverage</strong></td><td><span class="tag tag-stable">v1.0</span></td><td>Per-user simulation statistics</td></tr>
+                    <tr><td><strong>trainingUserCoverage</strong></td><td><span class="tag tag-stable">v1.0</span></td><td>Per-user training completion</td></tr>
+                    <tr><td><strong>simulations</strong></td><td><span class="tag tag-beta">beta</span></td><td>Campaign definitions and metrics</td></tr>
+                    <tr><td><strong>simulationUsers</strong></td><td><span class="tag tag-beta">beta</span></td><td>Per-user results for each simulation</td></tr>
+                    <tr><td><strong>simulationUserEvents</strong></td><td><span class="tag tag-beta">beta</span></td><td>User events: clicks, credential submissions, reports</td></tr>
+                    <tr><td><strong>trainings</strong></td><td><span class="tag tag-beta">beta</span></td><td>Training module definitions</td></tr>
+                    <tr><td><strong>payloads</strong></td><td><span class="tag tag-beta">beta</span></td><td>Phishing payload templates</td></tr>
+                    <tr><td><strong>users</strong></td><td><span class="tag tag-stable">v1.0</span></td><td>Entra ID enrichment (department, city, country)</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <p>The first three tables use the stable v1.0 Graph API. The rest use the beta API and are enabled by default through the <code>SYNC_SIMULATIONS</code> setting.</p>
+
+        <h2>Design decisions</h2>
+
+        <p>A few things that shaped how this was built:</p>
+
+        <p><strong>Fully async.</strong> The function uses aiohttp for Graph API calls and the Azure SDK async client for storage writes. This keeps the function fast and avoids blocking on I/O. A full sync across all nine endpoints finishes in under two minutes.</p>
+
+        <p><strong>Parquet with explicit schemas.</strong> Each table has a PyArrow schema defined in code, with Snappy compression and INT64 timestamps. This gives Power BI clean column types on import without any guessing.</p>
+
+        <p><strong>Incremental sync.</strong> After the initial full sync, the function uses a 7-day lookback window to only process recent data. This cuts API calls by 70-80% and reduces the risk of hitting Graph API throttling limits.</p>
+
+        <p><strong>Security first.</strong> The function authenticates with Managed Identity. Secrets live in Key Vault. The infrastructure supports private endpoints and VNet integration. All RBAC assignments follow least-privilege.</p>
+
+        <p><strong>Modular storage layer.</strong> The ADLS writer is a separate module. If you want to send data to Microsoft Fabric, Azure SQL, or Dataverse instead, you can swap the writer without touching the rest of the pipeline.</p>
+
+        <h2>Getting started</h2>
+
+        <p>The repo includes full deployment guides for three methods: GitHub Actions, Azure CLI, and manual portal setup. Here's the short version:</p>
+
+        <div class="steps">
+            <div class="step-item">
+                <div class="step-num"></div>
+                <div class="step-text">
+                    <h4>Deploy the infrastructure</h4>
+                    <p>Run the included Bicep templates to create the Azure Function, ADLS Gen2, Key Vault, and Application Insights.</p>
+                </div>
+            </div>
+            <div class="step-item">
+                <div class="step-num"></div>
+                <div class="step-text">
+                    <h4>Register the app in Entra ID</h4>
+                    <p>Create an app registration with <code>AttackSimulation.Read.All</code> and <code>User.Read.All</code> application permissions.</p>
+                </div>
+            </div>
+            <div class="step-item">
+                <div class="step-num"></div>
+                <div class="step-text">
+                    <h4>Deploy the function code</h4>
+                    <p>Push via GitHub Actions, Azure CLI, or manually. The timer starts syncing data automatically.</p>
+                </div>
+            </div>
+            <div class="step-item">
+                <div class="step-num"></div>
+                <div class="step-text">
+                    <h4>Connect Power BI</h4>
+                    <p>Open the included report template, point it at your storage account, and refresh.</p>
+                </div>
+            </div>
+        </div>
+
+        <h2>Tech stack</h2>
+
+        <div class="tags">
+            <span class="tech-tag">Python 3.11</span>
+            <span class="tech-tag">Azure Functions v4</span>
+            <span class="tech-tag">Microsoft Graph API</span>
+            <span class="tech-tag">ADLS Gen2</span>
+            <span class="tech-tag">Power BI</span>
+            <span class="tech-tag">aiohttp</span>
+            <span class="tech-tag">PyArrow</span>
+            <span class="tech-tag">Bicep</span>
+            <span class="tech-tag">Key Vault</span>
+            <span class="tech-tag">Managed Identity</span>
+        </div>
+
+        <div class="note">
+            <p>This is an open-source project released under the MIT license. Contributions, issues, and feature requests are welcome on <a href="https://github.com/Contosec-EMU/MDOAttackSimulation-PowerBI" target="_blank">GitHub</a>.</p>
+        </div>
+
+        <div class="cta">
+            <h3>Get the source code</h3>
+            <p>Full documentation, deployment guides, and the Power BI report template are on GitHub.</p>
+            <a href="https://github.com/Contosec-EMU/MDOAttackSimulation-PowerBI" class="btn" target="_blank">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+                View on GitHub
+            </a>
+        </div>
+
+    </article>
+
+    <footer class="footer">
+        Created by <a href="https://github.com/carlossuarez-msft" target="_blank">Carlos Suarez</a> &bull; <a href="https://github.com/Contosec-EMU/MDOAttackSimulation-PowerBI/blob/main/LICENSE" target="_blank">MIT License</a>
+    </footer>
+
+    <script>
+        function openGallery(el) {
+            var src = el.querySelector('img').src;
+            document.getElementById('galleryFullImg').src = src;
+            document.getElementById('galleryOverlay').classList.add('active');
+        }
+        function closeGallery() {
+            document.getElementById('galleryOverlay').classList.remove('active');
+            document.getElementById('galleryFullImg').src = '';
+        }
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') closeGallery();
+        });
+    </script>
+
+</body>
+</html>

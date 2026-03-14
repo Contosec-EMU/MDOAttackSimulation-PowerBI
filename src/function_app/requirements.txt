@@ -1,0 +1,14 @@
+# Azure Functions core
+azure-functions>=1.21.0,<2.0
+
+# Azure SDK
+azure-identity>=1.19.0,<2.0
+azure-keyvault-secrets>=4.9.0,<5.0
+azure-storage-file-datalake>=12.17.0,<13.0
+
+# Async HTTP client
+aiohttp>=3.6.0,<4.0
+
+# Data processing
+pyarrow>=18.1.0,<20.0
+pandas>=2.2.0,<4.0

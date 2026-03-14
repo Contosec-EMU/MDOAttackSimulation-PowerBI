@@ -1,0 +1,97 @@
+table simulationUserCoverage
+	lineageTag: a2000001-0000-0000-0000-000000000002
+
+	column snapshotDateUtc
+		dataType: dateTime
+		lineageTag: a2010001-0000-0000-0000-000000000002
+		summarizeBy: none
+		sourceColumn: snapshotDateUtc
+
+		variation Variation
+			isDefault
+			relationship: a26ce83b-ed2a-42aa-9366-67bdd5de7f2e
+			defaultHierarchy: LocalDateTable_5450c278-5fa0-4c5f-87d5-939ed23b32a9.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column userId
+		dataType: string
+		lineageTag: a2010002-0000-0000-0000-000000000002
+		summarizeBy: none
+		sourceColumn: userId
+
+		annotation SummarizationSetBy = Automatic
+
+	column displayName
+		dataType: string
+		lineageTag: a2010003-0000-0000-0000-000000000002
+		summarizeBy: none
+		sourceColumn: displayName
+
+		annotation SummarizationSetBy = Automatic
+
+	column email
+		dataType: string
+		lineageTag: a2010004-0000-0000-0000-000000000002
+		summarizeBy: none
+		sourceColumn: email
+
+		annotation SummarizationSetBy = Automatic
+
+	column simulationCount
+		dataType: int64
+		formatString: 0
+		lineageTag: a2010005-0000-0000-0000-000000000002
+		summarizeBy: sum
+		sourceColumn: simulationCount
+
+		annotation SummarizationSetBy = Automatic
+
+	column latestSimulationDateTime
+		dataType: dateTime
+		lineageTag: a2010006-0000-0000-0000-000000000002
+		summarizeBy: none
+		sourceColumn: latestSimulationDateTime
+
+		variation Variation
+			isDefault
+			relationship: 810cc98e-625a-466b-b88c-b9dfd549b532
+			defaultHierarchy: LocalDateTable_222b61c1-0018-4141-b42d-068273cfede2.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column clickCount
+		dataType: int64
+		formatString: 0
+		lineageTag: a2010007-0000-0000-0000-000000000002
+		summarizeBy: sum
+		sourceColumn: clickCount
+
+		annotation SummarizationSetBy = Automatic
+
+	column compromisedCount
+		dataType: int64
+		formatString: 0
+		lineageTag: a2010008-0000-0000-0000-000000000002
+		summarizeBy: sum
+		sourceColumn: compromisedCount
+
+		annotation SummarizationSetBy = Automatic
+
+	partition simulationUserCoverage = m
+		mode: import
+		source =
+				let
+				    Result = try
+				        let
+				            Source = AzureStorage.DataLake(StorageAccountUrl & "/" & ContainerName & "/simulationUserCoverage"),
+				            Sorted = Table.Sort(Source, {{"Date modified", Order.Descending}})
+				        in
+				            Parquet.Document(Sorted{0}[Content])
+				    otherwise
+				        #table({"snapshotDateUtc", "userId", "displayName", "email", "simulationCount", "latestSimulationDateTime", "clickCount", "compromisedCount"}, {})
+				in
+				    Result
+
+	annotation PBI_ResultType = Table
+

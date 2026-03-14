@@ -1,0 +1,85 @@
+# Azure Functions
+local.settings.json
+.python_packages/
+.venv/
+__pycache__/
+*.pyc
+.python_version
+.funcignore
+
+# Python
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+pip-log.txt
+pip-delete-this-directory.txt
+.pytest_cache/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.classpath
+.settings/
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Build artifacts
+*.zip
+dist/
+build/
+*.egg-info/
+.eggs/
+
+# Secrets (never commit)
+*.secret
+*.key
+credentials.json
+*.pfx
+*.pem
+.env
+.env.local
+
+# Bicep parameters (contain tenant IDs, credentials)
+*.bicepparam
+
+# Azure deployment
+.azure/
+
+# Terraform (if used in future)
+*.tfstate
+*.tfstate.*
+.terraform/
+
+# GitHub
+.github/workflows/*.log
+
+# AI assistant config (internal)
+.claude/
+CLAUDE.md
+
+# Windows artifacts
+nul
+
+# Coverage reports
+htmlcov/
+.coverage
+coverage.xml
+
+# Power BI Desktop local artifacts
+**/.pbi/
+**/LocalDateTable_*.tmdl
+**/DateTableTemplate_*.tmdl
+infra/main.json

@@ -1,0 +1,36 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.6.0/schema.json",
+  "name": "v4a007",
+  "position": {
+    "x": 644.43276809171243,
+    "y": 8.5598280391688562,
+    "z": 2000,
+    "height": 39.130642464771917,
+    "width": 619.97611655123,
+    "tabOrder": 2000
+  },
+  "visual": {
+    "visualType": "textbox",
+    "objects": {
+      "general": [
+        {
+          "properties": {
+            "paragraphs": [
+              {
+                "textRuns": [
+                  {
+                    "value": "Training assignment completion and compliance tracking",
+                    "textStyle": {
+                      "fontSize": "14pt",
+                      "color": "#605e5c"
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    }
+  }
+}
